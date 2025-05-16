@@ -257,11 +257,11 @@ To get to the swagger documentation page - visit root url - `/` or `/docs`.
 
 To authenticate in the swagger docs - click on the `Authorize` button in the top right side of the docs page:
 
-![alt text](image.png)
+![authorize_btn](docs/authorize.png)
 
 Provide your credentials in the following pop-up menu:
 
-![alt text](image-1.png)
+![auth_form](docs/login_form.png)
 
 ⚠️ Ignore `client_id` and `client_secret` fields in the pop-up menu.
 
