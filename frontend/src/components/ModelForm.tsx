@@ -42,7 +42,7 @@ export const ModelForm: FC<ModelFormProps> = ({
     model: initialData?.model || '',
     provider: initialData?.provider || settings.ai_provider,
     system_prompt: initialData?.system_prompt || settings?.system_prompt || '',
-    temperature: initialData?.temperature || 0.7,
+    temperature: initialData?.temperature ?? 0.7,
   });
 
   const [error, setError] = useState<string | null>(null);

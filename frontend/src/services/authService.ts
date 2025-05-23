@@ -1,4 +1,4 @@
-import { AnyARecord } from 'dns';
+import { USER_STORAGE_KEY } from '../constants/localStorage';
 import { apiService, tokenService } from './apiService';
 
 export interface User {
@@ -9,8 +9,6 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
 }
-
-const USER_STORAGE_KEY = 'user';
 
 class AuthService {
   // Get current user from localStorage

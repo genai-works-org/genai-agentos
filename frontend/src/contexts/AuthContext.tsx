@@ -2,8 +2,8 @@ import type { FC, ReactNode } from 'react';
 import { useEffect, useState, createContext, useContext, useCallback, useMemo } from 'react';
 import { authService, User } from '../services/authService';
 import { websocketService } from '../services/websocketService';
+import { REFRESH_TOKEN_KEY, TOKEN_KEY, USER_STORAGE_KEY } from '../constants/localStorage';
 import { useChatHistory } from './ChatHistoryContext';
-// import { useHandleRequest } from '../hooks/useHandleequest';
 
 interface AuthContextType {
   user: User | null;
@@ -26,12 +26,6 @@ export const AuthProvider: FC<{
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { clearMessages } = useChatHistory();
-
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
-    setIsLoading(false);
-  }, []);
 
   const login = useCallback(async (username: string, password: string) => {
     try {
@@ -58,16 +52,36 @@ export const AuthProvider: FC<{
     // Clear all context data
     setUser(null);
     clearMessages();
-    
+
     // Disconnect websocket
     websocketService.disconnect();
-    
+
     // Clear all local storage data
     authService.logout();
-    
+
     // Clear any other local storage items that might be related to the session
     localStorage.clear();
   }, [clearMessages]);
+
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      const storageKeys = [TOKEN_KEY, REFRESH_TOKEN_KEY, USER_STORAGE_KEY]
+      const isStorageChanged = storageKeys.some((key) => event.key === key) || !event.key;
+
+      if (isStorageChanged && !event.newValue) {
+        logout();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const value = useMemo(() => ({
     user,

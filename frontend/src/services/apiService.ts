@@ -1,4 +1,5 @@
 import { environment } from '../common/environment';
+import { REFRESH_TOKEN_KEY, TOKEN_KEY } from '../constants/localStorage';
 import { useToast } from '../hooks/useToast';
 // Types
 export interface ApiResponse<T> {
@@ -29,8 +30,6 @@ interface PostOptions extends RequestInit {
 
 // Constants
 const API_BASE_URL = environment.apiBaseUrl;
-const TOKEN_KEY = 'auth_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
 
 // Token management
 export const tokenService = {

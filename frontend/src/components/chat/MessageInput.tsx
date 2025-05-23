@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, KeyboardEvent } from 'react';
 import type { FC, FormEvent, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useSettings } from '../../contexts/SettingsContext';
 
 interface MessageInputProps {
   message: string;
@@ -21,6 +22,15 @@ const MessageInput: FC<MessageInputProps> = ({
   onSubmit,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { settings } = useSettings();
+  const isModelSelected = Boolean(settings.model);
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      isModelSelected && onSubmit(e);
+    }
+  };
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -43,12 +53,7 @@ const MessageInput: FC<MessageInputProps> = ({
           ref={textareaRef}
           value={message}
           onChange={onMessageChange}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              onSubmit(e);
-            }
-          }}
+          onKeyDown={handleKeyDown}
           placeholder="Message"
           className="w-full h-full px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none resize-none"
           rows={1}

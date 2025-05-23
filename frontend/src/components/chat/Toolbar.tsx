@@ -1,5 +1,5 @@
-import type { FC } from 'react';
-import { SendIcon, PaperclipIcon, EyeIcon, EyeOffIcon, BoldIcon, ItalicIcon, CodeIcon } from 'lucide-react';
+import { FC, useEffect } from 'react';
+import { SendIcon, PaperclipIcon } from 'lucide-react';
 import { useSettings } from '../../contexts/SettingsContext';
 import { MenuItem, SelectChangeEvent, FormControl, InputLabel } from '@mui/material';
 import { Select } from '@mui/material';
@@ -25,6 +25,7 @@ const Toolbar: FC<ToolbarProps> = ({
   const { settings, availableModels, updateSettings } = useSettings();
   const isModelAvailable = availableModels.length > 0;
   const isModelSelected = Boolean(settings.model?.id);
+
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
     if (value) {
@@ -33,10 +34,16 @@ const Toolbar: FC<ToolbarProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (!isModelSelected && isModelAvailable) {
+      updateSettings({ model: availableModels[0] });
+    }
+  }, [])
+
   return (
     <div className="px-3 py-2 flex items-center justify-between">
       <div className="flex items-center space-x-2 text-gray-500">
-        <button 
+        <button
           onClick={onAttachClick}
           disabled={isUploading || isAnyFileUploading}
           className="p-1.5 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 shadow-md"
@@ -74,14 +81,14 @@ const Toolbar: FC<ToolbarProps> = ({
             </FormControl>
           )
         }
-        <button 
+        <button
           onClick={onSubmit}
           disabled={!isModelSelected || !hasContent}
           className={`ml-6 p-2 rounded-md transition-colors shadow-md ${
             hasContent && isModelSelected
-              ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] ' 
+              ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] '
               : 'bg-gray-100 text-gray-400'
-          }`}
+            }`}
         >
           <SendIcon size={20} />
         </button>
