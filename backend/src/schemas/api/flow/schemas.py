@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import List, Optional, Self, Union
 from uuid import UUID
+
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -58,6 +59,10 @@ class AgentFlowList(AgentFlowBase):
 
 class AgentFlowUpdate(AgentFlowCreate):
     pass
+
+
+class AgentFlowAlias(AgentFlowCreate):
+    alias: Optional[str] = None
 
 
 class FlowSchema(BaseModel):

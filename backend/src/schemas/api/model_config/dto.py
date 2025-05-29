@@ -8,6 +8,7 @@ from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
 class ModelConfigDTO(ModelConfigBase, BaseUUIDToStrModel):
     system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT)
+    user_prompt: Optional[str] = None
 
     @field_validator("system_prompt")
     def return_default_system_prompt(cls, v):

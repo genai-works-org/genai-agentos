@@ -1,6 +1,8 @@
 import copy
 import logging
 import traceback
+from datetime import datetime
+from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
@@ -10,9 +12,11 @@ from pydantic import ValidationError
 
 from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
+from src.repositories.chat import chat_repo
 from src.repositories.files import files_repo
 from src.repositories.model_config import model_config_repo
 from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
+from src.schemas.api.chat.schemas import CreateChatMessage
 from src.schemas.ws.frontend import (
     AgentResponseDTO,
     IncomingFrontendMessage,
@@ -20,7 +24,8 @@ from src.schemas.ws.frontend import (
     LLMPropertiesDTO,
 )
 from src.schemas.ws.ml import OutgoingMLRequestSchema
-from src.utils.get_agents_and_flows import query_agents_and_flows
+from src.utils.enums import SenderType
+from src.utils.validate_uuid import is_valid_uuid
 from src.utils.validation_error_handler import validation_exception_handler
 from src.utils.websocket import get_current_ws_user
 
@@ -34,6 +39,7 @@ async def handle_frontend_ws(
     websocket: WebSocket,
     db: AsyncDBSession,
     token: str,
+    session_id: Optional[str] = None,
 ):
     """
         WS endpoint to receive messages from frontend and proxy them to ML
@@ -109,7 +115,10 @@ async def handle_frontend_ws(
     query_params = websocket.query_params
     token = query_params.get("token")
     if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="JWT token is expired or invalid",
+        )
         return
 
     current_user = await get_current_ws_user(websocket=websocket, db=db, token=token)
@@ -118,9 +127,31 @@ async def handle_frontend_ws(
     if not user_model:
         return
 
+    if not session_id:
+        # session_id was not provided
+        session_id = str(uuid4())
+        await chat_repo.create_chat_by_session_id(
+            db=db, user_model=user_model, session_id=session_id
+        )
+    else:
+        if not is_valid_uuid(uuid=session_id):
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="session_id is not a valid UUID",
+            )
+            return
+        # session_id invalid or non-existing id
+        chat = await chat_repo.get_chat_by_session_id(
+            db=db, session_id=session_id, user_model=user_model
+        )
+        if not chat:
+            await chat_repo.create_chat_by_session_id(
+                db=db, user_model=user_model, session_id=session_id
+            )
+
     websocket.app.state.frontend_ws = websocket
     await websocket.accept()
-    session_id = str(uuid4())
+
     session: GenAISession = websocket.app.state.genai_session
 
     try:
@@ -128,6 +159,7 @@ async def handle_frontend_ws(
             message_obj = IncomingFrontendMessage.model_validate_json(
                 await websocket.receive_text()
             )
+
             request_id = str(uuid4())
             file_ids = message_obj.files
             if file_ids:
@@ -175,9 +207,9 @@ async def handle_frontend_ws(
                         model=users_model_config.model,
                         temperature=users_model_config.temperature,
                         system_prompt=users_model_config.system_prompt,
+                        user_prompt=users_model_config.user_prompt,
                         credentials=updated_credentials,
                     )
-
                 except ValueError:
                     await websocket.send_json(
                         {
@@ -195,14 +227,22 @@ async def handle_frontend_ws(
                 )
                 return
 
-            agents_and_flows = await query_agents_and_flows(db=db)
+            await chat_repo.add_message_to_conversation(
+                db=db,
+                user_model=user_model,
+                session_id=session_id,
+                message_in=CreateChatMessage(
+                    sender_type=SenderType.user, content=message_obj.message
+                ),
+            )
+
             ml_request = OutgoingMLRequestSchema(
-                message=message_obj.message,
-                agents=agents_and_flows.agents,
+                user_id=user_model.id,
+                session_id=session_id,
+                timestamp=datetime.now().timestamp(),
                 configs=LLMPropertiesDTO(llm=enriched_llm_props.to_json()),
                 files=files,
             )
-
             req_body = ml_request.model_dump(exclude_none=True)
 
             try:
@@ -217,6 +257,15 @@ async def handle_frontend_ws(
                     response=response.response,
                     request_id=request_id,
                     session_id=session_id,
+                )
+                await chat_repo.add_message_to_conversation(
+                    db=db,
+                    user_model=user_model,
+                    session_id=session_id,
+                    message_in=CreateChatMessage(
+                        sender_type=SenderType.master_agent,
+                        content=agent_response.response,
+                    ),
                 )
 
                 files_by_request_id = await files_repo.list_files_by_request_id(

@@ -1,12 +1,18 @@
 from typing import List, Optional, Union
 
-from sqlalchemy import delete, select, and_
-from src.repositories.base import CRUDBase
-from src.models import Agent, AgentWorkflow, User
-from src.schemas.api.flow.schemas import AgentFlowCreate, AgentFlowUpdate, FlowAgentId
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.repositories.agent import agent_repo
 from fastapi import HTTPException
+from sqlalchemy import and_, delete, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.models import Agent, AgentWorkflow, User
+from src.repositories.agent import agent_repo
+from src.repositories.base import CRUDBase
+from src.schemas.api.flow.schemas import (
+    AgentFlowAlias,
+    AgentFlowCreate,
+    AgentFlowUpdate,
+    FlowAgentId,
+)
+from src.utils.helpers import generate_alias
 
 
 class AgentWorkflowRepository(
@@ -96,6 +102,7 @@ class AgentWorkflowRepository(
             description=obj_in.description,
             flow=[flow.model_dump(mode="json") for flow in obj_in.flow],
             creator_id=user_model.id,
+            alias=generate_alias(obj_in.name),
         )
 
         db.add(db_obj)
@@ -176,8 +183,10 @@ class AgentWorkflowRepository(
         upd_data: AgentFlowUpdate,
         user_model: User,
     ) -> Optional[AgentWorkflow]:
+        alias = generate_alias(upd_data.name)
+        upd_model = AgentFlowAlias(**upd_data.__dict__, alias=alias)
         valid_agents = await self.validate_all_agents_in_flow_are_active(
-            db=db, obj_in=upd_data, user_model=user_model
+            db=db, obj_in=upd_model, user_model=user_model
         )
         if valid_agents:
             return await self.update_by_id(

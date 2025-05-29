@@ -1,15 +1,14 @@
-from typing_extensions import Annotated
 from fastapi import APIRouter, Body, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.exc import IntegrityError
+from typing_extensions import Annotated
 
 from src.auth.jwt import create_access_token, validate_token
-
 from src.db.session import AsyncDBSession
-from src.schemas.api.auth.jwt import TokenDTO
 from src.repositories.user import user_repo
+from src.schemas.api.auth.jwt import TokenDTO
 from src.schemas.api.user.schemas import TokenValidationInput, UserCreate
-from sqlalchemy.exc import IntegrityError
 
 user_router = APIRouter(tags=["users"])
 
@@ -46,7 +45,7 @@ async def register_user(
     db: AsyncDBSession, new_user_data: Annotated[UserCreate, Body()]
 ):
     try:
-        return await user_repo.create(db=db, obj_in=new_user_data)
+        return await user_repo.register(db=db, obj_in=new_user_data)
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail=f"User '{new_user_data.username}' already exists"

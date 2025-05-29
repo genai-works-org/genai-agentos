@@ -1,25 +1,27 @@
-from typing import Optional
-from fastapi import APIRouter, HTTPException
+import logging
+import traceback
+from typing import Annotated, Optional
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi.responses import Response
+from sqlalchemy.exc import IntegrityError
 
 from src.auth.dependencies import (
-    CurrentUserDependency,
     CurrentUserByAgentOrUserTokenDependency,
+    CurrentUserDependency,
 )
+from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
-from src.schemas.api.agent.schemas import AgentRegister, AgentUpdate
-from src.schemas.api.agent.dto import (
-    ActiveAgentsWithQueryParams,
-    AgentDTOWithJWT,
-    MLAgentJWTDTO,
-)
-from uuid import UUID
-from fastapi.responses import Response
-from sqlalchemy.exc import IntegrityError
-import traceback
-import logging
+from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
+from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
+from src.utils.enums import ActiveAgentTypeFilter
+from src.utils.filters import AgentFilter
+from src.utils.helpers import get_user_id_from_jwt
 
+settings = get_settings()
 logger = logging.getLogger(__name__)
 agent_router = APIRouter(tags=["agents"], prefix="/agents")
 
@@ -30,34 +32,98 @@ agent_router = APIRouter(tags=["agents"], prefix="/agents")
 )
 async def get_active_connections(
     db: AsyncDBSession,
-    user_model: CurrentUserByAgentOrUserTokenDependency,
+    authorization: Annotated[Optional[str], Header()] = None,
+    x_api_key: Annotated[Optional[str], Header(convert_underscores=True)] = None,
+    agent_type: ActiveAgentTypeFilter = Query(),
+    user_id: Optional[UUID] = Query(None),
     offset: int = 0,
     limit: int = 100,
-) -> ActiveAgentsWithQueryParams:
-    agents = await agent_repo.get_all_online_agents_by_user(
-        db=db, user_model=user_model, offset=offset, limit=limit
+):
+    if not any((user_id, authorization)):
+        raise HTTPException(
+            status_code=400,
+            detail="You must provide either 'user_id' or your jwt token to continue.",
+        )
+
+    if all((authorization, x_api_key, user_id)):
+        raise HTTPException(
+            status_code=400,
+            detail="You must provide either 'user_id' or your jwt token, but not both at the same time.",
+        )
+
+    if all((authorization, user_id)):
+        raise HTTPException(
+            status_code=400,
+            detail="Lookup by user_id is not allowed for plain authenticated users.",
+        )
+
+    if not user_id and not authorization:
+        if not x_api_key == settings.MASTER_BE_API_KEY:
+            raise HTTPException(
+                detail="You must provide x-api-key header if user_id query parameter is provided.",
+                status_code=401,
+            )
+        user_id = get_user_id_from_jwt(token=authorization.split(" ")[-1])
+
+    if authorization:
+        user_id = get_user_id_from_jwt(token=authorization.split(" ")[-1])
+
+    return await agent_repo.get_active_agents_by_filter(
+        db=db, agent_type=agent_type, user_id=user_id, limit=limit, offset=offset
     )
-    return ActiveAgentsWithQueryParams(**agents.__dict__, limit=limit, offset=offset)
 
 
-@agent_router.get("/", response_model=list[MLAgentJWTDTO])
+@agent_router.get("/")
 async def list_all_agents(
     db: AsyncDBSession,
     user: CurrentUserByAgentOrUserTokenDependency,
     offset: Optional[int] = 0,
     limit: int = 100,
+    filter: AgentFilter = Depends(),
 ):
-    # TODO: pagination
-    return await agent_repo.list_all_agents(
-        db=db, user_model=user, offset=offset, limit=limit
+    result = await agent_repo.query_by_filter(
+        db=db, user_model=user, filter_field=filter, offset=offset, limit=limit
     )
+    if isinstance(result, list):
+        return result
+
+    return [
+        MLAgentJWTDTO(
+            agent_id=str(agent.id),
+            agent_name=agent.name,
+            agent_description=agent.description,
+            agent_input_schema=agent.input_parameters,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            is_active=agent.is_active,
+            agent_jwt=agent.jwt,
+        )
+        for agent in result
+    ]
 
 
 @agent_router.get("/{agent_id}", response_model=MLAgentJWTDTO)
 async def get_data(
-    db: AsyncDBSession, user: CurrentUserByAgentOrUserTokenDependency, agent_id: UUID
+    db: AsyncDBSession,
+    user: CurrentUserByAgentOrUserTokenDependency,
+    agent_id: UUID,
 ):
-    return await agent_repo.get_agent(db=db, id_=str(agent_id), user_model=user)
+    agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
+    if not agent:
+        raise HTTPException(
+            status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
+        )
+    return MLAgentJWTDTO(
+        agent_id=str(agent.id),
+        agent_name=agent.name,
+        agent_description=agent.description,
+        agent_input_schema=agent.input_parameters,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        is_active=agent.is_active,
+        agent_jwt=agent.jwt,
+        agent_alias=agent.alias,
+    )
 
 
 @agent_router.post("/register", response_model=AgentDTOWithJWT)
@@ -91,13 +157,24 @@ async def update_agent(
     db: AsyncDBSession,
     user: CurrentUserDependency,
     agent_id: UUID,
-    agent_upd_data: AgentUpdate,
+    agent_upd_data: AgentCRUDUpdate,
 ):
-    agent = await agent_repo.update_by_id(
-        db=db, id_=str(agent_id), obj_in=agent_upd_data, user_model=user
+    agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
+    if not agent:
+        raise HTTPException(
+            status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
+        )
+    return MLAgentJWTDTO(
+        agent_id=str(agent.id),
+        agent_name=agent.name,
+        agent_description=agent.description,
+        agent_input_schema=agent.input_parameters,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        is_active=agent.is_active,
+        agent_jwt=agent.jwt,
+        agent_alias=agent.alias,
     )
-
-    return agent
 
 
 @agent_router.delete("/{agent_id}")

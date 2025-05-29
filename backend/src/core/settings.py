@@ -1,11 +1,7 @@
 from functools import lru_cache
 from typing import Optional, Self
 
-from pydantic import (
-    Field,
-    model_validator,
-    field_validator,
-)
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -43,8 +39,10 @@ class Settings(BaseSettings):
 
     DEFAULT_FILES_FOLDER_NAME: str = Field(default="files")
 
-    OPENAI_API_KEY: Optional[str] = None
-    DEEPSEEK_API_KEY: Optional[str] = None
+    REDIS_BROKER_URI: str = Field(default="redis://redis:6379/0")
+    REDIS_BACKEND_URI: str = Field(default="redis://redis:6379/0")
+
+    CELERY_BEAT_INTERVAL_MINUTES: int = Field(default=10)
 
     @model_validator(mode="after")
     def build_database_uri(self) -> Self:
