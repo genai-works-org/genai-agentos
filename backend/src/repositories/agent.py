@@ -349,7 +349,6 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 limit=limit,
                 offset=offset,
             )
-            # return [map_genai_agent_to_unified_dto(a) for a in agents]
             return agents
 
         if filter_field.description:
@@ -360,7 +359,6 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 limit=limit,
                 offset=offset,
             )
-            # return [map_genai_agent_to_unified_dto(a) for a in agents]
             return agents
 
         return await self.get_multiple_by_user(

@@ -84,6 +84,22 @@ async def list_all_agents(
     result = await agent_repo.query_by_filter(
         db=db, user_model=user, filter_field=filter, offset=offset, limit=limit
     )
+    if isinstance(result, list):
+        return result
+
+    return [
+        MLAgentJWTDTO(
+            agent_id=str(agent.id),
+            agent_name=agent.name,
+            agent_description=agent.description,
+            agent_input_schema=agent.input_parameters,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            is_active=agent.is_active,
+            agent_jwt=agent.jwt,
+        )
+        for agent in result
+    ]
 
     return [
         MLAgentJWTDTO(
@@ -107,7 +123,6 @@ async def get_data(
     agent_id: UUID,
 ):
     agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
-
     if not agent:
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
