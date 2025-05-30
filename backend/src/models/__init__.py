@@ -9,12 +9,14 @@ from src.db.annotations import (
     created_at,
     int_pk,
     last_invoked_at,
+    not_null_json_array_column,
     not_null_json_column,
-    not_null_json_column_flow,
+    nullable_json_column,
     updated_at,
     uuid_pk,
 )
 from src.db.base import Base
+from src.utils.enums import SenderType
 
 
 class UserProjectAssociation(Base):
@@ -104,6 +106,12 @@ class User(Base):
         back_populates="creator",
     )
 
+    conversations: Mapped[List["ChatConversation"]] = relationship(
+        back_populates="creator"
+    )
+    mcpservers: Mapped[List["MCPServer"]] = relationship(back_populates="creator")
+    a2acards: Mapped[List["A2ACard"]] = relationship(back_populates="creator")
+
     def __repr__(self) -> str:
         return f"<User(uuid={self.id!r}, username={self.username!r})>"
 
@@ -111,6 +119,7 @@ class User(Base):
 class Agent(Base):
     id: Mapped[uuid_pk]
 
+    alias: Mapped[str] = mapped_column(nullable=False, unique=True)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
 
@@ -135,10 +144,11 @@ class Agent(Base):
 class AgentWorkflow(Base):
     id: Mapped[uuid_pk]
 
+    alias: Mapped[str] = mapped_column(nullable=False, unique=True)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
 
-    flow: Mapped[not_null_json_column_flow]
+    flow: Mapped[not_null_json_array_column]
 
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
@@ -231,6 +241,7 @@ class ModelConfig(Base):
     provider: Mapped[str] = mapped_column(nullable=False, index=True)
 
     system_prompt: Mapped[str]
+    user_prompt: Mapped[str]
     temperature: Mapped[float] = mapped_column(default=0.7)
 
     credentials: Mapped[not_null_json_column]  # api_key must be hashed
@@ -242,3 +253,90 @@ class ModelConfig(Base):
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+
+
+class MCPServer(Base):
+    id: Mapped[uuid_pk]
+
+    name: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str] = mapped_column(nullable=True)
+
+    server_url: Mapped[str]  # TODO: validate
+
+    mcp_tools: Mapped[not_null_json_array_column]
+    mcp_prompts: Mapped[not_null_json_array_column]
+    mcp_resources: Mapped[not_null_json_array_column]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator: Mapped["User"] = relationship(back_populates="mcpservers")  # noqa: F821
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+
+    is_active: Mapped[bool]
+
+    def __repr__(self) -> str:
+        return f"<MCPServer(host={self.server_url!r}>"
+
+
+class A2ACard(Base):
+    id: Mapped[uuid_pk]
+
+    name: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str] = mapped_column(nullable=True)
+
+    server_url: Mapped[str]
+    card_content: Mapped[not_null_json_column]
+
+    is_active: Mapped[bool]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator: Mapped["User"] = relationship(back_populates="a2acards")  # noqa: F821
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+
+
+class ChatMessage(Base):
+    id: Mapped[uuid_pk]
+
+    sender_type: Mapped[SenderType]
+    content: Mapped[str]
+
+    # 'metadata' is a reserved word by alembic
+    extra_metadata: Mapped[nullable_json_column]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("chatconversations.session_id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    conversation: Mapped["ChatConversation"] = relationship(back_populates="messages")
+
+
+class ChatConversation(Base):
+    """Chat history"""
+
+    session_id: Mapped[uuid_pk] = mapped_column(nullable=False, index=True)
+    title: Mapped[str]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    creator: Mapped["User"] = relationship(back_populates="conversations")
+
+    messages: Mapped[List["ChatMessage"]] = relationship(
+        back_populates="conversation", cascade="all, delete"
+    )

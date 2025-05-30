@@ -1,22 +1,22 @@
 from typing import Any, Optional, Union
 
-from src.auth.hashing import get_password_hash, verify_password
-from src.repositories.base import CRUDBase
-from src.models import User, Project
-from src.schemas.api.user.schemas import UserCreate, UserUpdate
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.auth.hashing import get_password_hash, verify_password
+from src.models import Project, User
+from src.repositories.base import CRUDBase
+from src.schemas.api.user.schemas import UserCreate, UserUpdate
 
 
 class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
-    async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
+    async def register(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
         default_project = Project(name="Default")
         db.add(default_project)
         await db.flush()
 
         db_obj = User(
             username=obj_in.username,
-            password=get_password_hash(obj_in.password),
+            password=get_password_hash(obj_in.password.get_secret_value()),
             projects=[default_project],
         )
         db.add(db_obj)

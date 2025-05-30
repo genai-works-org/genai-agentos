@@ -1,18 +1,28 @@
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
+
 from fastapi import HTTPException
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, create_access_token, validate_token
+from src.models import Agent, AgentWorkflow, User
+from src.repositories.a2a import a2a_repo
+from src.repositories.base import CRUDBase
+from src.repositories.mcp import mcp_repo
+from src.schemas.a2a.dto import ActiveA2ACardDTO
 from src.schemas.api.agent.dto import (
     ActiveAgentsDTO,
+    ActiveGenAIAgentDTO,
     AgentDTOWithJWT,
     MLAgentJWTDTO,
     MLAgentSchema,
 )
-from src.repositories.base import CRUDBase
-from src.models import Agent, User
 from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdate
-from sqlalchemy.ext.asyncio import AsyncSession
+from src.schemas.api.flow.schemas import FlowSchema
+from src.schemas.mcp.dto import ActiveMCPServerDTO
+from src.utils.enums import ActiveAgentTypeFilter
+from src.utils.filters import AgentFilter
+from src.utils.helpers import generate_alias
 
 
 class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
@@ -35,6 +45,23 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             .order_by(self.model.last_invoked_at.desc())
         )
         return q.scalars().first()
+
+    async def _insert_new_agent(
+        self,
+        user_model: User,
+        obj_in: Union[AgentCreate, AgentUpdate],
+    ):
+        alias = generate_alias(obj_in.name)
+        db_obj = Agent(
+            id=obj_in.id,
+            name=obj_in.name,
+            description=obj_in.description,
+            input_parameters=obj_in.input_parameters,
+            creator_id=str(user_model.id),
+            is_active=False,
+            alias=alias,
+        )
+        return db_obj
 
     async def create_by_user(
         self, db: AsyncSession, *, obj_in: AgentRegister, user_model: User
@@ -66,19 +93,15 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 status_code=400, detail=f"Agent with {obj_in.id} already exists"
             )
 
-        db_obj = Agent(
-            id=obj_in.id,
-            name=obj_in.name,
-            description=obj_in.description,
-            input_parameters=obj_in.input_parameters,
-            creator_id=str(user_model.id),
-            is_active=False,
+        db_obj: Optional[Agent] = await self._insert_new_agent(
+            user_model=user_model, obj_in=obj_in
         )
         jwt = create_access_token(
             subject=str(db_obj.id),
             lifespan_type=TokenLifespanType.cli,
             user_id=str(db_obj.creator_id),
         )
+
         db_obj.jwt = jwt
         db.add(db_obj)
         await db.commit()
@@ -155,10 +178,10 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         )
 
     async def list_all_agents(
-        self, db: AsyncSession, user_model: User, limit: int, offset: int
+        self, db: AsyncSession, user_id: UUID, limit: int, offset: int
     ) -> list[Optional[MLAgentJWTDTO]]:
-        result = await self.get_multiple_by_user(
-            db=db, user_model=user_model, offset=offset, limit=limit
+        result = await self.get_multiple_by_user_id(
+            db=db, user_id=user_id, offset=offset, limit=limit
         )
         return [
             MLAgentJWTDTO(
@@ -253,6 +276,357 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             )
         )
         return q.scalars().first()  # one jwt per one agent per user
+
+    async def get_agent_by_id(
+        self, db: AsyncSession, agent_id: UUID, user_model: User
+    ) -> Optional[Agent]:
+        q = await db.execute(
+            select(self.model).where(
+                and_(
+                    self.model.id == str(agent_id),
+                    self.model.creator_id == str(user_model.id),
+                )
+            )
+        )
+        return q.scalars().first()
+
+    async def list_agents_by_name(
+        self,
+        db: AsyncSession,
+        agent_name: str,
+        user_model: User,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[Optional[Agent]]:
+        q = await db.execute(
+            select(self.model)
+            .where(
+                and_(
+                    self.model.name == agent_name,
+                    self.model.creator_id == str(user_model.id),
+                )
+            )
+            .limit(limit=limit)
+            .offset(offset=offset)
+            .order_by(self.model.created_at.desc())
+        )
+        return q.scalars().all()
+
+    async def find_agent_by_description(
+        self, db: AsyncSession, description_query: str, user_model: User
+    ) -> Optional[Agent]:
+        q = await db.execute(
+            select(self.model).where(
+                and_(
+                    self.model.description.ilike(f"%{description_query}%"),
+                    self.model.creator_id == str(user_model.id),
+                )
+            )
+        )
+        return q.scalars().first()
+
+    async def search_agents_by_description(
+        self,
+        db: AsyncSession,
+        description_query: str,
+        user_model: User,
+        limit: int = 100,
+        offset: int = 0,
+    ):
+        q = await db.execute(
+            select(self.model)
+            .where(
+                and_(
+                    self.model.description.ilike(f"%{description_query}%"),
+                    self.model.creator_id == str(user_model.id),
+                )
+            )
+            .limit(limit=limit)
+            .offset(offset=offset)
+            .order_by(self.model.created_at.desc())
+        )
+        return q.scalars().all()
+
+    async def query_by_filter(
+        self,
+        db: AsyncSession,
+        user_model: User,
+        filter_field: AgentFilter,
+        limit: int = 0,
+        offset: int = 0,
+    ):
+        if filter_field.name:
+            return await self.list_agents_by_name(
+                db=db,
+                agent_name=filter_field.name,
+                user_model=user_model,
+                limit=limit,
+                offset=offset,
+            )
+
+        if filter_field.description:
+            return await self.search_agents_by_description(
+                db=db,
+                description_query=filter_field.description,
+                user_model=user_model,
+                limit=limit,
+                offset=offset,
+            )
+
+        return await self.list_all_agents(
+            db=db, user_model=user_model, limit=limit, offset=offset
+        )
+
+    async def query_all_platform_agents(
+        self, db: AsyncSession, user_id: UUID, offset: int, limit: int
+    ):
+        """
+        Query all platform agents - genai, mcp, a2a.
+        Using raw union query instead of multiple queries via ORM to preserve ordering.
+        To use union query, all of the tables must have the same amount of columns.
+        Missing columns are replaced with NULLs.
+        """
+        q = text(
+            """
+SELECT
+    'agents' as table_source,
+    id,
+    name,
+    description,
+    jwt,
+    creator_id,
+    input_parameters as json_data1,
+    NULL as json_data2,
+    NULL as json_data3,
+    NULL as server_url,
+    created_at,
+    updated_at,
+    last_invoked_at,
+    is_active,
+    alias
+FROM agents
+WHERE creator_id = :creator_id AND is_active = TRUE
+
+UNION ALL
+
+SELECT
+    'mcpservers' as table_source,
+    id,
+    name,
+    description,
+    NULL as jwt,
+    creator_id,
+    mcp_tools as json_data1,
+    mcp_prompts as json_data2,
+    mcp_resources as json_data3,
+    server_url,
+    created_at,
+    updated_at,
+    NULL as last_invoked_at,
+    is_active,
+    NULL as alias
+FROM mcpservers
+WHERE creator_id = :creator_id AND is_active = TRUE
+
+UNION ALL
+
+SELECT
+    'a2acards' as table_source,
+    id,
+    name,
+    description,
+    NULL as jwt,
+    creator_id,
+    card_content as json_data1,
+    NULL as json_data2,
+    NULL as json_data3,
+    server_url,
+    created_at,
+    updated_at,
+    NULL as last_invoked_at,
+    is_active,
+    NULL as alias
+FROM a2acards
+WHERE creator_id = :creator_id AND is_active = TRUE
+ORDER BY created_at DESC
+LIMIT :limit OFFSET :offset;
+"""
+        )
+
+        result = await db.execute(
+            q, {"creator_id": str(user_id), "limit": limit, "offset": offset}
+        )
+        return result.fetchall()
+
+    async def orm_flow_to_dto(self, flow: AgentWorkflow, db: AsyncSession):
+        first_agent_id = flow.flow[0].get("agent_id")
+        first_agent = await agent_repo.get(
+            db=db,
+            id_=first_agent_id,
+        )
+        if first_agent:
+            if flow:
+                input_params = first_agent.input_parameters
+                if func := input_params.get("function"):
+                    if func.get("name"):
+                        input_params["function"]["name"] = str(flow.id)
+
+                    if func.get("description"):
+                        input_params["function"]["description"] = flow.description
+
+                flow_schema = FlowSchema(
+                    agent_id=str(flow.id),
+                    agent_name=flow.name,
+                    agent_description=flow.description,
+                    agent_input_schema=input_params,
+                    flow=[flow.get("agent_id") for flow in flow.flow],
+                )
+                return flow_schema
+
+    async def _get_all_flows_by_user(
+        self, db: AsyncSession, user_id: UUID
+    ) -> list[Optional[FlowSchema]]:
+        q = await db.scalars(
+            select(AgentWorkflow).where(AgentWorkflow.creator_id == user_id)
+        )
+        flows = q.all()
+        if not flows:
+            return []
+
+        valid_flows = []
+        for f in flows:
+            flow = await self.orm_flow_to_dto(f, db=db)
+            if not flow:
+                continue
+            valid_flows.append(flow)
+
+        return valid_flows
+
+    async def map_agents_to_dto_models(
+        self, db: AsyncSession, user_id: UUID, offset: int, limit: int
+    ):
+        result = await self.query_all_platform_agents(
+            db=db, user_id=user_id, limit=limit, offset=offset
+        )
+        columns = [row._asdict() for row in result]
+        flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
+
+        response: list[
+            Optional[ActiveA2ACardDTO | ActiveGenAIAgentDTO | ActiveMCPServerDTO]
+        ] = []
+        if flows:
+            response.extend(flows)
+        for col in columns:
+            agent_type = col.pop("table_source")
+            if agent_type == "mcpservers":
+                fields_to_pop = [
+                    "name",
+                    "description",
+                    "jwt",
+                    "last_invoked_at",
+                    "alias",
+                ]
+                for field in fields_to_pop:
+                    col.pop(field)
+
+                col["mcp_tools"] = col.pop("json_data1")
+                col["mcp_prompts"] = col.pop("json_data2")
+                col["mcp_resources"] = col.pop("json_data3")
+
+                mcp = ActiveMCPServerDTO(**col)
+                response.append(mcp)
+
+            if agent_type == "a2acards":
+                fields_to_pop = [
+                    "jwt",
+                    "json_data2",
+                    "json_data3",
+                    "last_invoked_at",
+                    "alias",
+                ]
+                for field in fields_to_pop:
+                    col.pop(field)
+
+                card = ActiveA2ACardDTO(
+                    **col["json_data1"],
+                    name=col["name"],
+                    description=col["description"],
+                    id=col["id"],
+                    url=col["server_url"],
+                    server_url=col["server_url"],
+                    created_at=col["created_at"],
+                    updated_at=col["updated_at"],
+                )
+
+                response.append(card)
+
+            if agent_type == "agents":
+                fields_to_pop = [
+                    "server_url",
+                    "json_data2",
+                    "json_data3",
+                ]
+                for field in fields_to_pop:
+                    col.pop(field)
+
+                agent = ActiveGenAIAgentDTO(
+                    agent_id=col["alias"],
+                    agent_name=col["name"],
+                    agent_description=col["description"],
+                    agent_input_schema=col["json_data1"],
+                    agent_jwt=col["jwt"],
+                    agent_alias=col["alias"],
+                    is_active=col["is_active"],
+                    created_at=col["created_at"],
+                    updated_at=col["updated_at"],
+                )
+                response.append(agent)
+
+        return ActiveAgentsDTO(
+            count_active_connections=len(response),
+            active_connections=[resp_model.model_dump() for resp_model in response],
+        )
+
+    async def list_all_mcp_servers(
+        self, db: AsyncSession, user_id: UUID, limit: int, offset: int
+    ):
+        return await mcp_repo.list_active_mcp_servers(
+            db=db, user_id=user_id, limit=limit, offset=offset
+        )
+
+    async def list_all_a2a_cards(
+        self, db: AsyncSession, user_id: UUID, limit: int, offset: int
+    ):
+        result = await a2a_repo.list_active_cards(
+            db=db, user_id=user_id, limit=limit, offset=offset
+        )
+        return result
+
+    async def get_active_agents_by_filter(
+        self,
+        db: AsyncSession,
+        agent_type: ActiveAgentTypeFilter,
+        user_id: UUID,
+        limit: int,
+        offset: int,
+    ):
+        if agent_type == agent_type.genai:
+            return await self.list_all_agents(
+                db=db, user_id=user_id, limit=limit, offset=offset
+            )
+        elif agent_type == agent_type.a2a:
+            return await self.list_all_a2a_cards(
+                db=db, user_id=user_id, limit=limit, offset=offset
+            )
+        elif agent_type == agent_type.mcp:
+            return await self.list_all_mcp_servers(
+                db=db, user_id=user_id, limit=limit, offset=offset
+            )
+
+        else:
+            return await self.map_agents_to_dto_models(
+                db=db, user_id=user_id, limit=limit, offset=offset
+            )
 
 
 agent_repo = AgentRepository(Agent)

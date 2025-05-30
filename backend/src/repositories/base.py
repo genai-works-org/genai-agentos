@@ -2,13 +2,10 @@ from typing import Any, Generic, Optional, Type, TypeVar, Union
 from uuid import UUID
 
 from fastapi import HTTPException
-
-from src.db.base import Base
 from pydantic import BaseModel
-from sqlalchemy import Result, and_, delete
-from sqlalchemy import select
+from sqlalchemy import Result, and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from src.db.base import Base
 from src.models import User
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -172,6 +169,18 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .limit(limit)
         )
         return q.scalars().all()
+
+    async def get_multiple_by_user_id(
+        self, db: AsyncSession, user_id: UUID | str, limit: int = 0, offset: int = 0
+    ) -> list[Optional[ModelType]]:
+        q = await db.scalars(
+            select(self.model)
+            .where(self.model.creator_id == user_id)
+            .limit(limit=limit)
+            .offset(offset=offset)
+            .order_by(self.model.created_at.desc())
+        )
+        return q.all()
 
     async def create_by_user(
         self, db: AsyncSession, obj_in: CreateSchemaType, user_model: User

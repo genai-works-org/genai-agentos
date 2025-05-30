@@ -1,6 +1,7 @@
+from typing import Optional, Union
 from uuid import UUID
+
 from pydantic import BaseModel, field_validator
-from typing import Union
 
 
 class BaseUUIDToStrModel(BaseModel):
@@ -8,6 +9,16 @@ class BaseUUIDToStrModel(BaseModel):
 
     @field_validator("id")
     def cast_uuid_to_str(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
+
+
+class CastSessionIDToStrModel(BaseModel):
+    session_id: Optional[str | UUID] = None
+
+    @field_validator("session_id")
+    def cast_session_id_to_str(cls, v):
         if isinstance(v, UUID):
             return str(v)
         return v

@@ -1,4 +1,5 @@
 import logging
+
 from src.core.settings import get_settings
 
 settings = get_settings()
@@ -40,6 +41,11 @@ def init_logging() -> None:
 
     logging.getLogger("python_multipart.multipart").propagate = False
     logging.getLogger("passlib.handlers.bcrypt").propagate = False
+    # turn off the mcp sdk debug logs
+    logging.getLogger("mcp.client.sse").propagate = False
+    logging.getLogger("httpcore.http11").propagate = False
+    logging.getLogger("httpcore.connection").propagate = False
+    logging.getLogger("httpx").propagate = False
 
     for log_name in ("websockets", "uvicorn"):
         logging.getLogger(log_name).setLevel(logging.INFO)

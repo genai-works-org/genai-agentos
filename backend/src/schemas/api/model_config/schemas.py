@@ -1,6 +1,6 @@
 from typing import Optional, Self
-from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from src.schemas.base import BaseUUIDToStrModel
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
@@ -19,6 +19,7 @@ class ModelConfigBase(BaseModel):
 
 class ModelConfigCreate(ModelConfigBase):
     system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT)
+    user_prompt: Optional[str] = None
 
     @model_validator(mode="after")
     def strip_str_values(self) -> Self:

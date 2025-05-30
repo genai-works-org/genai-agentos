@@ -1,7 +1,7 @@
 from typing import List, Optional, Self, Union
 from uuid import UUID
-from pydantic import BaseModel, Field, model_validator, field_validator
 
+from pydantic import BaseModel, Field, field_validator, model_validator
 from src.auth.encrypt import decrypt_secret
 
 
@@ -51,6 +51,7 @@ class LLMProperties(BaseModel):
     model: Optional[str] = None
     temperature: Optional[float] = Field(default=0.7)
     system_prompt: Optional[str] = None
+    user_prompt: Optional[str] = None
 
     config_name: str
     credentials: Optional[dict] = {}
@@ -61,6 +62,7 @@ class LLMProperties(BaseModel):
             "model": self.model,
             "temperature": self.temperature,
             "system_prompt": self.system_prompt,
+            "user_prompt": self.user_prompt,
             "config_name": self.config_name,
             **self.credentials,
         }
