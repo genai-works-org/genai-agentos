@@ -12,3 +12,5 @@ class Settings(BaseSettings):
         default="e1adc3d8-fca1-40b2-b90a-7b48290f2d6a::master_server_ml",
         alias="MASTER_AGENT_API_KEY",
     )
+    MASTER_BE_API_KEY: str = Field(..., alias="MASTER_BE_API_KEY")
+    BACKEND_API_URL: str = Field(default="http://backend:8000/api", alias="BACKEND_API_URL")

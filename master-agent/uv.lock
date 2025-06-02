@@ -248,6 +248,7 @@ version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "genai-protocol" },
+    { name = "httpx" },
     { name = "jmespath" },
     { name = "langchain" },
     { name = "langchain-ollama" },
@@ -262,6 +263,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "genai-protocol" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "jmespath", specifier = ">=1.0.1" },
     { name = "langchain", specifier = ">=0.3.21" },
     { name = "langchain-ollama", specifier = ">=0.3.1" },
