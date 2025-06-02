@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from src.schemas.a2a.schemas import A2AAgentCard
 from src.schemas.base import BaseUUIDToStrModel
@@ -16,8 +16,9 @@ class A2ACardDTO(BaseUUIDToStrModel):
     card_content: Optional[A2AAgentCard | dict] = None
 
 
-class ActiveA2ACardDTO(A2AAgentCard):
+class ActiveA2ACardDTO(BaseModel):
     type: AgentType = Field(default=AgentType.a2a)
-    server_url: str
+    # server_url: str
     created_at: datetime
     updated_at: datetime
+    agent_schema: A2AAgentCard
