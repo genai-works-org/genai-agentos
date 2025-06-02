@@ -19,7 +19,7 @@ class ModelConfigBase(BaseModel):
 
 class ModelConfigCreate(ModelConfigBase):
     system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT)
-    user_prompt: Optional[str] = None
+    user_prompt: Optional[str] = ""
 
     @model_validator(mode="after")
     def strip_str_values(self) -> Self:
