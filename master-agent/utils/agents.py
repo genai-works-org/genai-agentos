@@ -2,8 +2,7 @@ from typing import Any
 
 import httpx
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import BaseMessage, AIMessage
-
+from langchain_core.messages import AIMessage, BaseMessage
 from utils.common import bind_tools_safely
 
 
@@ -22,12 +21,14 @@ async def get_agents(url: str, agent_type: str, api_key: str, user_id: str):
 
 
 async def select_agent_and_resolve_parameters(
-        model: BaseChatModel,
-        messages: list[BaseMessage],
-        agents: list[dict[str, Any]],
-        agent_choice: bool = False
+    model: BaseChatModel,
+    messages: list[BaseMessage],
+    agents: list[dict[str, Any]],
+    agent_choice: bool = False,
 ) -> AIMessage:
-    model_with_agents = bind_tools_safely(model=model, tools=agents, tool_choice=agent_choice)
+    model_with_agents = bind_tools_safely(
+        model=model, tools=agents, tool_choice=agent_choice
+    )
 
     response = await model_with_agents.ainvoke(messages)
     return response
