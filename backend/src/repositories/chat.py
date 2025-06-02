@@ -56,7 +56,7 @@ class ChatRepository(
     async def get_paginated_chat_history(
         self,
         db: AsyncSession,
-        user_model: User,
+        user_id: UUID,
         session_id: UUID,
         page: int,
         per_page: int,
@@ -67,7 +67,7 @@ class ChatRepository(
             .where(
                 and_(
                     self.model.session_id == session_id,
-                    self.model.creator_id == user_model.id,
+                    self.model.creator_id == user_id,
                 )
             )
             .order_by(ChatMessage.created_at.desc())
