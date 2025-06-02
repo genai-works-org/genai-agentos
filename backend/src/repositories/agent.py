@@ -10,6 +10,7 @@ from src.repositories.a2a import a2a_repo
 from src.repositories.base import CRUDBase
 from src.repositories.mcp import mcp_repo
 from src.schemas.a2a.dto import ActiveA2ACardDTO
+from src.schemas.a2a.schemas import A2AAgentCard
 from src.schemas.api.agent.dto import (
     ActiveAgentsDTO,
     ActiveGenAIAgentDTO,
@@ -533,7 +534,12 @@ LIMIT :limit OFFSET :offset;
                 col["mcp_prompts"] = col.pop("json_data2")
                 col["mcp_resources"] = col.pop("json_data3")
 
-                mcp = ActiveMCPServerDTO(**col)
+                created_at = col.pop("created_at")
+                updated_at = col.pop("updated_at")
+
+                mcp = ActiveMCPServerDTO(
+                    agent_schema=col, created_at=created_at, updated_at=updated_at
+                )
                 response.append(mcp)
 
             if agent_type == "a2acards":
@@ -548,12 +554,13 @@ LIMIT :limit OFFSET :offset;
                     col.pop(field)
 
                 card = ActiveA2ACardDTO(
-                    **col["json_data1"],
-                    name=col["name"],
-                    description=col["description"],
-                    id=col["id"],
-                    url=col["server_url"],
-                    server_url=col["server_url"],
+                    agent_schema=A2AAgentCard(
+                        **col["json_data1"],
+                        id=col["id"],
+                        name=generate_alias(col["name"]),
+                        description=col["description"],
+                        url=col["server_url"],
+                    ),
                     created_at=col["created_at"],
                     updated_at=col["updated_at"],
                 )

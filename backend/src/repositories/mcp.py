@@ -28,7 +28,6 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
-    # TODO: extend url with /sse, but test behaviour when user changes mount_point on MCP server side
     try:
         async with streamablehttp_client(
             url if isinstance(url, str) else str(url),

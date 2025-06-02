@@ -13,7 +13,8 @@ class MCPServerDTO(BaseModel):
     is_active: bool
 
 
-class ActiveMCPServerDTO(MCPServerDTO):
+class ActiveMCPServerDTO(BaseModel):
     type: AgentType = Field(default=AgentType.mcp)
     created_at: datetime
     updated_at: datetime
+    agent_schema: MCPServerDTO
