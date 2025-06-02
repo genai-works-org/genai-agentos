@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel, SecretStr, field_validator
 from src.utils.constants import SPECIAL_CHARS
 
@@ -35,3 +37,9 @@ class UserUpdate(UserPassword):
 
 class TokenValidationInput(BaseModel):
     token: str
+
+
+class UserProfileCRUDUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    max_last_messages: Optional[int] = None
