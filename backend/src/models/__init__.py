@@ -111,6 +111,7 @@ class User(Base):
     )
     mcpservers: Mapped[List["MCPServer"]] = relationship(back_populates="creator")
     a2acards: Mapped[List["A2ACard"]] = relationship(back_populates="creator")
+    profile: Mapped["UserProfile"] = relationship(back_populates="user")
 
     def __repr__(self) -> str:
         return f"<User(uuid={self.id!r}, username={self.username!r})>"
@@ -340,3 +341,21 @@ class ChatConversation(Base):
     messages: Mapped[List["ChatMessage"]] = relationship(
         back_populates="conversation", cascade="all, delete"
     )
+
+
+class UserProfile(Base):
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4, index=True
+    )
+
+    first_name: Mapped[str] = mapped_column(nullable=True)
+    last_name: Mapped[str] = mapped_column(nullable=True)
+    # TODO: other fields like address, avatar, bio, company_name, etc
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user: Mapped["User"] = relationship(back_populates="profile", single_parent=True)
+
+    max_last_messages: Mapped[int] = mapped_column(nullable=True)  # TODO: rm
+    # TODO: config fields like user prompt, other credentials, etc
