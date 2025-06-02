@@ -1,6 +1,7 @@
 import json
+import traceback
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from src.auth.dependencies import CurrentUserDependency
@@ -16,11 +17,12 @@ async def add_server_url(
     db: AsyncDBSession, user_model: CurrentUserDependency, data_in: MCPCreateServer
 ):
     try:
-        if not str(data_in.server_url).endswith("/sse"):
-            raise HTTPException(
-                detail="MCP server address must contain /sse endpoint. Example: http://example.com/sse",
-                status_code=400,
-            )
+        # if not str(data_in.server_url).endswith("/sse"):
+        #     raise HTTPException(
+        #         detail="MCP server address must contain /sse endpoint. Example: http://example.com/sse",
+        #         status_code=400,
+        #     )
         return await mcp_repo.add_url(db=db, user_model=user_model, data_in=data_in)
     except ValidationError as e:
+        print(traceback.format_exc())
         return JSONResponse(content=json.loads(e.json()), status_code=400)

@@ -43,6 +43,7 @@ def init_logging() -> None:
     logging.getLogger("passlib.handlers.bcrypt").propagate = False
     # turn off the mcp sdk debug logs
     logging.getLogger("mcp.client.sse").propagate = False
+    logging.getLogger("mcp.client.streamable_http").propagate = False
     logging.getLogger("httpcore.http11").propagate = False
     logging.getLogger("httpcore.connection").propagate = False
     logging.getLogger("httpx").propagate = False

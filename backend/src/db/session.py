@@ -1,9 +1,9 @@
 from typing import Annotated, AsyncGenerator
 
 from fastapi import Depends
-from src.core.settings import get_settings
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
+from src.core.settings import get_settings
 
 settings = get_settings()
 
@@ -11,7 +11,7 @@ engine = create_async_engine(
     settings.SQLALCHEMY_ASYNC_DATABASE_URI,
     poolclass=NullPool,
     future=True,
-    echo=settings.DEBUG,
+    # echo=settings.DEBUG,
     pool_pre_ping=True,
 )
 async_session = async_sessionmaker(autocommit=False, autoflush=False, bind=engine)

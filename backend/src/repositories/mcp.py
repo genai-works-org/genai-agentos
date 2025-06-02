@@ -1,10 +1,13 @@
 import logging
+from datetime import timedelta
 from typing import Optional
 from uuid import UUID
 
 from fastapi import HTTPException
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+
+# from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import MCPServer, User
@@ -16,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 async def lookup_mcp_server(
-    url: str, headers: Optional[dict] = None, cursor=None
+    url: str, headers: Optional[dict] = None, timeout: int = 60, cursor=None
 ) -> Optional[MCPServerData]:
     """
     Function to lookup remote mcp server for tools, prompts, resources
@@ -27,10 +30,14 @@ async def lookup_mcp_server(
     """
     # TODO: extend url with /sse, but test behaviour when user changes mount_point on MCP server side
     try:
-        async with sse_client(
-            url if isinstance(url, str) else str(url), headers=headers
-        ) as streams:
-            async with ClientSession(*streams) as session:
+        async with streamablehttp_client(
+            url if isinstance(url, str) else str(url),
+            headers=headers,
+            timeout=timedelta(seconds=timeout),
+        ) as (read_stream, write_stream, _):
+            async with ClientSession(
+                write_stream=write_stream, read_stream=read_stream
+            ) as session:
                 logger.debug(f"Initializing conn with MCP server: {url}")
                 await session.initialize()
 
@@ -109,7 +116,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         if not mcp_server.is_active:
             raise HTTPException(
                 status_code=400,
-                detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible",  # noqa: E501
+                detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible. Make sure to specify /mcp or /sse suffix depending on the protocol used by your server",  # noqa: E501
             )
 
         mcp_in = MCPServer(
