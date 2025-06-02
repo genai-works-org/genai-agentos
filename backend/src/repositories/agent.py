@@ -374,7 +374,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             )
 
         return await self.list_all_agents(
-            db=db, user_model=user_model, limit=limit, offset=offset
+            db=db, user_id=user_model.id, limit=limit, offset=offset
         )
 
     async def query_all_platform_agents(

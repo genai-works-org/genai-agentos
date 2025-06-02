@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 async def lookup_agent_well_known(
-    base_url: str, headers: dict = {}
+    base_url: str, headers: Optional[dict] = None
 ) -> Optional[A2AAgentCardSchema]:
     async with ClientSession(base_url=base_url, headers=headers) as session:
         try:

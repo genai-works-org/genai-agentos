@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 async def lookup_mcp_server(
-    url: str, headers: dict = {}, cursor=None
+    url: str, headers: Optional[dict] = None, cursor=None
 ) -> Optional[MCPServerData]:
     """
     Function to lookup remote mcp server for tools, prompts, resources
