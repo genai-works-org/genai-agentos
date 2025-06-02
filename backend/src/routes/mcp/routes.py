@@ -19,6 +19,7 @@ async def add_server_url(
     try:
         return await mcp_repo.add_url(db=db, user_model=user_model, data_in=data_in)
     except ValidationError as e:
+        print(traceback.format_exc())
         return JSONResponse(content=json.loads(e.json()), status_code=400)
 
 
