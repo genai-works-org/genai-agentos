@@ -44,6 +44,11 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
+    url = (
+        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
+        if isinstance(url, AnyHttpUrl)
+        else url[:-1]
+    )
     try:
         async with streamablehttp_client(
             url=str(url),
