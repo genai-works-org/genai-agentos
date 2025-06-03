@@ -87,19 +87,7 @@ async def list_all_agents(
     if isinstance(result, list):
         return result
 
-    return [
-        MLAgentJWTDTO(
-            agent_id=str(agent.id),
-            agent_name=agent.name,
-            agent_description=agent.description,
-            agent_input_schema=agent.input_parameters,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            is_active=agent.is_active,
-            agent_jwt=agent.jwt,
-        )
-        for agent in result
-    ]
+    return [map_agent_model_to_dto(agent=agent) for agent in result]
 
     return [
         MLAgentJWTDTO(
