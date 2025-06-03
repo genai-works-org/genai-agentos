@@ -4,7 +4,7 @@ import logging
 from celery_singleton import Singleton
 from src.celery.celery_app import celery_app
 from src.utils.lookup_a2a_agent import lookup_a2a_agents
-from src.utils.lookup_mcp_sse_server import lookup_mcp_servers
+from src.utils.lookup_mcp_server import lookup_mcp_servers
 
 logger = logging.getLogger(__name__)
 

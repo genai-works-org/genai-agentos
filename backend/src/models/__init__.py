@@ -262,11 +262,9 @@ class MCPServer(Base):
     name: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
 
-    server_url: Mapped[str]  # TODO: validate
+    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
 
     mcp_tools: Mapped[not_null_json_array_column]
-    mcp_prompts: Mapped[not_null_json_array_column]
-    mcp_resources: Mapped[not_null_json_array_column]
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -289,7 +287,7 @@ class A2ACard(Base):
     name: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
 
-    server_url: Mapped[str]
+    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
     card_content: Mapped[not_null_json_column]
 
     is_active: Mapped[bool]
