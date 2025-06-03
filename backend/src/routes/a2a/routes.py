@@ -24,7 +24,7 @@ async def add_agent_url(
         return JSONResponse(content=json.loads(e.json()), status_code=400)
 
 
-@a2a_router.delete("/agent/{agent_id}")
+@a2a_router.delete("/agents/{agent_id}")
 async def delete_mcp_server(
     db: AsyncDBSession, user_model: CurrentUserDependency, agent_id: UUID
 ):

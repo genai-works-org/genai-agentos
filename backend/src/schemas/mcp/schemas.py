@@ -62,6 +62,4 @@ class MCPCreateServer(BaseModel):
     This model is used to validate server url and looking up the
     """
 
-    name: str
-    description: str
     server_url: AnyHttpUrl

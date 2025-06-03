@@ -119,8 +119,6 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             )
 
         mcp_in = MCPServer(
-            name=data_in.name,
-            description=data_in.description,
             server_url=str(data_in.server_url),
             mcp_tools=mcp_server.mcp_tools,
             mcp_prompts=mcp_server.mcp_prompts,

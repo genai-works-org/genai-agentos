@@ -64,6 +64,4 @@ class A2ACreateAgentSchema(BaseModel):
     This model is used to validate server url and start fetching the .well-known data from the a2a agent
     """
 
-    name: str
-    description: str
     server_url: AnyHttpUrl

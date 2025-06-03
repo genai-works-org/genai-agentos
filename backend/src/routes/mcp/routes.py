@@ -24,7 +24,7 @@ async def add_server_url(
         return JSONResponse(content=json.loads(e.json()), status_code=400)
 
 
-@mcp_router.delete("/server/{server_id}")
+@mcp_router.delete("/servers/{server_id}")
 async def delete_mcp_server(
     db: AsyncDBSession, user_model: CurrentUserDependency, server_id: UUID
 ):
