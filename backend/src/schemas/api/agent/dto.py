@@ -13,7 +13,7 @@ class MLAgentSchema(BaseModel):
     agent_id: str
     agent_name: str
     agent_description: str
-    agent_input_schema: dict[str, Any]
+    agent_schema: dict[str, Any]
 
 
 class MLAgentDTO(MLAgentSchema):

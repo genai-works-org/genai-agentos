@@ -52,7 +52,7 @@ async def query_agents_and_flows(
                     agent_id=str(agent.id),
                     agent_name=agent.name,
                     agent_description=agent.description,
-                    agent_input_schema=agent.input_parameters,
+                    agent_schema=agent.input_parameters,
                 )
                 agents.append(schema)
 
@@ -84,7 +84,7 @@ async def query_agents_and_flows(
                         agent_id=str(flow.id),
                         agent_name=flow.name,
                         agent_description=flow.description,
-                        agent_input_schema=input_params,
+                        agent_schema=input_params,
                         flow=[flow.get("agent_id") for flow in flow.flow],
                     )
                     agents.append(flow_schema)

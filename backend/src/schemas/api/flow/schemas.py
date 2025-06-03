@@ -69,7 +69,7 @@ class FlowSchema(BaseModel):
     agent_id: Union[UUID, str]
     agent_name: str
     agent_description: str
-    agent_input_schema: dict
+    agent_schema: dict
 
     flow: Optional[List[str]] = []
 
