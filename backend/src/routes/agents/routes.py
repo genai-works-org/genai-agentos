@@ -19,7 +19,7 @@ from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
 from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
-from src.utils.helpers import get_user_id_from_jwt
+from src.utils.helpers import get_user_id_from_jwt, map_agent_model_to_dto
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -87,19 +87,7 @@ async def list_all_agents(
     if isinstance(result, list):
         return result
 
-    return [
-        MLAgentJWTDTO(
-            agent_id=str(agent.id),
-            agent_name=agent.name,
-            agent_description=agent.description,
-            agent_input_schema=agent.input_parameters,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            is_active=agent.is_active,
-            agent_jwt=agent.jwt,
-        )
-        for agent in result
-    ]
+    return [map_agent_model_to_dto(agent=agent) for agent in result]
 
 
 @agent_router.get("/{agent_id}", response_model=MLAgentJWTDTO)
@@ -113,17 +101,7 @@ async def get_data(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return MLAgentJWTDTO(
-        agent_id=str(agent.id),
-        agent_name=agent.name,
-        agent_description=agent.description,
-        agent_input_schema=agent.input_parameters,
-        created_at=agent.created_at,
-        updated_at=agent.updated_at,
-        is_active=agent.is_active,
-        agent_jwt=agent.jwt,
-        agent_alias=agent.alias,
-    )
+    return map_agent_model_to_dto(agent=agent)
 
 
 @agent_router.post("/register", response_model=AgentDTOWithJWT)
@@ -164,17 +142,7 @@ async def update_agent(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return MLAgentJWTDTO(
-        agent_id=str(agent.id),
-        agent_name=agent.name,
-        agent_description=agent.description,
-        agent_input_schema=agent.input_parameters,
-        created_at=agent.created_at,
-        updated_at=agent.updated_at,
-        is_active=agent.is_active,
-        agent_jwt=agent.jwt,
-        agent_alias=agent.alias,
-    )
+    return map_agent_model_to_dto(agent=agent)
 
 
 @agent_router.delete("/{agent_id}")

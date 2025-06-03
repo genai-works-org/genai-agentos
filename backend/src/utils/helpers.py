@@ -1,8 +1,13 @@
 import random
+import re
 import string
-from typing import Optional
+from typing import Any, Optional
 
+from mcp.types import Tool
 from src.auth.jwt import TokenLifespanType, validate_token
+from src.models import Agent
+from src.schemas.api.agent.dto import MLAgentJWTDTO
+from src.utils.exceptions import InvalidToolNameException
 
 
 def generate_alias(agent_name: str):
@@ -14,3 +19,55 @@ def generate_alias(agent_name: str):
 def get_user_id_from_jwt(token: str) -> Optional[str]:
     token_data = validate_token(token=token, lifespan_type=TokenLifespanType.api)
     return token_data.sub
+
+
+def mcp_tool_to_json_schema(tool: Tool) -> dict:
+    tool_dict = tool.model_dump()
+
+    tool_dict.pop("annotations")
+    tool_dict.update(tool_dict.pop("inputSchema"))
+    tool_dict["title"] = generate_alias(tool_dict.pop("name").replace(" ", "_"))
+
+    return tool_dict
+
+
+def validate_tool_name(tool_name: str) -> Optional[str]:
+    # TODO: enforce validation or rm this func
+    pattern = r"^[a-zA-Z0-9_\\.-]+$"
+    match = re.search(pattern=pattern, string=tool_name)
+    if not match:
+        raise InvalidToolNameException(
+            f"Tool name: '{tool_name}' is invalid and must match the following regex pattern: {pattern}."
+        )
+
+    return tool_name
+
+
+def get_agent_description_from_skills(
+    description: str, skills: list[dict[str, Any]]
+) -> str:
+    combined_skill_descriptions = "\n".join([skill["description"] for skill in skills])
+    full_agent_description = f"{description}\nSKILLS:\n{combined_skill_descriptions}"
+    return full_agent_description
+
+
+def map_agent_model_to_dto(agent: Agent):
+    """
+    Helper function to map agent model to universal output structure
+    Params:
+        agent: GenAI agent ORM model instance
+        loaded_tags: bool to indicate whether `tags` were explicitly loaded via `selectinload`
+    Returns:
+        Populated MLAgentJWTDTO object
+    """
+    return MLAgentJWTDTO(
+        agent_id=str(agent.id),
+        agent_name=agent.name,
+        agent_description=agent.description,
+        agent_schema=agent.input_parameters,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        is_active=agent.is_active,
+        agent_jwt=agent.jwt,
+        agent_alias=agent.alias,
+    )

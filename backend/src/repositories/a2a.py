@@ -8,12 +8,14 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import A2ACard, User
 from src.repositories.base import CRUDBase
-from src.schemas.a2a.dto import A2ACardDTO
+from src.schemas.a2a.dto import A2ACardDTO, A2ACardJsonSchema
 from src.schemas.a2a.schemas import (
     A2AAgentCard,
     A2AAgentCardSchema,
     A2ACreateAgentSchema,
+    A2AJsonSchema,
 )
+from src.utils.helpers import generate_alias, get_agent_description_from_skills
 
 logger = logging.getLogger(__name__)
 
@@ -117,7 +119,32 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             .limit(limit=limit)
             .offset(offset=offset)
         )
-        return [A2ACardDTO(**c.__dict__) for c in q.all()]
+        cards = [A2ACardDTO(**c.__dict__) for c in q.all()]
+        return [
+            a2a_repo.agent_card_to_dto(
+                agent_card=A2AAgentCard(
+                    **c.card_content,
+                    name=c.name,
+                    description=c.description,
+                    url=c.server_url,
+                )
+            )
+            for c in cards
+        ]
+
+    @staticmethod
+    def _agent_card_to_json_schema(agent_card: A2AAgentCard):
+        return A2AJsonSchema(
+            title=generate_alias(agent_card.name.strip()),
+            description=get_agent_description_from_skills(
+                agent_card.description,
+                [s.model_dump(mode="json") for s in agent_card.skills],
+            ),
+        )
+
+    def agent_card_to_dto(self, agent_card: A2AAgentCard):
+        json_schema = self._agent_card_to_json_schema(agent_card=agent_card)
+        return A2ACardJsonSchema(agent_schema=json_schema, url=agent_card.url)
 
 
 a2a_repo = A2ARepository(A2ACard)

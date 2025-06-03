@@ -20,10 +20,10 @@ from src.schemas.api.agent.dto import (
 )
 from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdate
 from src.schemas.api.flow.schemas import FlowSchema
-from src.schemas.mcp.dto import ActiveMCPServerDTO
+from src.schemas.mcp.dto import ActiveMCPToolDTO
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
-from src.utils.helpers import generate_alias
+from src.utils.helpers import generate_alias, map_agent_model_to_dto
 
 
 class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
@@ -130,7 +130,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 agent_id=str(agent.id),
                 agent_name=agent.name,
                 agent_description=agent.description,
-                agent_input_schema=agent.input_parameters,
+                agent_schema=agent.input_parameters,
             ).model_dump(mode="json")
             for agent in agents
             if agent.is_active
@@ -151,7 +151,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 agent_id=str(agent.id),
                 agent_name=agent.name,
                 agent_description=agent.description,
-                agent_input_schema=agent.input_parameters,
+                agent_schema=agent.input_parameters,
             ).model_dump(mode="json")
             for agent in agents
             if agent.is_active
@@ -167,16 +167,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         agent = await self.get_by_user(db=db, id_=id_, user_model=user_model)
         if not agent:
             raise HTTPException(status_code=400, detail=f"Agent {id_} was not found.")
-        return MLAgentJWTDTO(
-            agent_id=str(agent.id),
-            agent_name=agent.name,
-            agent_description=agent.description,
-            agent_input_schema=agent.input_parameters,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            is_active=agent.is_active,
-            agent_jwt=agent.jwt,
-        )
+        return map_agent_model_to_dto(agent=agent)
 
     async def list_all_agents(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
@@ -184,19 +175,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         result = await self.get_multiple_by_user_id(
             db=db, user_id=user_id, offset=offset, limit=limit
         )
-        return [
-            MLAgentJWTDTO(
-                agent_id=str(agent.id),
-                agent_name=agent.name,
-                agent_description=agent.description,
-                agent_input_schema=agent.input_parameters,
-                created_at=agent.created_at,
-                updated_at=agent.updated_at,
-                is_active=agent.is_active,
-                agent_jwt=agent.jwt,
-            )
-            for agent in result
-        ]
+        return [map_agent_model_to_dto(agent=agent) for agent in result]
 
     async def get_agents_by_ids(
         self, db: AsyncSession, agent_ids: list[str], user_model: User
@@ -397,8 +376,6 @@ SELECT
     jwt,
     creator_id,
     input_parameters as json_data1,
-    NULL as json_data2,
-    NULL as json_data3,
     NULL as server_url,
     created_at,
     updated_at,
@@ -418,8 +395,6 @@ SELECT
     NULL as jwt,
     creator_id,
     mcp_tools as json_data1,
-    mcp_prompts as json_data2,
-    mcp_resources as json_data3,
     server_url,
     created_at,
     updated_at,
@@ -439,8 +414,6 @@ SELECT
     NULL as jwt,
     creator_id,
     card_content as json_data1,
-    NULL as json_data2,
-    NULL as json_data3,
     server_url,
     created_at,
     updated_at,
@@ -479,7 +452,7 @@ LIMIT :limit OFFSET :offset;
                     agent_id=str(flow.id),
                     agent_name=flow.name,
                     agent_description=flow.description,
-                    agent_input_schema=input_params,
+                    agent_schema=input_params,
                     flow=[flow.get("agent_id") for flow in flow.flow],
                 )
                 return flow_schema
@@ -513,7 +486,7 @@ LIMIT :limit OFFSET :offset;
         flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
 
         response: list[
-            Optional[ActiveA2ACardDTO | ActiveGenAIAgentDTO | ActiveMCPServerDTO]
+            Optional[ActiveA2ACardDTO | ActiveGenAIAgentDTO | ActiveMCPToolDTO]
         ] = []
         if flows:
             response.extend(flows)
@@ -530,48 +503,42 @@ LIMIT :limit OFFSET :offset;
                 for field in fields_to_pop:
                     col.pop(field)
 
-                col["mcp_tools"] = col.pop("json_data1")
-                col["mcp_prompts"] = col.pop("json_data2")
-                col["mcp_resources"] = col.pop("json_data3")
+                tools = col.pop("json_data1")
 
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                mcp = ActiveMCPServerDTO(
-                    agent_schema=col, created_at=created_at, updated_at=updated_at
-                )
-                response.append(mcp)
+                modified_tools = [
+                    ActiveMCPToolDTO(
+                        agent_schema=t, created_at=created_at, updated_at=updated_at
+                    )
+                    for t in tools
+                ]
+                response.extend(modified_tools)
 
             if agent_type == "a2acards":
                 fields_to_pop = [
                     "jwt",
-                    "json_data2",
-                    "json_data3",
                     "last_invoked_at",
                     "alias",
                 ]
                 for field in fields_to_pop:
                     col.pop(field)
 
-                card = ActiveA2ACardDTO(
-                    agent_schema=A2AAgentCard(
-                        **col["json_data1"],
-                        id=col["id"],
-                        name=generate_alias(col["name"]),
-                        description=col["description"],
-                        url=col["server_url"],
-                    ),
-                    created_at=col["created_at"],
-                    updated_at=col["updated_at"],
+                agent_schema = A2AAgentCard(
+                    **col["json_data1"],
+                    id=col["id"],
+                    name=col["name"],
+                    description=col["description"],
+                    url=col["server_url"],
                 )
+                agent_card = a2a_repo.agent_card_to_dto(agent_card=agent_schema)
 
-                response.append(card)
+                response.append(agent_card)
 
             if agent_type == "agents":
                 fields_to_pop = [
                     "server_url",
-                    "json_data2",
-                    "json_data3",
                 ]
                 for field in fields_to_pop:
                     col.pop(field)
@@ -580,7 +547,7 @@ LIMIT :limit OFFSET :offset;
                     agent_id=col["alias"],
                     agent_name=col["name"],
                     agent_description=col["description"],
-                    agent_input_schema=col["json_data1"],
+                    agent_schema=col["json_data1"],
                     agent_jwt=col["jwt"],
                     agent_alias=col["alias"],
                     is_active=col["is_active"],

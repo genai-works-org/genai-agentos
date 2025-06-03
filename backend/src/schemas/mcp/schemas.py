@@ -49,8 +49,6 @@ class MCPPromptSchema(BaseModel):
 
 class MCPServerData(BaseModel):
     mcp_tools: list[Optional[dict]] = []
-    mcp_prompts: list[Optional[dict]] = []
-    mcp_resources: list[Optional[dict]] = []
     is_active: bool
     meta: Optional[Any] = None
     nextCursor: Optional[Any] = None

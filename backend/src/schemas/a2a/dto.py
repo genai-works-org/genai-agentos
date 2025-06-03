@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from src.schemas.a2a.schemas import A2AAgentCard
+from src.schemas.a2a.schemas import A2AAgentCard, A2AJsonSchema
 from src.schemas.base import BaseUUIDToStrModel
 from src.utils.enums import AgentType
 
@@ -22,3 +22,9 @@ class ActiveA2ACardDTO(BaseModel):
     created_at: datetime
     updated_at: datetime
     agent_schema: A2AAgentCard
+
+
+class A2ACardJsonSchema(BaseModel):
+    type: AgentType = Field(default=AgentType.a2a)
+    url: str
+    agent_schema: A2AJsonSchema

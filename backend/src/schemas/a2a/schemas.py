@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from pydantic import AnyHttpUrl, BaseModel, ValidationError, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, ValidationError, field_validator
 
 # The following models are the exact replicas of the a2a.types
 # added for compatibility with agent cards
@@ -27,6 +27,10 @@ class A2AAgentSkill(BaseModel):
     outputModes: list[str] | None = None
     tags: list[str] = []
 
+    @field_validator("name")
+    def replace_whitespaces_with_underscores(cls, v: str):
+        return v.replace(" ", "_")
+
 
 class A2AAgentCard(BaseModel):
     name: str
@@ -52,6 +56,10 @@ class A2AAgentCard(BaseModel):
         except ValidationError:
             return v
 
+    @field_validator("name")
+    def replace_whitespace_with_underscore(cls, v: str):
+        return v.replace(" ", "_")
+
 
 class A2AAgentCardSchema(BaseModel):
     card: Optional[A2AAgentCard] = None
@@ -65,3 +73,23 @@ class A2ACreateAgentSchema(BaseModel):
     """
 
     server_url: AnyHttpUrl
+
+
+class A2AJsonSchema(BaseModel):
+    """
+    Model to structure adjusted A2A agent schema without the a2a agent skills
+    """
+
+    title: str
+    description: str
+    properties: dict[str, Any] = Field(
+        default={
+            "task": {
+                "type": "string",
+                "description": "A meaningful, well-formulated task for the agent",
+            },
+            "text": {"type": "string"},
+        },
+    )
+    required: list[Optional[str]] = Field(default=["task", "text"])
+    type: Optional[str] = Field(default="object")

@@ -3,23 +3,28 @@ from datetime import timedelta
 from typing import Optional
 from uuid import UUID
 
+import httpx
 from fastapi import HTTPException
 from mcp import ClientSession
-
-# from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamablehttp_client
+from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import MCPServer, User
 from src.repositories.base import CRUDBase
 from src.schemas.mcp.dto import MCPServerDTO
 from src.schemas.mcp.schemas import MCPCreateServer, MCPServerData, MCPToolSchema
+from src.utils.exceptions import InvalidToolNameException
+from src.utils.helpers import mcp_tool_to_json_schema
 
 logger = logging.getLogger(__name__)
 
 
 async def lookup_mcp_server(
-    url: str, headers: Optional[dict] = None, timeout: int = 60, cursor=None
+    url: str | AnyHttpUrl,
+    headers: Optional[dict] = None,
+    timeout: int = 60,
+    cursor=None,
 ) -> Optional[MCPServerData]:
     """
     Function to lookup remote mcp server for tools, prompts, resources
@@ -28,9 +33,14 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
+    url = (
+        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
+        if isinstance(url, AnyHttpUrl)
+        else url[:-1]
+    )
     try:
         async with streamablehttp_client(
-            url if isinstance(url, str) else str(url),
+            f"{url}/mcp",
             headers=headers,
             timeout=timedelta(seconds=timeout),
         ) as (read_stream, write_stream, _):
@@ -41,25 +51,18 @@ async def lookup_mcp_server(
                 await session.initialize()
 
                 tools = await session.list_tools()
-                prompts = await session.list_prompts()
-                resources = await session.list_resources()
+                converted_tools = [mcp_tool_to_json_schema(t) for t in tools.tools]
                 logger.debug(f"Successfully got the mcp server data of: {url}")
 
                 return MCPServerData(
-                    mcp_tools=[tool.model_dump(mode="json") for tool in tools.tools],
-                    mcp_prompts=[
-                        prompt.model_dump(mode="json") for prompt in prompts.prompts
-                    ],
-                    mcp_resources=[
-                        resource.model_dump(mode="json")
-                        for resource in resources.resources
-                    ],
+                    mcp_tools=converted_tools,
                     is_active=True,
                 )
 
-    except ExceptionGroup:  # noqa: F821
-        logger.warning(f"Could not connect to {url}")
-        return MCPServerData(is_active=False)
+    except* (OSError, httpx.ConnectError) as e:
+        logger.warning(f"Could not connect to {url}. Details: {e.exceptions[0]}")
+
+    return MCPServerData(is_active=False)
 
 
 class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
@@ -111,18 +114,30 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     async def add_url(
         self, db: AsyncSession, data_in: MCPCreateServer, user_model: User
     ):
-        mcp_server = await lookup_mcp_server(url=data_in.server_url)
-        if not mcp_server.is_active:
+        try:
+            mcp_server = await lookup_mcp_server(url=data_in.server_url)
+            if not mcp_server.is_active:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible. Make sure to specify /mcp or /sse suffix depending on the protocol used by your server",  # noqa: E501
+                )
+        except* InvalidToolNameException as eg:  # noqa: F821
+            res = eg.split(InvalidToolNameException)
+            # exception group unpacking to retrieve the message of the exception
+            message = str(res[0].exceptions[0].exceptions[0])
             raise HTTPException(
+                detail=message,
                 status_code=400,
-                detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible. Make sure to specify /mcp or /sse suffix depending on the protocol used by your server",  # noqa: E501
             )
 
+        server_url = str(data_in.server_url)
+
+        # AnyHttpUrl always returns url with trailing slash,
+        # trimming slash here to ensure consistency across all urls and to painlessly append suffixes like '/mcp'
+        trimmed_url = server_url[:-1] if server_url.endswith("/") else server_url
         mcp_in = MCPServer(
-            server_url=str(data_in.server_url),
+            server_url=trimmed_url,
             mcp_tools=mcp_server.mcp_tools,
-            mcp_prompts=mcp_server.mcp_prompts,
-            mcp_resources=mcp_server.mcp_resources,
             creator_id=user_model.id,
             is_active=mcp_server.is_active,
         )
