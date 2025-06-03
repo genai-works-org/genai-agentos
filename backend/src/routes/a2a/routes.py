@@ -1,6 +1,7 @@
 import json
+from uuid import UUID
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from src.auth.dependencies import CurrentUserDependency
@@ -21,3 +22,16 @@ async def add_agent_url(
         return await a2a_repo.add_url(db=db, user_model=user_model, data_in=data_in)
     except ValidationError as e:
         return JSONResponse(content=json.loads(e.json()), status_code=400)
+
+
+@a2a_router.delete("/agent/{agent_id}")
+async def delete_mcp_server(
+    db: AsyncDBSession, user_model: CurrentUserDependency, agent_id: UUID
+):
+    is_ok = await a2a_repo.delete_by_user(db=db, user=user_model, id_=agent_id)
+    if not is_ok:
+        raise HTTPException(
+            status_code=400, detail=f"MCP server with ID {str(agent_id)} was not found"
+        )
+
+    return Response(status_code=204)
