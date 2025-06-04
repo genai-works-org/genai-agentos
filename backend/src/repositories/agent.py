@@ -656,7 +656,11 @@ LIMIT :limit OFFSET :offset;
                     description=description if description else col["description"],
                     url=url if url else col["server_url"],
                 )
-                agent_card = a2a_repo.agent_card_to_dto(agent_card=agent_schema)
+                agent_card = a2a_repo.agent_card_to_dto(
+                    agent_card=agent_schema,
+                    created_at=created_at,
+                    updated_at=updated_at,
+                )
 
                 agent_card = a2a_repo.agent_card_to_dto(
                     agent_card=agent_schema,
