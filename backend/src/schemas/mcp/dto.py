@@ -9,6 +9,8 @@ class MCPServerDTO(BaseModel):
     server_url: str
     mcp_tools: list[dict]
     is_active: bool
+    created_at: datetime
+    updated_at: datetime
 
 
 class ActiveMCPToolDTO(BaseModel):

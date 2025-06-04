@@ -169,13 +169,34 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             raise HTTPException(status_code=400, detail=f"Agent {id_} was not found.")
         return map_agent_model_to_dto(agent=agent)
 
-    async def list_all_agents(
+    async def query_active_agents(
+        self, db: AsyncSession, user_id: UUID, limit: int, offset: int
+    ):
+        q = await db.scalars(
+            select(self.model)
+            .where(
+                self.model.is_active == True,  # noqa: E712
+                self.model.creator_id == user_id,
+            )
+            .order_by(self.model.created_at.desc())
+            .limit(limit=limit)
+            .offset(offset=offset)
+        )
+        return q.all()
+
+    async def list_all_genai_agents(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
     ) -> list[Optional[MLAgentJWTDTO]]:
-        result = await self.get_multiple_by_user_id(
+        flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
+        agents = await self.query_active_agents(
             db=db, user_id=user_id, offset=offset, limit=limit
         )
-        return [map_agent_model_to_dto(agent=agent) for agent in result]
+        agent_dtos = [map_agent_model_to_dto(agent=agent) for agent in agents]
+        result: list[MLAgentJWTDTO | FlowSchema | None] = [*flows, *agent_dtos]
+        return ActiveAgentsDTO(
+            count_active_connections=len(result),
+            active_connections=[r.model_dump(mode="json") for r in result if r],
+        )
 
     async def get_agents_by_ids(
         self, db: AsyncSession, agent_ids: list[str], user_model: User
@@ -561,11 +582,26 @@ LIMIT :limit OFFSET :offset;
             active_connections=[resp_model.model_dump() for resp_model in response],
         )
 
-    async def list_all_mcp_servers(
+    async def list_all_mcp_tools(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
     ):
-        return await mcp_repo.list_active_mcp_servers(
+        mcp_servers = await mcp_repo.list_active_mcp_servers(
             db=db, user_id=user_id, limit=limit, offset=offset
+        )
+        tools = []
+        for s in mcp_servers:
+            for tool in s.mcp_tools:
+                tools.append(
+                    ActiveMCPToolDTO(
+                        agent_schema=tool,
+                        created_at=s.created_at,
+                        updated_at=s.updated_at,
+                    ).model_dump(mode="json")
+                )
+
+        return ActiveAgentsDTO(
+            count_active_connections=len(tools),
+            active_connections=tools,
         )
 
     async def list_all_a2a_cards(
@@ -574,7 +610,10 @@ LIMIT :limit OFFSET :offset;
         result = await a2a_repo.list_active_cards(
             db=db, user_id=user_id, limit=limit, offset=offset
         )
-        return result
+        return ActiveAgentsDTO(
+            count_active_connections=len(result),
+            active_connections=[r.model_dump(mode="json") for r in result],
+        )
 
     async def get_active_agents_by_filter(
         self,
@@ -585,7 +624,7 @@ LIMIT :limit OFFSET :offset;
         offset: int,
     ):
         if agent_type == agent_type.genai:
-            return await self.list_all_agents(
+            return await self.list_all_genai_agents(
                 db=db, user_id=user_id, limit=limit, offset=offset
             )
         elif agent_type == agent_type.a2a:
@@ -593,7 +632,7 @@ LIMIT :limit OFFSET :offset;
                 db=db, user_id=user_id, limit=limit, offset=offset
             )
         elif agent_type == agent_type.mcp:
-            return await self.list_all_mcp_servers(
+            return await self.list_all_mcp_tools(
                 db=db, user_id=user_id, limit=limit, offset=offset
             )
 
