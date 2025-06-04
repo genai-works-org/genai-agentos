@@ -15,11 +15,15 @@ from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
-from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
+from src.schemas.api.agent.dto import AgentDTOWithJWT
 from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
-from src.utils.helpers import get_user_id_from_jwt, map_agent_model_to_dto
+from src.utils.helpers import (
+    get_user_id_from_jwt,
+    map_agent_model_to_dto,
+    map_genai_agent_to_unified_dto,
+)
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -87,21 +91,22 @@ async def list_all_agents(
     if isinstance(result, list):
         return result
 
-    return [map_agent_model_to_dto(agent=agent) for agent in result]
+    return result
 
 
-@agent_router.get("/{agent_id}", response_model=MLAgentJWTDTO)
+@agent_router.get("/{agent_id}")
 async def get_data(
     db: AsyncDBSession,
     user: CurrentUserByAgentOrUserTokenDependency,
     agent_id: UUID,
 ):
     agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
+
     if not agent:
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_agent_model_to_dto(agent=agent)
+    return map_genai_agent_to_unified_dto(agent=agent)
 
 
 @agent_router.post("/register", response_model=AgentDTOWithJWT)

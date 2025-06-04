@@ -190,9 +190,20 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         )
         return q.all()
 
-    async def list_all_genai_agents(
+    async def query_all_genai_agents(
+        self, db: AsyncSession, user_model: User, limit: int, offset: int
+    ):
+        flows = await self._get_all_flows_by_user(db=db, user_id=user_model.id)
+        agents = await self.get_multiple_by_user_id(
+            db=db, user_id=user_model.id, offset=offset, limit=limit
+        )
+        agent_dtos = [map_genai_agent_to_unified_dto(agent=agent) for agent in agents]
+        result: list[MLAgentJWTDTO | FlowSchema | None] = [*flows, *agent_dtos]
+        return result
+
+    async def list_all_active_genai_agents(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
-    ) -> list[Optional[MLAgentJWTDTO]]:
+    ) -> ActiveAgentsDTO:
         flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
         agents = await self.query_active_agents(
             db=db, user_id=user_id, offset=offset, limit=limit
@@ -382,8 +393,8 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 offset=offset,
             )
 
-        return await self.list_all_genai_agents(
-            db=db, user_id=user_model.id, limit=limit, offset=offset
+        return await self.query_all_genai_agents(
+            db=db, user_model=user_model, limit=limit, offset=offset
         )
 
     async def query_all_platform_agents(
@@ -667,7 +678,7 @@ LIMIT :limit OFFSET :offset;
         offset: int,
     ):
         if agent_type == agent_type.genai:
-            return await self.list_all_genai_agents(
+            return await self.list_all_active_genai_agents(
                 db=db, user_id=user_id, limit=limit, offset=offset
             )
         elif agent_type == agent_type.a2a:
