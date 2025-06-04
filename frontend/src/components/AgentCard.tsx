@@ -154,7 +154,7 @@ export const AgentCard: FC<AgentCardProps> = ({
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {expanded
             ? description
-            : description.length > 100
+            : description && description?.length > 100
               ? `${description.substring(0, 100)}...`
               : description}
         </Typography>

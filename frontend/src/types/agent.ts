@@ -2,7 +2,7 @@ export interface AgentSchema {
   type: string;
   function: {
     name: string;
-    description: string;
+    description: string | null;
     parameters: {
       type: string;
       properties: Record<
