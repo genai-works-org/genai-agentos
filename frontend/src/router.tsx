@@ -2,18 +2,41 @@ import { createBrowserRouter } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
-import { SettingsProvider } from './contexts/SettingsContext';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage').then(module => ({ default: module.SettingsPage })));
-const AgentsPage = lazy(() => import('./pages/AgentsPage').then(module => ({ default: module.AgentsPage })));
-const AgentDetailsPage = lazy(() => import('./pages/AgentDetailsPage').then(module => ({ default: module.AgentDetailsPage })));
-const AgentFlowsPage = lazy(() => import('./pages/AgentFlowsPage').then(module => ({ default: module.AgentFlowsPage })));
-const AgentFlowsEditPage = lazy(() => import('./pages/AgentFlowsEditPage').then(module => ({ default: module.AgentFlowsEditPage })));
-const AgentsTracePage = lazy(() => import('./pages/AgentsTracePage').then(module => ({ default: module.default })));
+const A2AAgentsPage = lazy(() => import('./pages/A2AAgentsPage'));
+const MCPAgentsPage = lazy(() => import('./pages/MCPAgentsPage'));
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage').then(module => ({
+    default: module.SettingsPage,
+  })),
+);
+const AgentsPage = lazy(() =>
+  import('./pages/AgentsPage').then(module => ({ default: module.AgentsPage })),
+);
+const AgentDetailsPage = lazy(() =>
+  import('./pages/AgentDetailsPage').then(module => ({
+    default: module.AgentDetailsPage,
+  })),
+);
+const AgentFlowsPage = lazy(() =>
+  import('./pages/AgentFlowsPage').then(module => ({
+    default: module.AgentFlowsPage,
+  })),
+);
+const AgentFlowsEditPage = lazy(() =>
+  import('./pages/AgentFlowsEditPage').then(module => ({
+    default: module.AgentFlowsEditPage,
+  })),
+);
+const AgentsTracePage = lazy(() =>
+  import('./pages/AgentsTracePage').then(module => ({
+    default: module.default,
+  })),
+);
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Loading component
@@ -25,17 +48,17 @@ const LoadingFallback = () => (
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
-            <ChatPage />
+          <ChatPage />
         </Suspense>
       </ProtectedRoute>
     ),
   },
   {
-    path: "/login",
+    path: '/login',
     element: (
       <PublicRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -45,7 +68,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/signup",
+    path: '/signup',
     element: (
       <PublicRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -55,7 +78,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/settings",
+    path: '/settings',
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <SettingsPage />
@@ -63,37 +86,37 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/chat",
+    path: '/chat',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
-            <ChatPage />
+          <ChatPage />
         </Suspense>
       </ProtectedRoute>
     ),
   },
   {
-    path: "/chat/:id",
+    path: '/chat/:id',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
-            <ChatPage />
+          <ChatPage />
         </Suspense>
       </ProtectedRoute>
     ),
   },
   {
-    path: "/chat/new",
+    path: '/chat/new',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
-            <ChatPage />
+          <ChatPage />
         </Suspense>
       </ProtectedRoute>
     ),
   },
   {
-    path: "/agents",
+    path: '/agents',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -103,7 +126,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/agents/:id/details",
+    path: '/agents/:id/details',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -113,7 +136,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/agent-flows",
+    path: '/agent-flows',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -123,7 +146,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/agent-flows/:id",
+    path: '/agent-flows/:id',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -133,7 +156,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/agents-trace",
+    path: '/agents-trace',
     element: (
       <ProtectedRoute>
         <Suspense fallback={<LoadingFallback />}>
@@ -143,7 +166,27 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "*",
+    path: '/a2a-agents',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingFallback />}>
+          <A2AAgentsPage />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/mcp-agents',
+    element: (
+      <ProtectedRoute>
+        <Suspense fallback={<LoadingFallback />}>
+          <MCPAgentsPage />
+        </Suspense>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '*',
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <NotFoundPage />

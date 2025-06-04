@@ -9,16 +9,24 @@ interface ModalProps {
   className?: string;
 }
 
-export const Modal: FC<ModalProps> = ({ isOpen, onClose, title, children, className = '' }) => {
+export const Modal: FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  className = '',
+}) => {
   const { theme } = useTheme();
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className={`p-6 rounded-lg w-[90%] sm:w-[70%] md:w-[50%] max-w-[800px] min-w-[300px] ${
-        theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'
-      } ${className}`}>
+      <div
+        className={`p-6 rounded-lg w-[90%] sm:w-[70%] md:w-[50%] max-w-[600px] min-w-[300px] ${
+          theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'
+        } ${className}`}
+      >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">{title}</h2>
           <button

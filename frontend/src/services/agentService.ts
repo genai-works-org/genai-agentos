@@ -1,10 +1,14 @@
-import { AgentDTO, AgentCreate, AgentFlowDTO, AgentFlowCreate, AgentFlowUpdate } from '../types/agent';
+import {
+  AgentDTO,
+  AgentCreate,
+  AgentFlowDTO,
+  AgentFlowCreate,
+  AgentFlowUpdate,
+  ActiveAgentsResponse,
+  A2AAgent,
+  MCPAgent,
+} from '../types/agent';
 import { apiService } from './apiService';
-
-interface ActiveAgentsResponse {
-  count_active_connections: number;
-  active_connections: AgentDTO[];
-}
 
 export const agentService = {
   async getAgents(): Promise<AgentDTO[]> {
@@ -12,8 +16,13 @@ export const agentService = {
     return response.data;
   },
 
-  async getActiveAgents(query: Record<string, string>): Promise<ActiveAgentsResponse> {
-    const response = await apiService.get<ActiveAgentsResponse>('/api/agents/active', { params: query });
+  async getActiveAgents(query: Record<string, string>) {
+    const response = await apiService.get<ActiveAgentsResponse>(
+      '/api/agents/active',
+      {
+        params: query,
+      },
+    );
     return response.data;
   },
 
@@ -23,7 +32,10 @@ export const agentService = {
   },
 
   async createAgent(agent: AgentCreate): Promise<AgentDTO> {
-    const response = await apiService.post<AgentDTO>('/api/agents/register', agent);
+    const response = await apiService.post<AgentDTO>(
+      '/api/agents/register',
+      agent,
+    );
     return response.data;
   },
 
@@ -37,12 +49,17 @@ export const agentService = {
   },
 
   async getAgentFlow(id: string): Promise<AgentFlowDTO> {
-    const response = await apiService.get<AgentFlowDTO>(`/api/agentflows/${id}`);
+    const response = await apiService.get<AgentFlowDTO>(
+      `/api/agentflows/${id}`,
+    );
     return response.data;
   },
 
   async createAgentFlow(flow: AgentFlowCreate): Promise<AgentFlowDTO> {
-    const response = await apiService.post<AgentFlowDTO>('/api/agentflows/register-flow', flow);
+    const response = await apiService.post<AgentFlowDTO>(
+      '/api/agentflows/register-flow',
+      flow,
+    );
     return response.data;
   },
 
@@ -52,5 +69,49 @@ export const agentService = {
 
   async deleteAgentFlow(id: string): Promise<void> {
     await apiService.delete<void>(`/api/agentflows/${id}`);
+  },
+
+  // A2A
+  async getAllA2aAgents() {
+    const response = await apiService.get<A2AAgent[]>('/api/a2a/agents');
+    return response.data;
+  },
+
+  async getA2aAgent(id: string) {
+    const response = await apiService.get<A2AAgent>(`/api/a2a/agents/${id}`);
+    return response.data;
+  },
+
+  async addA2AAgent(url: string) {
+    const response = await apiService.post<A2AAgent>('/api/a2a/agents', {
+      server_url: url,
+    });
+    return response.data;
+  },
+
+  async deleteA2AAgent(id: string) {
+    await apiService.delete(`/api/a2a/agents/${id}`);
+  },
+
+  // MCP
+  async getAllMcpServers() {
+    const response = await apiService.get<MCPAgent[]>('/api/mcp/servers');
+    return response.data;
+  },
+
+  async getMcpServer(id: string) {
+    const response = await apiService.get<MCPAgent>(`/api/mcp/servers/${id}`);
+    return response.data;
+  },
+
+  async addMcpServer(url: string) {
+    const response = await apiService.post<MCPAgent>('/api/mcp/servers', {
+      server_url: url,
+    });
+    return response.data;
+  },
+
+  async deleteMcpServer(id: string) {
+    await apiService.delete(`/api/mcp/servers/${id}`);
   },
 };

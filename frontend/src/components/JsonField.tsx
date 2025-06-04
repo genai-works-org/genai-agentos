@@ -1,12 +1,6 @@
 import type { FC } from 'react';
 import { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  TextField,
-  IconButton,
-} from '@mui/material';
+import { Box, Typography, Paper, TextField, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
@@ -16,11 +10,14 @@ interface JsonFieldProps {
   fieldId: string;
 }
 
-export const JsonField: FC<JsonFieldProps> = ({ label, value, fieldId }) => {
+export const JsonField: FC<JsonFieldProps> = ({ label, value }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isObject = typeof value === 'object' && value !== null;
   const stringValue = isObject ? JSON.stringify(value, null, 2) : value;
-  const preview = stringValue?.length > 100 ? stringValue.substring(0, 100) + '...' : stringValue;
+  const preview =
+    stringValue?.length > 100
+      ? stringValue.substring(0, 100) + '...'
+      : stringValue;
 
   return (
     <Box sx={{ mb: 2 }}>
@@ -41,7 +38,9 @@ export const JsonField: FC<JsonFieldProps> = ({ label, value, fieldId }) => {
               <TextField
                 key={key}
                 label={key}
-                value={typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                value={
+                  typeof val === 'object' ? JSON.stringify(val) : String(val)
+                }
                 fullWidth
                 margin="dense"
                 InputProps={{ readOnly: true }}
@@ -64,4 +63,4 @@ export const JsonField: FC<JsonFieldProps> = ({ label, value, fieldId }) => {
       )}
     </Box>
   );
-}; 
+};

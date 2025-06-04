@@ -1,4 +1,4 @@
-import type { FC, FormEvent, ChangeEvent, ClipboardEvent } from 'react';
+import type { FC, FormEvent, ChangeEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
@@ -43,11 +43,9 @@ const AuthForm: FC<AuthFormProps> = ({
   const { theme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
-
-  const handlePaste = (e: ClipboardEvent) => {
-    e.preventDefault();
-  };
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
   const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -76,39 +74,45 @@ const AuthForm: FC<AuthFormProps> = ({
     e.preventDefault();
     const usernameError = validateField('username', name);
     const passwordError = validateField('password', password);
-    
+
     if (usernameError || passwordError) {
       setValidationErrors({
         username: usernameError || '',
-        password: passwordError || ''
+        password: passwordError || '',
       });
       return;
     }
-    
+
     onSubmit(e);
   };
 
   return (
     <div className="max-w-md w-full space-y-8 px-4 sm:px-6 lg:px-8">
       <div>
-        <h2 className={`text-center text-3xl font-extrabold ${
-          theme === 'light' ? 'text-light-text' : 'text-dark-text'
-        }`}>
+        <h2
+          className={`text-center text-3xl font-extrabold ${
+            theme === 'light' ? 'text-light-text' : 'text-dark-text'
+          }`}
+        >
           {title}
         </h2>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
         {error && (
-          <div className={`text-center text-sm ${
-            theme === 'light' ? 'text-red-600' : 'text-red-400'
-          }`}>
+          <div
+            className={`text-center text-sm ${
+              theme === 'light' ? 'text-red-600' : 'text-red-400'
+            }`}
+          >
             {error}
           </div>
         )}
         {passwordError && (
-          <div className={`text-center text-sm ${
-            theme === 'light' ? 'text-red-600' : 'text-red-400'
-          }`}>
+          <div
+            className={`text-center text-sm ${
+              theme === 'light' ? 'text-red-600' : 'text-red-400'
+            }`}
+          >
             {passwordError}
           </div>
         )}
@@ -132,9 +136,11 @@ const AuthForm: FC<AuthFormProps> = ({
               onChange={handleNameChange}
             />
             {validationErrors.username && (
-              <div className={`text-sm mt-1 ${
-                theme === 'light' ? 'text-red-600' : 'text-red-400'
-              }`}>
+              <div
+                className={`text-sm mt-1 ${
+                  theme === 'light' ? 'text-red-600' : 'text-red-400'
+                }`}
+              >
                 {validationErrors.username}
               </div>
             )}
@@ -147,7 +153,7 @@ const AuthForm: FC<AuthFormProps> = ({
               <input
                 id="password"
                 name="password"
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 required
                 className={`appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border ${
                   theme === 'light'
@@ -163,7 +169,7 @@ const AuthForm: FC<AuthFormProps> = ({
                 onClick={() => setShowPassword(!showPassword)}
                 className={`absolute inset-y-0 right-0 pr-3 flex items-center ${
                   theme === 'light' ? 'text-light-text' : 'text-dark-text'
-                }` }
+                }`}
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -174,9 +180,11 @@ const AuthForm: FC<AuthFormProps> = ({
               </button>
             </div>
             {validationErrors.password && (
-              <div className={`text-sm mt-1 ${
-                theme === 'light' ? 'text-red-600' : 'text-red-400'
-              }`}>
+              <div
+                className={`text-sm mt-1 ${
+                  theme === 'light' ? 'text-red-600' : 'text-red-400'
+                }`}
+              >
                 {validationErrors.password}
               </div>
             )}
@@ -187,46 +195,47 @@ const AuthForm: FC<AuthFormProps> = ({
                 Repeat Password
               </label>
               <div className="relative">
-              <input
-                id="repeatPassword"
-                name="repeatPassword"
-                type={showRepeatPassword ? "text" : "password"}
-                required
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border ${
-                  theme === 'light'
-                    ? 'border-light-secondary-secondary text-light-text placeholder-light-secondary-secondary focus:ring-light-secondary-primary focus:border-light-secondary-primary'
-                    : 'border-dark-secondary-secondary text-dark-text placeholder-dark-secondary-secondary focus:ring-dark-secondary-primary focus:border-dark-secondary-primary'
-                } focus:outline-none  sm:text-sm`}
-                placeholder="Repeat Password"
-                value={repeatPassword}
-                onChange={handleRepeatPasswordChange}
-                onPaste={handlePaste}
-                onBlur={onRepeatPasswordBlur}
-              />
-              <button
-                type="button"
-                onClick={() => setShowRepeatPassword(!showRepeatPassword)}
-                className={`absolute inset-y-0 right-0 pr-3 flex items-center ${
-                  theme === 'light' ? 'text-light-text' : 'text-dark-text'
-                }` }
-                tabIndex={-1}
-              >
-                {showRepeatPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
-                  <Eye className="h-5 w-5" />
-                )}
-              </button>
+                <input
+                  id="repeatPassword"
+                  name="repeatPassword"
+                  type={showRepeatPassword ? 'text' : 'password'}
+                  required
+                  className={`appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border ${
+                    theme === 'light'
+                      ? 'border-light-secondary-secondary text-light-text placeholder-light-secondary-secondary focus:ring-light-secondary-primary focus:border-light-secondary-primary'
+                      : 'border-dark-secondary-secondary text-dark-text placeholder-dark-secondary-secondary focus:ring-dark-secondary-primary focus:border-dark-secondary-primary'
+                  } focus:outline-none  sm:text-sm`}
+                  placeholder="Repeat Password"
+                  value={repeatPassword}
+                  onChange={handleRepeatPasswordChange}
+                  onBlur={onRepeatPasswordBlur}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRepeatPassword(!showRepeatPassword)}
+                  className={`absolute inset-y-0 right-0 pr-3 flex items-center ${
+                    theme === 'light' ? 'text-light-text' : 'text-dark-text'
+                  }`}
+                  tabIndex={-1}
+                >
+                  {showRepeatPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
               </div>
               {validationErrors.repeatPassword && (
-              <div className={`text-sm mt-1 ${
-                theme === 'light' ? 'text-red-600' : 'text-red-400'
-              }`}>
-                {validationErrors.repeatPassword}
-              </div>
-            )}
-          </div>
-        )}
+                <div
+                  className={`text-sm mt-1 ${
+                    theme === 'light' ? 'text-red-600' : 'text-red-400'
+                  }`}
+                >
+                  {validationErrors.repeatPassword}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <div>
           <button
@@ -261,4 +270,4 @@ const AuthForm: FC<AuthFormProps> = ({
   );
 };
 
-export default AuthForm; 
+export default AuthForm;
