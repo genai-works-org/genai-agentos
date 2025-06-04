@@ -12,7 +12,7 @@ from src.schemas.a2a.schemas import A2ACreateAgentSchema
 a2a_router = APIRouter(tags=["a2a"], prefix="/a2a")
 
 
-@a2a_router.post("/url")
+@a2a_router.post("/agents")
 async def add_agent_url(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -22,6 +22,18 @@ async def add_agent_url(
         return await a2a_repo.add_url(db=db, user_model=user_model, data_in=data_in)
     except ValidationError as e:
         return JSONResponse(content=json.loads(e.json()), status_code=400)
+
+
+@a2a_router.get("/agents")
+async def list_all_agent_cards(db: AsyncDBSession, user_model: CurrentUserDependency):
+    return await a2a_repo.get_multiple_by_user(db=db, user_model=user_model)
+
+
+@a2a_router.get("/agents/{agent_id}")
+async def get_agent_card(
+    db: AsyncDBSession, user_model: CurrentUserDependency, agent_id: UUID
+):
+    return await a2a_repo.get_by_user(db=db, id_=agent_id, user_model=user_model)
 
 
 @a2a_router.delete("/agents/{agent_id}")
