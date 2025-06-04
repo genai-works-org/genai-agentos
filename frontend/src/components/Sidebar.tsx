@@ -60,11 +60,9 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
 
   return (
     <div
-      className={`h-full w-64 z-30 ${
-        colors.bg
-      } shadow-lg flex flex-col transition-all duration-200 ease-in-out transform border-r border-gray-200 ${
-        isOpen ? 'translate-x-0 opacity-100' : 'translate-x-[-100%] opacity-0'
-      }`}
+      className={`h-full w-64 z-30 ${colors.bg
+        } shadow-lg flex flex-col transition-all duration-200 ease-in-out transform border-r border-gray-200 ${isOpen ? 'translate-x-0 opacity-100' : 'translate-x-[-100%] opacity-0'
+        }`}
     >
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -105,9 +103,8 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
             </button>
             {isUserMenuOpen && (
               <div
-                className={`absolute bottom-full right-0 mb-2 w-48 rounded-lg shadow-lg ${
-                  colors.bg
-                } ring-1 ring-black ring-opacity-5`}
+                className={`absolute bottom-full right-0 mb-2 w-48 rounded-lg shadow-lg ${colors.bg
+                  } ring-1 ring-black ring-opacity-5`}
               >
                 <div className="py-1">
                   <button

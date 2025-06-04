@@ -112,4 +112,48 @@ export const agentService = {
   async deleteMcpServer(id: string) {
     await apiService.delete(`/api/mcp/servers/${id}`);
   },
+
+  // A2A
+  async getAllA2aAgents() {
+    const response = await apiService.get<A2AAgent[]>('/api/a2a/agents');
+    return response.data;
+  },
+
+  async getA2aAgent(id: string) {
+    const response = await apiService.get<A2AAgent>(`/api/a2a/agents/${id}`);
+    return response.data;
+  },
+
+  async addA2AAgent(url: string) {
+    const response = await apiService.post<A2AAgent>('/api/a2a/agents', {
+      server_url: url,
+    });
+    return response.data;
+  },
+
+  async deleteA2AAgent(id: string) {
+    await apiService.delete(`/api/a2a/agents/${id}`);
+  },
+
+  // MCP
+  async getAllMcpServers() {
+    const response = await apiService.get<MCPAgent[]>('/api/mcp/servers');
+    return response.data;
+  },
+
+  async getMcpServer(id: string) {
+    const response = await apiService.get<MCPAgent>(`/api/mcp/servers/${id}`);
+    return response.data;
+  },
+
+  async addMcpServer(url: string) {
+    const response = await apiService.post<MCPAgent>('/api/mcp/servers', {
+      server_url: url,
+    });
+    return response.data;
+  },
+
+  async deleteMcpServer(id: string) {
+    await apiService.delete(`/api/mcp/servers/${id}`);
+  },
 };

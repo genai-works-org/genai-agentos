@@ -64,9 +64,8 @@ export const MainLayout: FC<MainLayoutProps> = ({
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className={`p-2 rounded-md hover:bg-gray-100 ${
-                  theme === 'light' ? 'text-gray-700' : 'text-gray-300'
-                }`}
+                className={`p-2 rounded-md hover:bg-gray-100 ${theme === 'light' ? 'text-gray-700' : 'text-gray-300'
+                  }`}
                 aria-label="Toggle sidebar"
               >
                 <Menu className="h-5 w-5" />
@@ -98,9 +97,8 @@ export const MainLayout: FC<MainLayoutProps> = ({
 
           {/* Page Content */}
           <main
-            className={`flex-1 transition-all duration-200 ease-in-out ${
-              isSidebarOpen ? 'ml-64' : 'ml-0'
-            }`}
+            className={`flex-1 transition-all duration-200 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-0'
+              }`}
           >
             {children}
           </main>
