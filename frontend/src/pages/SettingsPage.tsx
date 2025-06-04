@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MainLayout } from '../components/MainLayout';
-import { Settings, useSettings } from '../contexts/SettingsContext';
-import { AIModel } from '../services/apiService';
+import { toast } from 'react-toastify';
 import {
   Select,
   MenuItem,
@@ -10,41 +8,44 @@ import {
   Box,
   SelectChangeEvent,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions
 } from '@mui/material';
+import { Settings, useSettings } from '../contexts/SettingsContext';
+import { AIModel } from '../services/apiService';
+import { ModelConfig } from '../services/modelService';
+import { MainLayout } from '../components/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
 import { OllamaSettings } from '../components/settings/OllamaSettings';
-import { ModelConfig } from '../services/modelService';
 import { ModelForm } from '../components/ModelForm';
-import { toast } from 'react-toastify';
+import ConfirmModal from '../components/ConfirmModal';
 
 export const AI_PROVIDERS = {
   OPENAI: 'openai',
   AZURE_OPENAI: 'azure openai',
-  OLLAMA: 'ollama'
+  OLLAMA: 'ollama',
 } as const;
 
 const TOOLTIP_MESSAGES = {
   OPENAI: 'Provide OpenAI API key and model',
   AZURE_OPENAI: 'Provide Azure OpenAI API key, endpoint, and deployment name',
   OLLAMA: 'Provide Ollama base URL and model',
-  COMMON: 'Provide required provider data first'
+  COMMON: 'Provide required provider data first',
 } as const;
 
-const isProviderSettingsSet = (settings: Settings, ai_provider?: string | undefined) => {
+const isProviderSettingsSet = (
+  settings: Settings,
+  ai_provider?: string | undefined,
+) => {
   switch (ai_provider) {
     case AI_PROVIDERS.OPENAI:
       return Boolean(settings.openAi.api_key);
     case AI_PROVIDERS.AZURE_OPENAI:
-      return Boolean(settings.azureOpenAi.endpoint &&
-             settings.azureOpenAi.api_key &&
-             settings.azureOpenAi.deployment_name &&
-             settings.azureOpenAi.api_version);
+      return Boolean(
+        settings.azureOpenAi.endpoint &&
+          settings.azureOpenAi.api_key &&
+          settings.azureOpenAi.deployment_name &&
+          settings.azureOpenAi.api_version,
+      );
     case AI_PROVIDERS.OLLAMA:
       return Boolean(settings.ollama.base_url);
     default:
@@ -62,7 +63,7 @@ export const SettingsPage = () => {
     deleteModel,
     openAiModels,
     azureOpenAiModels,
-    ollamaModels
+    ollamaModels,
   } = useSettings();
   const [showForm, setShowForm] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
@@ -81,7 +82,7 @@ export const SettingsPage = () => {
   };
 
   const handleModelSelect = (model: AIModel) => {
-    console.log("==> model select", model);
+    console.log('==> model select', model);
     setConfig({ ...config, model });
   };
 
@@ -160,7 +161,9 @@ export const SettingsPage = () => {
                   onChange={handleProviderChange}
                 >
                   <MenuItem value={AI_PROVIDERS.OPENAI}>OpenAI</MenuItem>
-                  <MenuItem value={AI_PROVIDERS.AZURE_OPENAI}>Azure OpenAI</MenuItem>
+                  <MenuItem value={AI_PROVIDERS.AZURE_OPENAI}>
+                    Azure OpenAI
+                  </MenuItem>
                   <MenuItem value={AI_PROVIDERS.OLLAMA}>Ollama</MenuItem>
                 </Select>
               </FormControl>
@@ -175,7 +178,9 @@ export const SettingsPage = () => {
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.OPENAI)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(config, AI_PROVIDERS.OPENAI)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.OPENAI}
               />
             )}
@@ -189,7 +194,9 @@ export const SettingsPage = () => {
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.AZURE_OPENAI)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(config, AI_PROVIDERS.AZURE_OPENAI)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.AZURE_OPENAI}
               />
             )}
@@ -203,7 +210,9 @@ export const SettingsPage = () => {
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.OLLAMA)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(config, AI_PROVIDERS.OLLAMA)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.OLLAMA}
               />
             )}
@@ -222,35 +231,24 @@ export const SettingsPage = () => {
           </div>
         </div>
       </div>
-      <Dialog
-        open={deleteDialogOpen}
+
+      <ConfirmModal
+        isOpen={deleteDialogOpen}
         onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Delete Model
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete the model "{modelToDelete?.name}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Delete Model"
+        text={`Are you sure you want to delete the model "${modelToDelete?.name}"?`}
+      />
 
       {showForm && (
         <ModelForm
           settings={config}
           initialData={selectedModel}
-          availableModels={[...openAiModels, ...azureOpenAiModels, ...ollamaModels].map(m => ({ name: m.model, provider: m.provider }))}
+          availableModels={[
+            ...openAiModels,
+            ...azureOpenAiModels,
+            ...ollamaModels,
+          ].map(m => ({ name: m.model, provider: m.provider }))}
           onSave={handleSaveModel}
           onCancel={() => setShowForm(false)}
           isLoading={loading}

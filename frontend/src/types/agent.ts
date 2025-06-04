@@ -9,18 +9,20 @@ export interface AgentDTO {
       description: string;
       parameters: {
         type: string;
-        properties: Record<string, {
-          type: string;
-          description: string;
-        }>;
+        properties: Record<
+          string,
+          {
+            type: string;
+            description: string;
+          }
+        >;
         required?: string[];
       };
     };
     [key: string]: any;
   };
-  is_active:boolean
+  is_active: boolean;
 }
-
 
 export interface AgentCreate {
   id: string;
@@ -86,4 +88,69 @@ export interface AgentTrace {
     execution_time?: number;
     is_success: boolean;
   }>;
+}
+
+export enum AgentType {
+  A2A = 'a2a',
+  MCP = 'mcp',
+  GEN_AI = 'genai',
+  ALL = 'all',
+}
+
+export interface ActiveConnection {
+  id: string;
+  name: string;
+  type: string;
+  url: string;
+  agent_schema: {
+    title: string;
+    description: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActiveAgentsResponse {
+  count_active_connections: number;
+  active_connections: ActiveConnection[];
+}
+
+export interface IAgent {
+  id: string;
+  name: string;
+  description: string;
+  server_url: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  creator_id: string;
+}
+
+export interface AgentSkill {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  examples: string[];
+}
+
+export interface CardContent {
+  capabilities: Record<string, boolean | null>;
+  defaultInputModes: string[];
+  defaultOutputModes: string[];
+  skills: AgentSkill[];
+  version: string;
+}
+
+export interface McpTool {
+  title: string;
+  description: string;
+}
+
+export interface A2AAgent extends IAgent {
+  card_content: CardContent;
+}
+
+export interface MCPAgent extends IAgent {
+  mcp_tools: McpTool[];
 }

@@ -1,12 +1,19 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { AgentFlowDTO } from '../types/agent';
-import { Card, CardContent, Typography, IconButton, Box, CircularProgress } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Box,
+  CircularProgress,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { styled } from '@mui/material/styles';
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
@@ -18,7 +25,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
     opacity: 0.5,
     transform: 'scale(0.95)',
   },
-}));
+});
 
 const StyledCardContent = styled(CardContent)({
   flexGrow: 1,
@@ -68,7 +75,11 @@ interface AgentFlowCardProps {
   onDelete: (id: string) => void;
 }
 
-export const AgentFlowCard: FC<AgentFlowCardProps> = ({ flow, onEdit, onDelete }) => {
+export const AgentFlowCard: FC<AgentFlowCardProps> = ({
+  flow,
+  onEdit,
+  onDelete,
+}) => {
   const [expanded, setExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -82,11 +93,12 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({ flow, onEdit, onDelete }
   };
 
   return (
-    <StyledCard 
+    <StyledCard
       sx={{
-        mb: 3, 
+        mb: 3,
         borderRadius: '0.5rem',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        boxShadow:
+          '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         border: '1px solid',
         borderColor: 'rgba(229, 231, 235, 1)',
         maxHeight: expanded ? '400px' : '200px',
@@ -96,16 +108,14 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({ flow, onEdit, onDelete }
     >
       <StyledCardContent>
         <TitleBox>
-          <TitleTypography variant="h6">
-            {flow.name}
-          </TitleTypography>
+          <TitleTypography variant="h6">{flow.name}</TitleTypography>
           <Box>
             <IconButton onClick={() => onEdit(flow.id)} disabled={isDeleting}>
               <EditIcon />
             </IconButton>
-            <IconButton 
-              onClick={handleDelete} 
-              color="error" 
+            <IconButton
+              onClick={handleDelete}
+              color="error"
               disabled={isDeleting}
             >
               {isDeleting ? (
@@ -117,13 +127,17 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({ flow, onEdit, onDelete }
           </Box>
         </TitleBox>
         <DescriptionBox>
-          <Typography 
-            variant="body2" 
+          <Typography
+            variant="body2"
             color="text.secondary"
             onClick={() => setExpanded(!expanded)}
             sx={{ cursor: 'pointer' }}
           >
-            {expanded ? flow.description : flow.description.length > 100 ? `${flow.description.substring(0, 100)}...` : flow.description}
+            {expanded
+              ? flow.description
+              : flow.description.length > 100
+                ? `${flow.description.substring(0, 100)}...`
+                : flow.description}
           </Typography>
         </DescriptionBox>
         <Box sx={{ mt: 'auto' }}>
@@ -137,4 +151,4 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({ flow, onEdit, onDelete }
       </StyledCardContent>
     </StyledCard>
   );
-}; 
+};
