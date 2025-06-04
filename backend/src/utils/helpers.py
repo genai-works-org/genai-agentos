@@ -62,7 +62,7 @@ def map_agent_model_to_dto(agent: Agent):
     """
     return MLAgentJWTDTO(
         agent_id=str(agent.id),
-        agent_name=agent.name,
+        agent_name=agent.alias,
         agent_description=agent.description,
         agent_schema=agent.input_parameters,
         created_at=agent.created_at,

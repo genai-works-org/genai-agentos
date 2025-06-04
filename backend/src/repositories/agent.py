@@ -374,7 +374,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 offset=offset,
             )
 
-        return await self.list_all_agents(
+        return await self.list_all_genai_agents(
             db=db, user_id=user_model.id, limit=limit, offset=offset
         )
 
@@ -566,7 +566,7 @@ LIMIT :limit OFFSET :offset;
 
                 agent = ActiveGenAIAgentDTO(
                     agent_id=col["alias"],
-                    agent_name=col["name"],
+                    agent_name=generate_alias(col["name"]),
                     agent_description=col["description"],
                     agent_schema=col["json_data1"],
                     agent_jwt=col["jwt"],
