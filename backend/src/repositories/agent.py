@@ -495,6 +495,7 @@ LIMIT :limit OFFSET :offset;
                     agent_schema=input_params,
                     created_at=flow.created_at,
                     updated_at=flow.updated_at,
+                    flow=[f["agent_id"] for f in flow.flow if f],
                 )
                 return flow_schema
 
