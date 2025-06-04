@@ -48,10 +48,6 @@ class AgentFlowBase(BaseModel):
             return v.replace(" ", "_").lower()
         raise ValueError("Flow name must be less than 55 characters")
 
-    @field_validator("name")
-    def cast_name_to_alias(cls, v: str):
-        return generate_alias(v)
-
 
 class AgentFlowCreate(AgentFlowBase):
     @field_validator("flow")
