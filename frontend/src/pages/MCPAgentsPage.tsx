@@ -7,7 +7,7 @@ import { MainLayout } from '../components/MainLayout';
 import { AIModelCreateCard } from '../components/AIModelCreateCard';
 import CreateModal from '../components/CreateModal';
 import AgentDetailModal from '../components/mcp/AgentDetailModal';
-import ServerCard from '../components/mcp/AgentCard';
+import AgentCard from '../components/mcp/AgentCard';
 import ConfirmModal from '../components/ConfirmModal';
 
 const MCPServersPage = () => {
@@ -64,7 +64,7 @@ const MCPServersPage = () => {
               tooltipMessage="Create a new MCP Server"
             />
             {agents.map(agent => (
-              <ServerCard
+              <AgentCard
                 key={agent.id}
                 agent={agent}
                 setSelectedAgent={setSelectedAgent}
