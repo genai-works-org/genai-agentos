@@ -7,6 +7,7 @@ from mcp.types import Tool
 from src.auth.jwt import TokenLifespanType, validate_token
 from src.models import Agent
 from src.schemas.api.agent.dto import MLAgentJWTDTO
+from src.schemas.api.exceptions import IntegrityErrorDetails
 from src.schemas.base import AgentDTOPayload
 from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
@@ -84,3 +85,21 @@ def map_genai_agent_to_unified_dto(agent: Agent):
         created_at=agent.created_at,
         updated_at=agent.updated_at,
     )
+
+
+def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails]:
+    """
+    Helper function to match integrity error output into more dev-friendly output
+    Below pattern will match: '(email)=(kekster3@a.com)' and '(username)=(kekster3)'
+    where IntegrityError returns 'email' or 'username'
+    as column name and value after the equal sign in the message
+    """
+    pattern = r"\(([^)]+)\)=\(([^)]+)\)"
+
+    matches: list[Optional[tuple[str]]] = re.findall(pattern=pattern, string=msg)
+    if matches:
+        column = matches[0][0]
+        value = matches[0][1]
+
+        return IntegrityErrorDetails(column=column, value=value)
+    return None

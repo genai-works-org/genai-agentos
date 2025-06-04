@@ -6,6 +6,7 @@ from uuid import UUID
 from aiohttp import ClientSession
 from fastapi import HTTPException
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import A2ACard, User
 from src.repositories.base import CRUDBase
@@ -18,7 +19,11 @@ from src.schemas.a2a.schemas import (
 )
 from src.schemas.base import AgentDTOPayload
 from src.utils.enums import AgentType
-from src.utils.helpers import generate_alias, get_agent_description_from_skills
+from src.utils.helpers import (
+    generate_alias,
+    get_agent_description_from_skills,
+    prettify_integrity_error_details,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -87,25 +92,32 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
         card_name = card_content.pop("name")
         card_description = card_content.pop("description")
         card_url = card_content.pop("url")
-
-        a2a_agent = A2ACard(
-            name=card_name,
-            description=card_description,
-            server_url=card_url,
-            card_content=card_content,
-            creator_id=user_model.id,
-            is_active=a2a_card_dto.is_active,
-        )
-        db.add(a2a_agent)
-        await db.commit()
-        await db.refresh(a2a_agent)
-        return A2ACardDTO(
-            id=a2a_agent.id,
-            name=a2a_agent.name,
-            description=a2a_agent.description,
-            server_url=a2a_agent.server_url,
-            card_content=a2a_agent.card_content,
-        )
+        try:
+            a2a_agent = A2ACard(
+                name=card_name,
+                description=card_description,
+                server_url=card_url,
+                card_content=card_content,
+                creator_id=user_model.id,
+                is_active=a2a_card_dto.is_active,
+            )
+            db.add(a2a_agent)
+            await db.commit()
+            await db.refresh(a2a_agent)
+            return A2ACardDTO(
+                id=a2a_agent.id,
+                name=a2a_agent.name,
+                description=a2a_agent.description,
+                server_url=a2a_agent.server_url,
+                card_content=a2a_agent.card_content,
+            )
+        except IntegrityError as e:
+            msg = str(e._message())
+            detail = prettify_integrity_error_details(msg=msg)
+            raise HTTPException(
+                status_code=400,
+                detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
+            )
 
     async def list_active_cards(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int

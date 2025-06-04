@@ -7,15 +7,17 @@ import httpx
 from fastapi import HTTPException
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
+from mcp.shared.exceptions import McpError
 from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import MCPServer, User
 from src.repositories.base import CRUDBase
 from src.schemas.mcp.dto import MCPServerDTO
 from src.schemas.mcp.schemas import MCPCreateServer, MCPServerData, MCPToolSchema
 from src.utils.exceptions import InvalidToolNameException
-from src.utils.helpers import mcp_tool_to_json_schema
+from src.utils.helpers import mcp_tool_to_json_schema, prettify_integrity_error_details
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +61,7 @@ async def lookup_mcp_server(
                     is_active=True,
                 )
 
-    except* (OSError, httpx.ConnectError) as e:
+    except* (OSError, httpx.ConnectError, McpError) as e:
         logger.warning(f"Could not connect to {url}. Details: {e.exceptions[0]}")
 
     return MCPServerData(is_active=False)
@@ -135,16 +137,24 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         # AnyHttpUrl always returns url with trailing slash,
         # trimming slash here to ensure consistency across all urls and to painlessly append suffixes like '/mcp'
         trimmed_url = server_url[:-1] if server_url.endswith("/") else server_url
-        mcp_in = MCPServer(
-            server_url=trimmed_url,
-            mcp_tools=mcp_server.mcp_tools,
-            creator_id=user_model.id,
-            is_active=mcp_server.is_active,
-        )
-        db.add(mcp_in)
-        await db.commit()
-        await db.refresh(mcp_in)
-        return mcp_in
+        try:
+            mcp_in = MCPServer(
+                server_url=trimmed_url,
+                mcp_tools=mcp_server.mcp_tools,
+                creator_id=user_model.id,
+                is_active=mcp_server.is_active,
+            )
+            db.add(mcp_in)
+            await db.commit()
+            await db.refresh(mcp_in)
+            return mcp_in
+        except IntegrityError as e:
+            msg = str(e._message())
+            detail = prettify_integrity_error_details(msg=msg)
+            raise HTTPException(
+                status_code=400,
+                detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
+            )
 
 
 mcp_repo = MCPRepository(MCPServer)
