@@ -75,7 +75,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={agent.agent_id}
+                value={agent.id}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
@@ -88,7 +88,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={agent.agent_name}
+                value={agent.name}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
@@ -103,7 +103,7 @@ export const AgentDetailsPage: FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                value={agent.agent_description}
+                value={agent.agent_schema.function.description}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
@@ -111,25 +111,16 @@ export const AgentDetailsPage: FC = () => {
             </Box>
 
             <Box>
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                gutterBottom
+              >
                 Input Parameters
               </Typography>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <JSONTree
-                  data={agent.agent_input_schema}
-                  theme={jsonTreeTheme}
-                  invertTheme={false}
-                />
-              </Paper>
-            </Box>
-
-            <Box>
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                Output Parameters
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2 }}>
-                <JSONTree
-                  data={agent.agent_output_schema || {}}
+                  data={null} // TODO: add input parameters
                   theme={jsonTreeTheme}
                   invertTheme={false}
                 />
@@ -140,4 +131,4 @@ export const AgentDetailsPage: FC = () => {
       </Container>
     </MainLayout>
   );
-}; 
+};

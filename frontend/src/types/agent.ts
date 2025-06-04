@@ -1,27 +1,30 @@
-export interface AgentDTO {
-  agent_id: string;
-  agent_name: string;
-  agent_description: string;
-  agent_input_schema: {
-    type?: string;
-    function?: {
-      name: string;
-      description: string;
-      parameters: {
-        type: string;
-        properties: Record<
-          string,
-          {
-            type: string;
-            description: string;
-          }
-        >;
-        required?: string[];
-      };
+export interface AgentSchema {
+  type: string;
+  function: {
+    name: string;
+    description: string;
+    parameters: {
+      type: string;
+      properties: Record<
+        string,
+        {
+          type: string;
+          description: string;
+        }
+      >;
+      required: string[];
     };
-    [key: string]: any;
   };
-  is_active: boolean;
+}
+
+export interface AgentDTO {
+  id: string;
+  name: string;
+  type: string;
+  created_at: string;
+  updated_at: string;
+  url: string | null;
+  agent_schema: AgentSchema;
 }
 
 export interface AgentCreate {

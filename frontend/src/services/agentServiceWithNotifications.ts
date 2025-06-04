@@ -1,13 +1,21 @@
 import { agentService } from './agentService';
-import { AgentDTO, AgentCreate, AgentFlowDTO, AgentFlowCreate, AgentFlowUpdate } from '../types/agent';
+import {
+  AgentDTO,
+  AgentCreate,
+  AgentFlowDTO,
+  AgentFlowCreate,
+  AgentFlowUpdate,
+} from '../types/agent';
+import { useNotification } from '../contexts/NotificationContext';
 
 export const createAgentServiceWithNotifications = () => {
+  const { addNotification } = useNotification();
 
   const handleError = (error: unknown, action: string) => {
     addNotification(
       `Failed to ${action}`,
       'error',
-      error instanceof Error ? error.message : 'Unknown error occurred'
+      error instanceof Error ? error.message : 'Unknown error occurred',
     );
   };
 
@@ -47,15 +55,15 @@ export const createAgentServiceWithNotifications = () => {
       }
     },
 
-    async updateAgent(id: string, agent: AgentUpdate): Promise<void> {
-      try {
-        await agentService.updateAgent(id, agent);
-        handleSuccess('update agent');
-      } catch (error) {
-        handleError(error, 'update agent');
-        throw error;
-      }
-    },
+    // async updateAgent(id: string, agent: any): Promise<void> {
+    //   try {
+    //     await agentService.updateAgent(id, agent);
+    //     handleSuccess('update agent');
+    //   } catch (error) {
+    //     handleError(error, 'update agent');
+    //     throw error;
+    //   }
+    // },
 
     async deleteAgent(id: string): Promise<void> {
       try {
@@ -118,4 +126,4 @@ export const createAgentServiceWithNotifications = () => {
       }
     },
   };
-}; 
+};
