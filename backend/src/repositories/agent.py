@@ -600,11 +600,15 @@ LIMIT :limit OFFSET :offset;
                 for field in fields_to_pop:
                     col.pop(field)
 
+                alias = generate_alias(col["name"])
+                input_params = col["json_data1"]
+                if input_params:
+                    input_params["function"]["name"] = alias
                 agent = ActiveGenAIAgentDTO(
-                    agent_id=col["alias"],
-                    agent_name=generate_alias(col["name"]),
+                    agent_id=str(col["id"]),
+                    agent_name=alias,
                     agent_description=col["description"],
-                    agent_schema=col["json_data1"],
+                    agent_schema=input_params,
                     agent_jwt=col["jwt"],
                     agent_alias=col["alias"],
                     is_active=col["is_active"],
