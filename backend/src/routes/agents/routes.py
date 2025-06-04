@@ -15,7 +15,7 @@ from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
-from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
+from src.schemas.api.agent.dto import AgentDTOWithJWT
 from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
@@ -87,7 +87,7 @@ async def list_all_agents(
     if isinstance(result, list):
         return result
 
-    return [map_agent_model_to_dto(agent=agent) for agent in result]
+    return result
 
     return [
         MLAgentJWTDTO(
@@ -111,6 +111,7 @@ async def get_data(
     agent_id: UUID,
 ):
     agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
+
     if not agent:
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
