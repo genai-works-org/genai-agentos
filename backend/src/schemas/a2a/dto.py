@@ -14,6 +14,8 @@ class A2ACardDTO(BaseUUIDToStrModel):
     server_url: str
     # dict type is due to {} being a default value for the json field in DB
     card_content: Optional[A2AAgentCard | dict] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
 
 class ActiveA2ACardDTO(BaseModel):

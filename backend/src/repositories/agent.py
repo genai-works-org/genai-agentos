@@ -2,6 +2,7 @@ from typing import Optional, Union
 from uuid import UUID
 
 from fastapi import HTTPException
+from pydantic import BaseModel
 from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, create_access_token, validate_token
@@ -20,10 +21,15 @@ from src.schemas.api.agent.dto import (
 )
 from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdate
 from src.schemas.api.flow.schemas import FlowSchema
+from src.schemas.base import AgentDTOPayload
 from src.schemas.mcp.dto import ActiveMCPToolDTO
-from src.utils.enums import ActiveAgentTypeFilter
+from src.utils.enums import ActiveAgentTypeFilter, AgentType
 from src.utils.filters import AgentFilter
-from src.utils.helpers import generate_alias, map_agent_model_to_dto
+from src.utils.helpers import (
+    generate_alias,
+    map_agent_model_to_dto,
+    map_genai_agent_to_unified_dto,
+)
 
 
 class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
@@ -191,11 +197,13 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         agents = await self.query_active_agents(
             db=db, user_id=user_id, offset=offset, limit=limit
         )
-        agent_dtos = [map_agent_model_to_dto(agent=agent) for agent in agents]
+        agent_dtos = [map_genai_agent_to_unified_dto(agent=agent) for agent in agents]
         result: list[MLAgentJWTDTO | FlowSchema | None] = [*flows, *agent_dtos]
         return ActiveAgentsDTO(
             count_active_connections=len(result),
-            active_connections=[r.model_dump(mode="json") for r in result if r],
+            active_connections=[
+                r.model_dump(mode="json", exclude_none=True) for r in result if r
+            ],
         )
 
     async def get_agents_by_ids(
@@ -469,12 +477,13 @@ LIMIT :limit OFFSET :offset;
                     if func.get("description"):
                         input_params["function"]["description"] = flow.description
 
-                flow_schema = FlowSchema(
-                    agent_id=str(flow.id),
-                    agent_name=flow.name,
-                    agent_description=flow.description,
+                flow_schema = AgentDTOPayload(
+                    id=flow.id,
+                    name=flow.name,
+                    type=AgentType.flow,
                     agent_schema=input_params,
-                    flow=[flow.get("agent_id") for flow in flow.flow],
+                    created_at=flow.created_at,
+                    updated_at=flow.updated_at,
                 )
                 return flow_schema
 
@@ -529,12 +538,20 @@ LIMIT :limit OFFSET :offset;
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                modified_tools = [
-                    ActiveMCPToolDTO(
-                        agent_schema=t, created_at=created_at, updated_at=updated_at
+                modified_tools = []
+                for t in tools:
+                    modified_tools.append(
+                        AgentDTOPayload(
+                            # TODO: or generate uuid, but tool does not have a dedicated uuid in DB
+                            id=t["title"],
+                            name=t["title"],
+                            type=AgentType.mcp,
+                            url=col["server_url"],
+                            agent_schema=t,
+                            created_at=created_at,
+                            updated_at=updated_at,
+                        )
                     )
-                    for t in tools
-                ]
                 response.extend(modified_tools)
 
             if agent_type == "a2acards":
@@ -546,6 +563,9 @@ LIMIT :limit OFFSET :offset;
                 for field in fields_to_pop:
                     col.pop(field)
 
+                created_at = col.pop("created_at")
+                updated_at = col.pop("updated_at")
+
                 agent_schema = A2AAgentCard(
                     **col["json_data1"],
                     id=col["id"],
@@ -553,7 +573,11 @@ LIMIT :limit OFFSET :offset;
                     description=col["description"],
                     url=col["server_url"],
                 )
-                agent_card = a2a_repo.agent_card_to_dto(agent_card=agent_schema)
+                agent_card = a2a_repo.agent_card_to_dto(
+                    agent_card=agent_schema,
+                    created_at=created_at,
+                    updated_at=updated_at,
+                )
 
                 response.append(agent_card)
 
@@ -575,11 +599,24 @@ LIMIT :limit OFFSET :offset;
                     created_at=col["created_at"],
                     updated_at=col["updated_at"],
                 )
-                response.append(agent)
+                agent_dto = AgentDTOPayload(
+                    id=agent.agent_id,
+                    name=agent.agent_name,
+                    type=AgentType.genai,
+                    agent_schema=agent.agent_schema,
+                    created_at=agent.created_at,
+                    updated_at=agent.updated_at,
+                )
+                response.append(agent_dto)
 
         return ActiveAgentsDTO(
             count_active_connections=len(response),
-            active_connections=[resp_model.model_dump() for resp_model in response],
+            active_connections=[
+                resp_model.model_dump(exclude_none=True)
+                if isinstance(resp_model, BaseModel)
+                else resp_model
+                for resp_model in response
+            ],
         )
 
     async def list_all_mcp_tools(
@@ -592,11 +629,15 @@ LIMIT :limit OFFSET :offset;
         for s in mcp_servers:
             for tool in s.mcp_tools:
                 tools.append(
-                    ActiveMCPToolDTO(
+                    AgentDTOPayload(
+                        id=tool["title"],
+                        name=tool["title"],
+                        type=AgentType.mcp,
+                        url=s.server_url,
                         agent_schema=tool,
                         created_at=s.created_at,
                         updated_at=s.updated_at,
-                    ).model_dump(mode="json")
+                    ).model_dump(mode="json", exclude_none=True)
                 )
 
         return ActiveAgentsDTO(
@@ -612,7 +653,9 @@ LIMIT :limit OFFSET :offset;
         )
         return ActiveAgentsDTO(
             count_active_connections=len(result),
-            active_connections=[r.model_dump(mode="json") for r in result],
+            active_connections=[
+                r.model_dump(mode="json", exclude_none=True) for r in result
+            ],
         )
 
     async def get_active_agents_by_filter(

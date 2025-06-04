@@ -8,6 +8,7 @@ class AgentPlanType(Enum):
 
 class AgentType(Enum):
     genai = "genai"
+    flow = "flow"
     mcp = "mcp"
     a2a = "a2a"
 

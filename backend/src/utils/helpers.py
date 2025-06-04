@@ -7,6 +7,8 @@ from mcp.types import Tool
 from src.auth.jwt import TokenLifespanType, validate_token
 from src.models import Agent
 from src.schemas.api.agent.dto import MLAgentJWTDTO
+from src.schemas.base import AgentDTOPayload
+from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
 
 
@@ -70,4 +72,15 @@ def map_agent_model_to_dto(agent: Agent):
         is_active=agent.is_active,
         agent_jwt=agent.jwt,
         agent_alias=agent.alias,
+    )
+
+
+def map_genai_agent_to_unified_dto(agent: Agent):
+    return AgentDTOPayload(
+        id=agent.id,
+        name=agent.name,
+        type=AgentType.genai,
+        agent_schema=agent.input_parameters,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
     )

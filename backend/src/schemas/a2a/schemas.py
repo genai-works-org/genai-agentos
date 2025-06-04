@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 
 from pydantic import AnyHttpUrl, BaseModel, Field, ValidationError, field_validator
@@ -93,3 +94,5 @@ class A2AJsonSchema(BaseModel):
     )
     required: list[Optional[str]] = Field(default=["task", "text"])
     type: Optional[str] = Field(default="object")
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None

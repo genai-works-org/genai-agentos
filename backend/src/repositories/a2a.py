@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
@@ -8,13 +9,15 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import A2ACard, User
 from src.repositories.base import CRUDBase
-from src.schemas.a2a.dto import A2ACardDTO, A2ACardJsonSchema
+from src.schemas.a2a.dto import A2ACardDTO
 from src.schemas.a2a.schemas import (
     A2AAgentCard,
     A2AAgentCardSchema,
     A2ACreateAgentSchema,
     A2AJsonSchema,
 )
+from src.schemas.base import AgentDTOPayload
+from src.utils.enums import AgentType
 from src.utils.helpers import generate_alias, get_agent_description_from_skills
 
 logger = logging.getLogger(__name__)
@@ -127,7 +130,10 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
                     name=c.name,
                     description=c.description,
                     url=c.server_url,
-                )
+                ),
+                created_at=c.created_at,
+                updated_at=c.updated_at,
+                id_=c.id,
             )
             for c in cards
         ]
@@ -142,9 +148,23 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             ),
         )
 
-    def agent_card_to_dto(self, agent_card: A2AAgentCard):
+    def agent_card_to_dto(
+        self,
+        agent_card: A2AAgentCard,
+        created_at: Optional[datetime] = None,
+        updated_at: Optional[datetime] = None,
+        id_: Optional[UUID | str] = None,
+    ):
         json_schema = self._agent_card_to_json_schema(agent_card=agent_card)
-        return A2ACardJsonSchema(agent_schema=json_schema, url=agent_card.url)
+        return AgentDTOPayload(
+            id=id_ if id_ else agent_card.name,
+            name=agent_card.name,
+            type=AgentType.a2a,
+            url=agent_card.url,
+            agent_schema=json_schema.model_dump(mode="json", exclude_none=True),
+            created_at=created_at,
+            updated_at=updated_at,
+        )
 
 
 a2a_repo = A2ARepository(A2ACard)
