@@ -33,10 +33,7 @@ class FlowAgentId(BaseModel):
         return v
 
     def to_json(self) -> dict:
-        return {
-            "id": self.id,
-            "type": self.type
-        }
+        return {"id": self.id, "type": self.type}
 
 
 class AgentFlowBase(BaseModel):
@@ -50,6 +47,10 @@ class AgentFlowBase(BaseModel):
         if len(v) <= 55:
             return v.replace(" ", "_").lower()
         raise ValueError("Flow name must be less than 55 characters")
+
+    @field_validator("name")
+    def cast_name_to_alias(cls, v: str):
+        return generate_alias(v)
 
 
 class AgentFlowCreate(AgentFlowBase):
