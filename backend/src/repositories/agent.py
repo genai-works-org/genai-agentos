@@ -483,7 +483,7 @@ LIMIT :limit OFFSET :offset;
                 input_params = first_agent.input_parameters
                 if func := input_params.get("function"):
                     if func.get("name"):
-                        input_params["function"]["name"] = str(flow.alias)
+                        input_params["function"]["name"] = flow.alias
 
                     if func.get("description"):
                         input_params["function"]["description"] = flow.description

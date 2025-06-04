@@ -4,7 +4,6 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, model_validator
-from src.utils.helpers import generate_alias
 
 
 class FlowAgentId(BaseModel):  # TODO: rename
@@ -26,10 +25,6 @@ class AgentFlowBase(BaseModel):
     description: str
 
     flow: List[FlowAgentId]
-
-    @field_validator("name")
-    def cast_name_to_alias(cls, v: str):
-        return generate_alias(v)
 
 
 class AgentFlowCreate(AgentFlowBase):
