@@ -77,9 +77,12 @@ def map_agent_model_to_dto(agent: Agent):
 
 
 def map_genai_agent_to_unified_dto(agent: Agent):
+    input_params = agent.input_parameters
+    if input_params:
+        input_params["function"]["name"] = agent.alias
     return AgentDTOPayload(
         id=agent.id,
-        name=agent.name,
+        name=agent.alias,
         type=AgentType.genai,
         agent_schema=agent.input_parameters,
         created_at=agent.created_at,

@@ -168,9 +168,10 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
         id_: Optional[UUID | str] = None,
     ):
         json_schema = self._agent_card_to_json_schema(agent_card=agent_card)
+        title = json_schema.title
         return AgentDTOPayload(
-            id=id_ if id_ else agent_card.name,
-            name=agent_card.name,
+            id=id_ if id_ else title,
+            name=title,
             type=AgentType.a2a,
             url=agent_card.url,
             agent_schema=json_schema.model_dump(mode="json", exclude_none=True),

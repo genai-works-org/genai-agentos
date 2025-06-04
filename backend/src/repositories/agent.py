@@ -483,14 +483,14 @@ LIMIT :limit OFFSET :offset;
                 input_params = first_agent.input_parameters
                 if func := input_params.get("function"):
                     if func.get("name"):
-                        input_params["function"]["name"] = str(flow.id)
+                        input_params["function"]["name"] = str(flow.alias)
 
                     if func.get("description"):
                         input_params["function"]["description"] = flow.description
 
                 flow_schema = AgentDTOPayload(
                     id=flow.id,
-                    name=flow.name,
+                    name=flow.alias,
                     type=AgentType.flow,
                     agent_schema=input_params,
                     created_at=flow.created_at,
