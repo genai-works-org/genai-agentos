@@ -732,7 +732,7 @@ export const AgentFlowsEditPage: FC = () => {
                 );
               })}
               {(search.length >= 2 && searchResults.length === 0) ||
-              agents.length === 0 ? (
+                agents.length === 0 ? (
                 <Box
                   display="flex"
                   justifyContent="center"
