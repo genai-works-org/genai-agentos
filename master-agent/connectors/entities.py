@@ -4,11 +4,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
+from agents.flow_master_agent import FlowMasterAgent
 from genai_session.session import GenAISession
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
-
-from agents.flow_master_agent import FlowMasterAgent
 
 
 class AgentTypeEnum(Enum):
@@ -67,10 +66,7 @@ class GenAIFlowConfig(AgentConfig):
 
     def __post_init__(self):
         self.agent_type = AgentTypeEnum.flow.value
-        self.flow_master_agent = FlowMasterAgent(
-            model=self.model,
-            agents=self.agents
-        )
+        self.flow_master_agent = FlowMasterAgent(model=self.model, agents=self.agents)
 
 
 class ConnectorStrategy(ABC):

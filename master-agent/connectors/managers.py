@@ -2,18 +2,25 @@ from typing import Any, cast
 
 from a2a.client import A2AClient
 from a2a.types import MessageSendParams, SendMessageRequest, SendMessageSuccessResponse
+from connectors.entities import (
+    A2AConfig,
+    ConnectorStrategy,
+    GenAIConfig,
+    GenAIFlowConfig,
+    MCPConfig,
+)
 from genai_session.session import GenAISession
 from httpx import AsyncClient
 from loguru import logger
 from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
-
-from connectors.entities import ConnectorStrategy, A2AConfig, GenAIConfig, MCPConfig, GenAIFlowConfig
 from utils.tracing import trace_execution_time
 
 
 class MCPConnector(ConnectorStrategy):
-    async def invoke(self, *args, **kwargs) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
+    async def invoke(
+        self, *args, **kwargs
+    ) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
         config = cast(MCPConfig, self.config)
 
         trace = {
@@ -29,7 +36,9 @@ class MCPConnector(ConnectorStrategy):
                     await session.initialize()
 
                     async with trace_execution_time(trace=trace):
-                        response = await session.call_tool(config.name, config.arguments)
+                        response = await session.call_tool(
+                            config.name, config.arguments
+                        )
 
                     trace.update(
                         {
@@ -55,7 +64,9 @@ class MCPConnector(ConnectorStrategy):
 
 
 class A2AConnector(ConnectorStrategy):
-    async def invoke(self, *args, **kwargs) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
+    async def invoke(
+        self, *args, **kwargs
+    ) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
         config = cast(A2AConfig, self.config)
 
         trace = {
@@ -75,12 +86,7 @@ class A2AConnector(ConnectorStrategy):
                     "message": {
                         "role": config.role,
                         "messageId": config.message_id,
-                        "parts": [
-                            {
-                                "type": "text",
-                                "text": config.action
-                            }
-                        ],
+                        "parts": [{"type": "text", "text": config.action}],
                     },
                 }
                 request = SendMessageRequest(
@@ -88,7 +94,9 @@ class A2AConnector(ConnectorStrategy):
                 )
 
                 async with trace_execution_time(trace=trace):
-                    response = await client.send_message(request, http_kwargs={"timeout": None})
+                    response = await client.send_message(
+                        request, http_kwargs={"timeout": None}
+                    )
 
                 if isinstance(response.root, SendMessageSuccessResponse):
                     response_text = response.root.result.artifacts[0].parts[0].root.text
@@ -98,7 +106,9 @@ class A2AConnector(ConnectorStrategy):
                 trace.update(
                     {
                         "output": response.model_dump(mode="json"),
-                        "is_success": isinstance(response.root, SendMessageSuccessResponse)
+                        "is_success": isinstance(
+                            response.root, SendMessageSuccessResponse
+                        ),
                     }
                 )
 
@@ -119,27 +129,26 @@ class A2AConnector(ConnectorStrategy):
 
 
 class GenAIConnector(ConnectorStrategy):
-    async def invoke(self, *args, **kwargs) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
+    async def invoke(
+        self, *args, **kwargs
+    ) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
         config = cast(GenAIConfig, self.config)
 
         trace = {
             "id": config.id,
             "name": config.name,
             "type": config.agent_type,
-            "input": config.arguments
+            "input": config.arguments,
         }
         try:
             session: GenAISession = config.session
-            response = await session.send(
-                client_id=config.id,
-                message=config.arguments
-            )
+            response = await session.send(client_id=config.id, message=config.arguments)
 
             trace.update(
                 {
                     "output": response.response,
                     "execution_time": response.execution_time,
-                    "is_success": response.is_success
+                    "is_success": response.is_success,
                 }
             )
             return response.response, trace
@@ -159,20 +168,18 @@ class GenAIConnector(ConnectorStrategy):
 
 
 class GenAIFlowConnector(ConnectorStrategy):
-    async def invoke(self, *args, **kwargs) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
+    async def invoke(
+        self, *args, **kwargs
+    ) -> tuple[dict[str, Any] | str | None, dict[str, Any]]:
         config = cast(GenAIFlowConfig, self.config)
         session: GenAISession = config.session
 
-        trace = {
-            "id": config.id,
-            "name": config.name,
-            "type": config.agent_type
-        }
+        trace = {"id": config.id, "name": config.name, "type": config.agent_type}
 
         async with trace_execution_time(trace=trace):
             final_state = await config.flow_master_agent.graph.ainvoke(
                 input={"messages": config.messages.copy()},
-                config={"configurable": {"session": session}}
+                config={"configurable": {"session": session}},
             )
 
         response = final_state["messages"][-1].content

@@ -1,21 +1,16 @@
 from typing import Any
 
+from agents.base import BaseMasterAgent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
 from loguru import logger
-
-from agents.base import BaseMasterAgent
 from models.states import MasterAgentState
 from utils.agents import select_agent_and_resolve_parameters
 from utils.tracing import trace_execution_time
 
 
 class ReActMasterAgent(BaseMasterAgent):
-    def __init__(
-            self,
-            model: BaseChatModel,
-            agents: list[dict[str, Any]]
-    ) -> None:
+    def __init__(self, model: BaseChatModel, agents: list[dict[str, Any]]) -> None:
         """
         Supervisor agent building on top of ReAct framework to automatically execute available agents and flows.
         ReAct framework allows to continuously call tools (remote agents in this case) to complete task assigned by user.
@@ -44,20 +39,17 @@ class ReActMasterAgent(BaseMasterAgent):
                 response = await select_agent_and_resolve_parameters(
                     model=self.model,
                     messages=messages,
-                    agents=self._agents_to_bind_to_llm
+                    agents=self._agents_to_bind_to_llm,
                 )
 
             if response.tool_calls:
-                logger.success(f"Selected {response.tool_calls[0]["name"]} with args {response.tool_calls[0]["args"]}")
+                logger.success(
+                    f"Selected {response.tool_calls[0]['name']} with args {response.tool_calls[0]['args']}"
+                )
             else:
-                logger.success(f"No agent is selected, generating final response")
+                logger.success("No agent is selected, generating final response")
 
-            trace.update(
-                {
-                    "output": response.model_dump(),
-                    "is_success": True
-                }
-            )
+            trace.update({"output": response.model_dump(), "is_success": True})
             return {"messages": [response], "trace": [trace]}
 
         except Exception as e:
@@ -68,6 +60,6 @@ class ReActMasterAgent(BaseMasterAgent):
                 "name": "MasterAgent",
                 "input": messages[-1].model_dump(),
                 "output": error_message,
-                "is_success": False
+                "is_success": False,
             }
-            return {"messages": [AIMessage(content=error_message)],"trace": [trace]}
+            return {"messages": [AIMessage(content=error_message)], "trace": [trace]}
