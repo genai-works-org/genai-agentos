@@ -16,6 +16,7 @@ import { AgentDTO } from '../types/agent';
 import { MainLayout } from '../components/MainLayout';
 import { JSONTree } from 'react-json-tree';
 import { jsonTreeTheme } from '../constants/jsonTreeTheme';
+import { normalizeString } from '../utils/normalizeString';
 
 export const AgentDetailsPage: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -88,7 +89,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={agent.name}
+                value={normalizeString(agent.name)}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
