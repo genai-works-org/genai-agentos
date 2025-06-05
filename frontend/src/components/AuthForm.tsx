@@ -14,9 +14,9 @@ interface AuthFormProps {
   setName: (name: string) => void;
   password: string;
   setPassword: (password: string) => void;
-  repeatPassword: string;
+  repeatPassword?: string;
   setRepeatPassword?: (password: string) => void;
-  onRepeatPasswordBlur: () => void;
+  onRepeatPasswordBlur?: () => void;
   onSubmit: (e: FormEvent) => void;
   footerText: string;
   footerLinkText: string;

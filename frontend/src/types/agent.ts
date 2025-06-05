@@ -108,6 +108,16 @@ export interface ActiveConnection {
   agent_schema: {
     title: string;
     description: string;
+    type: string;
+    properties: Record<
+      string,
+      {
+        type: string;
+        title?: string;
+        description?: string;
+      }
+    >;
+    required: string[];
   };
   created_at: string;
   updated_at: string;

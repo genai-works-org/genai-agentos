@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Node, Edge, useNodesState, useEdgesState, MarkerType } from 'reactflow';
+import {
+  Node,
+  Edge,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
+} from 'reactflow';
 import { AgentTrace } from '../types/agent';
 
 export const useFlowNodes = (traceData: AgentTrace[] | null) => {
@@ -12,13 +18,16 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
       const { nodeId, height } = event.detail;
       setNodeHeights(prev => ({
         ...prev,
-        [nodeId]: height
+        [nodeId]: height,
       }));
     };
 
     window.addEventListener('nodeHeight', handleNodeHeight as EventListener);
     return () => {
-      window.removeEventListener('nodeHeight', handleNodeHeight as EventListener);
+      window.removeEventListener(
+        'nodeHeight',
+        handleNodeHeight as EventListener,
+      );
     };
   }, []);
 
@@ -26,7 +35,7 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
     if (traceData) {
       // Calculate node positions based on actual heights
       let currentY = 0;
-      const nodePositions = traceData.map((trace, index) => {
+      const nodePositions = traceData.map((_, index) => {
         const nodeId = `node-${index}`;
         const height = nodeHeights[nodeId] || 100; // Default height if not measured yet
         const position = { x: 100, y: currentY };
@@ -46,7 +55,7 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
           flow: trace.flow,
         },
         style: {
-          border: `2px solid ${(trace.is_success || trace.flow?.at(-1)?.is_success) ? '#4CAF50' : '#F44336'}`,
+          border: `2px solid ${trace.is_success || trace.flow?.at(-1)?.is_success ? '#4CAF50' : '#F44336'}`,
           borderRadius: '8px',
           padding: '10px',
           width: '180px',
@@ -71,27 +80,32 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
       }));
 
       // Create edges for sub-agents within flows
-      const flowEdges: Edge[] = traceData.reduce((edges: Edge[], trace, nodeIndex) => {
-        if (trace.flow) {
-          const flowNodeEdges = trace.flow.slice(0, -1).map((_, flowIndex) => ({
-            id: `flow-edge-${nodeIndex}-${flowIndex}-${flowIndex + 1}`,
-            source: `flow-source-${nodeIndex}-${flowIndex}`,
-            target: `flow-target-${nodeIndex}-${flowIndex + 1}`,
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#666',
-              fill: '#666',
-            },
-            style: {
-              strokeWidth: 1,
-              stroke: '#666',
-              strokeDasharray: '5,5',
-            },
-          }));
-          return [...edges, ...flowNodeEdges];
-        }
-        return edges;
-      }, []);
+      const flowEdges: Edge[] = traceData.reduce(
+        (edges: Edge[], trace, nodeIndex) => {
+          if (trace.flow) {
+            const flowNodeEdges = trace.flow
+              .slice(0, -1)
+              .map((_, flowIndex) => ({
+                id: `flow-edge-${nodeIndex}-${flowIndex}-${flowIndex + 1}`,
+                source: `flow-source-${nodeIndex}-${flowIndex}`,
+                target: `flow-target-${nodeIndex}-${flowIndex + 1}`,
+                markerEnd: {
+                  type: MarkerType.ArrowClosed,
+                  color: '#666',
+                  fill: '#666',
+                },
+                style: {
+                  strokeWidth: 1,
+                  stroke: '#666',
+                  strokeDasharray: '5,5',
+                },
+              }));
+            return [...edges, ...flowNodeEdges];
+          }
+          return edges;
+        },
+        [],
+      );
 
       setNodes(newNodes);
       setEdges([...mainEdges, ...flowEdges]);
@@ -99,4 +113,4 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
   }, [traceData, nodeHeights]);
 
   return { nodes, edges, onNodesChange, onEdgesChange };
-}; 
+};
