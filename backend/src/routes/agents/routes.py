@@ -149,7 +149,9 @@ async def update_agent(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_agent_model_to_dto(agent=agent)
+    return map_agent_model_to_dto(agent=agent).model_dump(
+        mode="json", exclude_none=True
+    )
 
 
 @agent_router.delete("/{agent_id}")
