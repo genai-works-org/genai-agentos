@@ -31,6 +31,7 @@ import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
+import { normalizeString } from '../utils/normalizeString';
 
 const getDefaultFlowName = () => `Agents-flow-${Date.now()}`;
 
@@ -194,7 +195,7 @@ export const AgentFlowsEditPage: FC = () => {
               type: 'default',
               position: { x: 0, y: index * 75 },
               data: {
-                label: agent?.name || flowItem.agent_id,
+                label: normalizeString(agent?.name || flowItem.agent_id),
                 description: agent?.agent_schema.description,
                 agent_id: flowItem.agent_id,
               },
@@ -334,7 +335,7 @@ export const AgentFlowsEditPage: FC = () => {
         type: 'default',
         position: boundedPosition,
         data: {
-          label: agent.name,
+          label: normalizeString(agent.name),
           description: agent.agent_schema.description,
           color,
         },
@@ -635,7 +636,11 @@ export const AgentFlowsEditPage: FC = () => {
                           whiteSpace: 'normal',
                         }}
                       >
-                        {highlightMatch(agent.name || '', search, false)}
+                        {highlightMatch(
+                          normalizeString(agent.name || ''),
+                          search,
+                          false,
+                        )}
                       </Typography>
                       <Typography
                         variant="body2"

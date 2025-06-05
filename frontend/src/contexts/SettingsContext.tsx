@@ -8,16 +8,16 @@ import { AI_PROVIDERS } from '../pages/SettingsPage';
 export interface Settings {
   openAi: {
     api_key: string;
-  },
+  };
   azureOpenAi: {
     endpoint: string;
     api_key: string;
     api_version: string;
     deployment_name: string;
-  },
+  };
   ollama: {
     base_url: string;
-  },
+  };
   model: AIModel | null;
   ai_provider: string;
   system_prompt: string | null;
@@ -33,7 +33,10 @@ interface SettingsContextType {
   loading: boolean;
   error: string | null;
   createModel: (model: Omit<ModelConfig, 'id'>) => Promise<ModelConfig>;
-  updateModel: (id: string, model: Partial<ModelConfig>) => Promise<ModelConfig>;
+  updateModel: (
+    id: string,
+    model: Partial<ModelConfig>,
+  ) => Promise<ModelConfig>;
   deleteModel: (id: string) => Promise<void>;
 }
 
@@ -55,18 +58,27 @@ const defaultSettings: Settings = {
   system_prompt: null,
 };
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+const SettingsContext = createContext<SettingsContextType | undefined>(
+  undefined,
+);
 
 export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const LOCAL_STORAGE_KEY = 'app-settings';
   const {
-    models: availableModels, loading, error, system_prompt,
-    createModel, updateModel, deleteModel,
+    models: availableModels,
+    loading,
+    error,
+    system_prompt,
+    createModel,
+    updateModel,
+    deleteModel,
   } = useModels();
   const [settings, setSettings] = useState<Settings>(() => {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return saved ? { ...JSON.parse(saved), system_prompt: system_prompt } : defaultSettings;
+      return saved
+        ? { ...JSON.parse(saved), system_prompt: system_prompt }
+        : defaultSettings;
     } catch {
       return defaultSettings;
     }
@@ -83,7 +95,7 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }, [system_prompt]);
 
   useEffect(() => {
-    const settingsForStorage = { 
+    const settingsForStorage = {
       openAi: {
         api_key: settings.openAi.api_key ? '********' : '',
       },
@@ -98,15 +110,12 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
       },
       model: settings.model,
       ai_provider: settings.ai_provider,
-    }
+    };
 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settingsForStorage));
   }, [settings]);
 
   useEffect(() => {
-
-    console.log("==> availableModels", availableModels);
-
     if (availableModels.length === 0) {
       setAzureOpenAiModels([]);
       setOpenAiModels([]);
@@ -115,9 +124,15 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
       return;
     }
 
-    const azureOpenAiModels = availableModels.filter(model => model.provider === AI_PROVIDERS.AZURE_OPENAI);
-    const openAiModels = availableModels.filter(model => model.provider === AI_PROVIDERS.OPENAI);
-    const ollamaModels = availableModels.filter(model => model.provider === AI_PROVIDERS.OLLAMA);
+    const azureOpenAiModels = availableModels.filter(
+      model => model.provider === AI_PROVIDERS.AZURE_OPENAI,
+    );
+    const openAiModels = availableModels.filter(
+      model => model.provider === AI_PROVIDERS.OPENAI,
+    );
+    const ollamaModels = availableModels.filter(
+      model => model.provider === AI_PROVIDERS.OLLAMA,
+    );
 
     setAzureOpenAiModels(azureOpenAiModels);
     setOpenAiModels(openAiModels);
@@ -163,24 +178,26 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings(prev => ({
       ...prev,
-      ...newSettings
+      ...newSettings,
     }));
   };
 
   return (
-    <SettingsContext.Provider value={{
-      settings,
-      updateSettings,
-      availableModels,
-      azureOpenAiModels,
-      openAiModels,
-      ollamaModels,
-      loading,
-      error,
-      createModel,
-      updateModel,
-      deleteModel
-    }}>
+    <SettingsContext.Provider
+      value={{
+        settings,
+        updateSettings,
+        availableModels,
+        azureOpenAiModels,
+        openAiModels,
+        ollamaModels,
+        loading,
+        error,
+        createModel,
+        updateModel,
+        deleteModel,
+      }}
+    >
       {children}
     </SettingsContext.Provider>
   );

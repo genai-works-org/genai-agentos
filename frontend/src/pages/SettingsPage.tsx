@@ -82,7 +82,6 @@ export const SettingsPage = () => {
   };
 
   const handleModelSelect = (model: AIModel) => {
-    console.log('==> model select', model);
     setConfig({ ...config, model });
   };
 
