@@ -12,7 +12,6 @@ class OutgoingMLRequestSchema(BaseModel):
     configs: dict
     files: Optional[List[FileDTO]] = []
     timestamp: datetime | float | int  # posix ts
-    max_last_messages: Optional[int] = None
 
     @model_validator(mode="after")
     def validate_uuids(self) -> Self:
