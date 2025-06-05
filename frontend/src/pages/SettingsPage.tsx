@@ -8,6 +8,7 @@ import {
   Box,
   SelectChangeEvent,
   Button,
+  TextField,
 } from '@mui/material';
 import { useSettings } from '../contexts/SettingsContext';
 import { useModels } from '../hooks/useModels';
@@ -226,6 +227,27 @@ export const SettingsPage = () => {
                 }
               />
             )}
+
+            <TextField
+              fullWidth
+              type="number"
+              name="messageDeepness"
+              label="Message deepness"
+              value={config.max_last_messages || 5}
+              onChange={handleDeepnessChange}
+              placeholder="Enter message deepness"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+              error={Boolean(
+                validateField(
+                  'maxLastMessages',
+                  String(config.max_last_messages),
+                ),
+              )}
+              helperText={validateField(
+                'maxLastMessages',
+                String(config.max_last_messages),
+              )}
+            />
 
             <Box>
               <Button
