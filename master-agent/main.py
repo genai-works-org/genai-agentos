@@ -34,8 +34,8 @@ async def receive_message(
     try:
         graph_config = {"configurable": {"session": session}}
 
-        base_system_prompt = configs.get("llm", {}).get("system_prompt")
-        user_system_prompt = configs.get("llm", {}).get("user_prompt")
+        base_system_prompt = configs.get("system_prompt")
+        user_system_prompt = configs.get("user_prompt")
 
         system_prompt = user_system_prompt or base_system_prompt
         system_prompt = f"{system_prompt}\n\n{FILE_RELATED_SYSTEM_PROMPT}"
@@ -45,7 +45,7 @@ async def receive_message(
             session_id=session_id,
             user_id=user_id,
             api_key=app_settings.MASTER_BE_API_KEY,
-            max_last_messages=configs.get("max_last_messages", 10)
+            max_last_messages=configs.get("max_last_messages", 5)
         )
 
         chat_history[-1] = attach_files_to_message(message=chat_history[-1], files=files) if files else chat_history[-1]
@@ -61,7 +61,7 @@ async def receive_message(
             user_id=user_id
         )
 
-        llm = LLMFactory.create(configs=configs.get("llm", {}))
+        llm = LLMFactory.create(configs=configs)
         master_agent = ReActMasterAgent(model=llm, agents=agents)
 
         logger.info("Running Master Agent")
