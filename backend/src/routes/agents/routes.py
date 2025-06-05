@@ -106,7 +106,9 @@ async def get_data(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_genai_agent_to_unified_dto(agent=agent)
+    return map_genai_agent_to_unified_dto(agent=agent).model_dump(
+        mode="json", exclude_none=True
+    )
 
 
 @agent_router.post("/register", response_model=AgentDTOWithJWT)
@@ -142,12 +144,19 @@ async def update_agent(
     agent_id: UUID,
     agent_upd_data: AgentCRUDUpdate,
 ):
-    agent = await agent_repo.get_agent_by_id(db=db, agent_id=agent_id, user_model=user)
-    if not agent:
+    existing_agent = await agent_repo.get_agent_by_id(
+        db=db, agent_id=agent_id, user_model=user
+    )
+    if not existing_agent:
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_agent_model_to_dto(agent=agent)
+    agent = await agent_repo.update_by_user(
+        db=db, id_=agent_id, user=user, obj_in=agent_upd_data
+    )
+    return map_agent_model_to_dto(agent=agent).model_dump(
+        mode="json", exclude_none=True
+    )
 
 
 @agent_router.delete("/{agent_id}")

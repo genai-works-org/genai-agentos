@@ -177,6 +177,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             agent_schema=json_schema.model_dump(mode="json", exclude_none=True),
             created_at=created_at,
             updated_at=updated_at,
+            is_active=True,
         )
 
 
