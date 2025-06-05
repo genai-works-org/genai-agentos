@@ -14,7 +14,6 @@ from src.db.session import AsyncDBSession
 from src.repositories.chat import chat_repo
 from src.repositories.files import files_repo
 from src.repositories.model_config import model_config_repo
-from src.repositories.user import user_repo
 from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
 from src.schemas.api.chat.schemas import CreateChatMessage
 from src.schemas.ws.frontend import (
@@ -231,18 +230,13 @@ async def handle_frontend_ws(
                     sender_type=SenderType.user, content=message_obj.message
                 ),
             )
-            user_profile = await user_repo.get_user_profile(
-                db=db, user_id=user_model.id
-            )
+
             ml_request = OutgoingMLRequestSchema(
                 user_id=user_model.id,
                 session_id=session_id,
                 timestamp=int(datetime.now().timestamp()),
                 configs=enriched_llm_props.to_json(),
                 files=files,
-                max_last_messages=user_profile.max_last_messages
-                if user_profile
-                else None,
             )
 
             req_body = ml_request.model_dump(exclude_none=True)
