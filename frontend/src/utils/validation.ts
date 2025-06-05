@@ -60,6 +60,15 @@ export const validationRules: ValidationRules = {
       message: 'Value must be between 1 and 20',
     },
   ],
+  maxLastMessages: [
+    {
+      validate: (value: string) => {
+        if (!Number(value)) return true;
+        return Number(value) >= 1 && Number(value) <= 20;
+      },
+      message: 'Value must be between 1 and 20',
+    },
+  ],
 };
 
 export const validateField = (
