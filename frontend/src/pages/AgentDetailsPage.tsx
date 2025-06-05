@@ -120,7 +120,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <Paper variant="outlined" sx={{ p: 2 }}>
                 <JSONTree
-                  data={null} // TODO: add input parameters
+                  data={agent.agent_schema}
                   theme={jsonTreeTheme}
                   invertTheme={false}
                 />

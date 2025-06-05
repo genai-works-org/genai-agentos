@@ -10,12 +10,11 @@ import {
   IconButton,
   Box,
   CircularProgress,
-  Chip,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
-import { AgentDTO, AgentType } from '../types/agent';
+import { AgentDTO } from '../types/agent';
 import { normalizeString } from '../utils/normalizeString';
 
 const ExpandMore = styled((props: { expanded: boolean } & any) => {
@@ -117,7 +116,6 @@ export const AgentCard: FC<AgentCardProps> = ({
     >
       <Box
         sx={{
-          display: agent.type === AgentType.FLOW ? 'none' : 'block',
           position: 'absolute',
           top: 12,
           right: 12,
@@ -128,17 +126,6 @@ export const AgentCard: FC<AgentCardProps> = ({
         }}
       />
       <CardContent>
-        <Chip
-          label={agent.type}
-          size="small"
-          sx={{
-            fontWeight: 600,
-            backgroundColor: '#FFE0B2',
-            color: '#E65100',
-            textTransform: 'uppercase',
-            marginBottom: 1,
-          }}
-        />
         <Box
           sx={{
             display: 'flex',
