@@ -106,7 +106,9 @@ async def get_data(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_genai_agent_to_unified_dto(agent=agent)
+    return map_genai_agent_to_unified_dto(agent=agent).model_dump(
+        mode="json", exclude_none=True
+    )
 
 
 @agent_router.post("/register", response_model=AgentDTOWithJWT)
