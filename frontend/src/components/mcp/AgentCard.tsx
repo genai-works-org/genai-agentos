@@ -57,7 +57,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           </Typography>
 
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {agent.mcp_tools.map(tool => (
+            {agent.mcp_tools?.map(tool => (
               <Chip
                 key={tool.title}
                 label={`${normalizeString(tool.title)}`}
