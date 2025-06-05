@@ -64,7 +64,7 @@ const MCPServersPage = () => {
               tooltipMessage="Create a new MCP Server"
               width="350px"
             />
-            {agents.map(agent => (
+            {agents?.map(agent => (
               <AgentCard
                 key={agent.id}
                 agent={agent}

@@ -45,7 +45,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
           </Typography>
 
           <Stack direction="row" gap={1} flexWrap="wrap">
-            {agent.mcp_tools.map(tool => (
+            {agent.mcp_tools?.map(tool => (
               <Box
                 key={tool.id}
                 px={1.5}
