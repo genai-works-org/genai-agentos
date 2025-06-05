@@ -39,3 +39,4 @@ class AgentDTOPayload(BaseUUIDToStrModel):
     flow: Optional[list] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    is_active: Optional[bool] = None

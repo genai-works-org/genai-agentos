@@ -87,6 +87,7 @@ def map_genai_agent_to_unified_dto(agent: Agent):
         agent_schema=agent.input_parameters,
         created_at=agent.created_at,
         updated_at=agent.updated_at,
+        is_active=agent.is_active,
     )
 
 

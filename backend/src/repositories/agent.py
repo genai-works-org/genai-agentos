@@ -198,8 +198,8 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             db=db, user_id=user_model.id, offset=offset, limit=limit
         )
         agent_dtos = [map_genai_agent_to_unified_dto(agent=agent) for agent in agents]
-        result: list[MLAgentJWTDTO | FlowSchema | None] = [*flows, *agent_dtos]
-        return result
+        result: list[AgentDTOPayload | None] = [*flows, *agent_dtos]
+        return [r.model_dump(mode="json", exclude_none=True) for r in result]
 
     async def list_all_active_genai_agents(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
@@ -376,22 +376,24 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         offset: int = 0,
     ):
         if filter_field.name:
-            return await self.list_agents_by_name(
+            agents = await self.list_agents_by_name(
                 db=db,
                 agent_name=filter_field.name,
                 user_model=user_model,
                 limit=limit,
                 offset=offset,
             )
+            return [map_genai_agent_to_unified_dto(a) for a in agents]
 
         if filter_field.description:
-            return await self.search_agents_by_description(
+            agents = await self.search_agents_by_description(
                 db=db,
                 description_query=filter_field.description,
                 user_model=user_model,
                 limit=limit,
                 offset=offset,
             )
+            return [map_genai_agent_to_unified_dto(a) for a in agents]
 
         return await self.query_all_genai_agents(
             db=db, user_model=user_model, limit=limit, offset=offset
@@ -562,6 +564,7 @@ LIMIT :limit OFFSET :offset;
                             agent_schema=t,
                             created_at=created_at,
                             updated_at=updated_at,
+                            is_active=True,
                         )
                     )
                 response.extend(modified_tools)
@@ -622,6 +625,7 @@ LIMIT :limit OFFSET :offset;
                     agent_schema=agent.agent_schema,
                     created_at=agent.created_at,
                     updated_at=agent.updated_at,
+                    is_active=agent.is_active,
                 )
                 response.append(agent_dto)
 
