@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import { AgentDTO } from '../types/agent';
+import { AgentDTO, AgentType } from '../types/agent';
 import { AgentCard } from '../components/AgentCard';
 import {
   Container,
@@ -15,8 +15,10 @@ import { useAgent } from '../hooks/useAgent';
 
 export const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
-  const [activeConnectionsCount, setActiveConnectionsCount] = useState(0);
   const { isLoading, getAgents, deleteAgent } = useAgent();
+
+  const filteredAgents = agents.filter(agent => agent.type !== AgentType.FLOW);
+  const activeAgents = filteredAgents.filter(agent => agent.is_active);
 
   useEffect(() => {
     loadAgents();
@@ -25,7 +27,6 @@ export const AgentsPage: FC = () => {
   const loadAgents = async () => {
     const response = await getAgents();
     setAgents(response);
-    setActiveConnectionsCount(response.length);
   };
 
   return (
@@ -40,7 +41,7 @@ export const AgentsPage: FC = () => {
           {!isLoading && (
             <Box>
               <Typography variant="h5" component="h3">
-                {activeConnectionsCount} agents ({agents.length} active)
+                {filteredAgents.length} agents ({activeAgents.length} active)
               </Typography>
             </Box>
           )}
@@ -64,7 +65,7 @@ export const AgentsPage: FC = () => {
           >
             <CircularProgress />
           </Box>
-        ) : agents.length === 0 ? (
+        ) : filteredAgents.length === 0 ? (
           <Box
             display="flex"
             justifyContent="center"
@@ -85,7 +86,7 @@ export const AgentsPage: FC = () => {
             }}
             gap={3}
           >
-            {agents.map(agent => (
+            {filteredAgents.map(agent => (
               <Box key={agent.id}>
                 <AgentCard
                   agent={agent}

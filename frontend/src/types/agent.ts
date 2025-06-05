@@ -23,8 +23,9 @@ export interface AgentDTO {
   type: string;
   created_at: string;
   updated_at: string;
-  url: string | null;
+  url?: string | null;
   agent_schema: AgentSchema;
+  is_active?: boolean;
 }
 
 export interface AgentCreate {
@@ -98,6 +99,7 @@ export enum AgentType {
   MCP = 'mcp',
   GEN_AI = 'genai',
   ALL = 'all',
+  FLOW = 'flow',
 }
 
 export interface ActiveConnection {
@@ -108,6 +110,16 @@ export interface ActiveConnection {
   agent_schema: {
     title: string;
     description: string;
+    type: string;
+    properties: Record<
+      string,
+      {
+        type: string;
+        title?: string;
+        description?: string;
+      }
+    >;
+    required: string[];
   };
   created_at: string;
   updated_at: string;

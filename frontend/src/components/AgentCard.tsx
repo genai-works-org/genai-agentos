@@ -122,7 +122,7 @@ export const AgentCard: FC<AgentCardProps> = ({
           width: 8,
           height: 8,
           borderRadius: '50%',
-          backgroundColor: 'success.main',
+          backgroundColor: agent?.is_active ? 'success.main' : 'error.main',
         }}
       />
       <CardContent>

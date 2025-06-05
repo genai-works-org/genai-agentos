@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { ChangeEvent, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   Select,
@@ -8,6 +8,7 @@ import {
   Box,
   SelectChangeEvent,
   Button,
+  TextField,
 } from '@mui/material';
 import { Settings, useSettings } from '../contexts/SettingsContext';
 import { AIModel } from '../services/apiService';
@@ -18,6 +19,8 @@ import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings'
 import { OllamaSettings } from '../components/settings/OllamaSettings';
 import { ModelForm } from '../components/ModelForm';
 import ConfirmModal from '../components/ConfirmModal';
+import { validateField } from '../utils/validation';
+import { authService } from '../services/authService';
 
 export const AI_PROVIDERS = {
   OPENAI: 'openai',
@@ -82,7 +85,6 @@ export const SettingsPage = () => {
   };
 
   const handleModelSelect = (model: AIModel) => {
-    console.log('==> model select', model);
     setConfig({ ...config, model });
   };
 
@@ -90,7 +92,26 @@ export const SettingsPage = () => {
     setConfig({ ...config, ...data });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (validateField('maxLastMessages', String(config.max_last_messages)))
+      return;
+
+    const user = authService.getCurrentUser();
+    let userId;
+
+    if (user?.accessToken) {
+      const tokenParts = user.accessToken.split('.');
+
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        userId = payload.id || payload.sub;
+      }
+    }
+
+    await authService.updateUserProfile(userId, {
+      max_last_messages: config.max_last_messages,
+    });
+
     updateSettings(config);
     toast.success('Settings saved successfully');
   };
@@ -109,6 +130,7 @@ export const SettingsPage = () => {
     if (!modelToDelete) return;
     try {
       await deleteModel(modelToDelete.id);
+      updateSettings({ ...config, model: null });
       if (modelToDelete.id === currentModelId) {
         setCurrentModelId(null);
       }
@@ -142,6 +164,10 @@ export const SettingsPage = () => {
   const handleCreateModel = () => {
     setSelectedModel(null);
     setShowForm(true);
+  };
+
+  const handleDeepnessChange = (e: ChangeEvent<HTMLInputElement>) => {
+    handleConfigChange({ max_last_messages: Number(e.target.value) });
   };
 
   return (
@@ -216,6 +242,27 @@ export const SettingsPage = () => {
                 tooltipMessage={TOOLTIP_MESSAGES.OLLAMA}
               />
             )}
+
+            <TextField
+              fullWidth
+              type="number"
+              name="messageDeepness"
+              label="Message deepness"
+              value={config.max_last_messages || 5}
+              onChange={handleDeepnessChange}
+              placeholder="Enter message deepness"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+              error={Boolean(
+                validateField(
+                  'maxLastMessages',
+                  String(config.max_last_messages),
+                ),
+              )}
+              helperText={validateField(
+                'maxLastMessages',
+                String(config.max_last_messages),
+              )}
+            />
 
             <Box>
               <Button

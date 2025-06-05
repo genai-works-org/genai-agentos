@@ -16,10 +16,8 @@ export const useModels = () => {
       setLoading(true);
       setError(null);
       const data = await modelService.getModels();
-      console.log(data);
       setModels(data);
     } catch (err) {
-      console.log(err);
       setError('Failed to fetch models');
       toast.showError('Failed to fetch models');
     } finally {
@@ -28,7 +26,7 @@ export const useModels = () => {
   };
 
   const createModel = async (model: Omit<ModelConfig, 'id'>) => {
-    setLoading(true);;
+    setLoading(true);
     try {
       const newModel = await modelService.createModel(model);
       return newModel;
@@ -37,7 +35,7 @@ export const useModels = () => {
       throw err;
     } finally {
       setLoading(false);
-      await fetchModels()
+      await fetchModels();
     }
   };
 
@@ -89,6 +87,6 @@ export const useModels = () => {
     createModel,
     updateModel,
     deleteModel,
-    refetch: fetchModels
+    refetch: fetchModels,
   };
 };

@@ -56,6 +56,25 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
             ))}
           </Stack>
         </Box>
+
+        <Box>
+          <Typography variant="subtitle2">Skills:</Typography>
+          <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
+            {agent.card_content.skills.map(skill => (
+              <Chip
+                key={skill.id}
+                label={normalizeString(skill.id)}
+                size="small"
+                sx={{
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  backgroundColor: '#E3F2FD',
+                  color: '#1565C0',
+                }}
+              />
+            ))}
+          </Stack>
+        </Box>
       </Stack>
 
       <DialogActions>

@@ -37,7 +37,7 @@ const ChatPage = () => {
 
   useEffect(() => {
     // Add connection state handler
-    const handleConnectionState = (connected: boolean) => {
+    const handleConnectionState = () => {
       // Remove console.log statement
     };
 
@@ -50,10 +50,13 @@ const ChatPage = () => {
 
   return (
     <MainLayout currentPage="Chat">
-      <Container maxWidth="xl" sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 2 }}>
+      <Container
+        maxWidth="xl"
+        sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 2 }}
+      >
         {/* Messages area */}
         <Box sx={{ flex: 1, overflow: 'auto', mb: 1 }}>
-          <ChatArea/>
+          <ChatArea />
         </Box>
       </Container>
     </MainLayout>

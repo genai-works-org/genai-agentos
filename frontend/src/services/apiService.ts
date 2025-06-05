@@ -62,12 +62,13 @@ export class ApiService {
   private toast = useToast();
 
   // Helper function to handle response
-  private async handleResponse<T>(response: Response, method: string): Promise<ApiResponse<T>> {
+  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     if (!response.ok) {
       let errorMessage = '';
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || errorData.message || await response.text();
+        errorMessage =
+          errorData.detail || errorData.message || (await response.text());
       } catch {
         errorMessage = await response.text();
       }
@@ -77,7 +78,7 @@ export class ApiService {
         status: response.status,
         statusText: response.statusText,
       };
-      
+
       // Handle 403 Forbidden error
       if (response.status === 403 || response.status === 401) {
         // Import authService and trigger logout
@@ -88,17 +89,17 @@ export class ApiService {
         // Show the actual error message from the API
         this.toast.showError(errorMessage);
       }
-      
+
       throw error;
     }
 
     // Check if response has content
     const contentLength = response.headers.get('content-length');
     const isEmpty = contentLength === '0' || contentLength === null;
-    
+
     const data = isEmpty ? null : await response.json();
     return {
-      data: (data as T),
+      data: data as T,
       status: response.status,
       statusText: response.statusText,
     };
@@ -143,7 +144,11 @@ export class ApiService {
   ): Promise<ApiResponse<T>> {
     // Check if user is authenticated
     const token = tokenService.getToken();
-    if (!token  && !endpoint.includes('/api/login') && !endpoint.includes('/api/register')) {
+    if (
+      !token &&
+      !endpoint.includes('/api/login') &&
+      !endpoint.includes('/api/register')
+    ) {
       throw new Error('User is not authenticated');
     }
 
@@ -157,8 +162,11 @@ export class ApiService {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, requestOptions);
-      return await this.handleResponse<T>(response, options.method || 'GET');
+      const response = await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        requestOptions,
+      );
+      return await this.handleResponse<T>(response);
     } catch (error) {
       throw error;
     }
@@ -166,8 +174,7 @@ export class ApiService {
 
   // Helper function to get headers
   private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
-    };
+    const headers: HeadersInit = {};
 
     const token = tokenService.getToken();
     if (token) {
@@ -180,33 +187,46 @@ export class ApiService {
   // Helper function to handle request with notifications
 
   // Helper function to build URL with query parameters
-  private buildUrlWithParams(endpoint: string, params?: Record<string, string>): string {
+  private buildUrlWithParams(
+    endpoint: string,
+    params?: Record<string, string>,
+  ): string {
     if (!params) return endpoint;
-    
+
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
         searchParams.append(key, value);
       }
     });
-    
+
     const queryString = searchParams.toString();
     return queryString ? `${endpoint}?${queryString}` : endpoint;
   }
 
   // Public API methods
-  async get<T>(endpoint: string, options: RequestInit & { params?: Record<string, string> } = {}): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    options: RequestInit & { params?: Record<string, string> } = {},
+  ): Promise<ApiResponse<T>> {
     try {
       const { params, ...requestOptions } = options;
       const url = this.buildUrlWithParams(endpoint, params);
-      const response = await this.makeRequest<T>(url, { ...requestOptions, method: 'GET' });
+      const response = await this.makeRequest<T>(url, {
+        ...requestOptions,
+        method: 'GET',
+      });
       return response;
     } catch (error) {
       throw error;
     }
   }
 
-  async post<T>(endpoint: string, data: any, options: PostOptions = {}): Promise<ApiResponse<T>> {
+  async post<T>(
+    endpoint: string,
+    data: any,
+    options: PostOptions = {},
+  ): Promise<ApiResponse<T>> {
     try {
       const response = await this.makeRequest<T>(endpoint, {
         ...options,
@@ -214,7 +234,8 @@ export class ApiService {
         body: options.noStingify ? data : JSON.stringify(data),
         headers: {
           ...options.headers,
-          ...(!options.isFormData && !options.noStingify && { 'Content-Type': 'application/json'}),
+          ...(!options.isFormData &&
+            !options.noStingify && { 'Content-Type': 'application/json' }),
         },
       });
       return response;
@@ -223,7 +244,11 @@ export class ApiService {
     }
   }
 
-  async put<T>(endpoint: string, data: any, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  async put<T>(
+    endpoint: string,
+    data: any,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<T>> {
     try {
       const response = await this.makeRequest<T>(endpoint, {
         ...options,
@@ -236,13 +261,17 @@ export class ApiService {
     }
   }
 
-  async patch<T>(endpoint: string, data: any, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  async patch<T>(
+    endpoint: string,
+    data: any,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<T>> {
     try {
       const response = await this.makeRequest<T>(endpoint, {
         ...options,
         method: 'PATCH',
         body: JSON.stringify(data),
-        headers: { 
+        headers: {
           ...options.headers,
           'Content-Type': 'application/json',
         },
@@ -253,9 +282,15 @@ export class ApiService {
     }
   }
 
-  async delete<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<ApiResponse<T>> {
     try {
-      const response = await this.makeRequest<T>(endpoint, { ...options, method: 'DELETE' });
+      const response = await this.makeRequest<T>(endpoint, {
+        ...options,
+        method: 'DELETE',
+      });
       return response;
     } catch (error) {
       throw error;
