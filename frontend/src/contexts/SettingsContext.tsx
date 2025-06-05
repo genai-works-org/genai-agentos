@@ -21,6 +21,7 @@ export interface Settings {
   model: AIModel | null;
   ai_provider: string;
   system_prompt: string | null;
+  max_last_messages: number;
 }
 
 interface SettingsContextType {
@@ -56,6 +57,7 @@ const defaultSettings: Settings = {
   model: null,
   ai_provider: AI_PROVIDERS.OPENAI,
   system_prompt: null,
+  max_last_messages: 5,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -110,6 +112,7 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
       },
       model: settings.model,
       ai_provider: settings.ai_provider,
+      max_last_messages: settings.max_last_messages,
     };
 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settingsForStorage));
