@@ -1,5 +1,6 @@
 from typing import Any, Literal, Optional
 
+from mcp.types import Tool
 from pydantic import AnyHttpUrl, BaseModel
 
 
@@ -48,7 +49,7 @@ class MCPPromptSchema(BaseModel):
 
 
 class MCPServerData(BaseModel):
-    mcp_tools: list[Optional[dict]] = []
+    mcp_tools: list[Optional[Tool]] = []
     is_active: bool
     meta: Optional[Any] = None
     nextCursor: Optional[Any] = None

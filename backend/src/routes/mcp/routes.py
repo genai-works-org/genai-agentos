@@ -23,15 +23,24 @@ async def add_server_url(
 
 
 @mcp_router.get("/servers")
-async def list_all_mcp_servers(db: AsyncDBSession, user_model: CurrentUserDependency):
-    return await mcp_repo.get_multiple_by_user(db=db, user_model=user_model)
+async def list_all_mcp_servers(
+    db: AsyncDBSession,
+    user_model: CurrentUserDependency,
+    limit: int = 100,
+    offset: int = 0,
+):
+    return await mcp_repo.get_all_mcp_tools_of_all_servers(
+        db=db, user_model=user_model, limit=limit, offset=offset
+    )
 
 
 @mcp_router.get("/servers/{server_id}")
 async def get_mcp_server(
     db: AsyncDBSession, user_model: CurrentUserDependency, server_id: UUID
 ):
-    return await mcp_repo.get_by_user(db=db, id_=server_id, user_model=user_model)
+    return await mcp_repo.get_all_mcp_tools_from_single_server(
+        db=db, id_=server_id, user_model=user_model
+    )
 
 
 @mcp_router.delete("/servers/{server_id}")

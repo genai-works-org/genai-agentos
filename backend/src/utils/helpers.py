@@ -9,6 +9,7 @@ from src.models import Agent
 from src.schemas.api.agent.dto import MLAgentJWTDTO
 from src.schemas.api.exceptions import IntegrityErrorDetails
 from src.schemas.base import AgentDTOPayload
+from src.schemas.mcp.dto import MCPToolDTO
 from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
 
@@ -24,7 +25,7 @@ def get_user_id_from_jwt(token: str) -> Optional[str]:
     return token_data.sub
 
 
-def mcp_tool_to_json_schema(tool: Tool) -> dict:
+def mcp_tool_to_json_schema(tool: Tool | MCPToolDTO) -> dict:
     tool_dict = tool.model_dump()
 
     tool_dict.pop("annotations")

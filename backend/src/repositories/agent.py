@@ -2,6 +2,7 @@ from typing import Optional, Union
 from uuid import UUID
 
 from fastapi import HTTPException
+from mcp.types import Tool, ToolAnnotations
 from pydantic import BaseModel
 from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -423,28 +424,31 @@ SELECT
     updated_at,
     last_invoked_at,
     is_active,
-    alias
+    alias,
+    NULL as json_data2
 FROM agents
 WHERE creator_id = :creator_id AND is_active = TRUE
 
 UNION ALL
 
 SELECT
-    'mcpservers' as table_source,
-    id,
-    name,
-    description,
+    'mcptools' as table_source,
+    t.id,
+    t.name,
+    t.description,
     NULL as jwt,
-    creator_id,
-    mcp_tools as json_data1,
-    server_url,
-    created_at,
-    updated_at,
+    m.creator_id,
+    t."inputSchema" as json_data1,
+    NULL as server_url,
+    m.created_at,
+    m.updated_at,
     NULL as last_invoked_at,
-    is_active,
-    NULL as alias
-FROM mcpservers
-WHERE creator_id = :creator_id AND is_active = TRUE
+    TRUE as is_active,
+    t.alias,
+    t.annotations as json_data2
+FROM mcpservers as m
+JOIN mcptools as t ON m.id = t.mcp_server_id
+WHERE m.creator_id = :creator_id AND m.is_active = TRUE
 
 UNION ALL
 
@@ -461,9 +465,11 @@ SELECT
     updated_at,
     NULL as last_invoked_at,
     is_active,
-    NULL as alias
+    NULL as alias,
+    NULL as json_data2
 FROM a2acards
 WHERE creator_id = :creator_id AND is_active = TRUE
+
 ORDER BY created_at DESC
 LIMIT :limit OFFSET :offset;
 """
@@ -513,12 +519,31 @@ LIMIT :limit OFFSET :offset;
 
         valid_flows = []
         for f in flows:
+            all_agents_active = await self.lookup_genai_agents_are_active_in_flow(
+                db=db, agent_ids=[a["agent_id"] for a in f.flow]
+            )
+            print(f"{all_agents_active=}")
+            if not all_agents_active:
+                continue
+
             flow = await self.orm_flow_to_dto(f, db=db)
+
             if not flow:
                 continue
+
             valid_flows.append(flow)
 
         return valid_flows
+
+    async def lookup_genai_agents_are_active_in_flow(
+        self, db: AsyncSession, agent_ids: list[str | UUID]
+    ) -> bool:
+        # TODO: this method only looks up genai agents.
+        # Since genai flow can have mcp and a2a tools, need to lookup them too
+        q = await db.scalars(
+            select(self.model.is_active).where(self.model.id.in_(agent_ids))
+        )
+        return all(q.all())
 
     async def map_agents_to_dto_models(
         self, db: AsyncSession, user_id: UUID, offset: int, limit: int
@@ -536,38 +561,36 @@ LIMIT :limit OFFSET :offset;
             response.extend(flows)
         for col in columns:
             agent_type = col.pop("table_source")
-            if agent_type == "mcpservers":
+            if agent_type == "mcptools":
                 fields_to_pop = [
-                    "name",
-                    "description",
                     "jwt",
                     "last_invoked_at",
-                    "alias",
                 ]
                 for field in fields_to_pop:
                     col.pop(field)
 
-                tools = col.pop("json_data1")
-
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                modified_tools = []
-                for t in tools:
-                    modified_tools.append(
-                        AgentDTOPayload(
-                            # TODO: or generate uuid, but tool does not have a dedicated uuid in DB
-                            id=t["title"],
-                            name=t["title"],
-                            type=AgentType.mcp,
-                            url=col["server_url"],
-                            agent_schema=t,
-                            created_at=created_at,
-                            updated_at=updated_at,
-                            is_active=True,
-                        )
-                    )
-                response.extend(modified_tools)
+                mcp_tool = AgentDTOPayload(
+                    id=col["id"],
+                    name=col["alias"] if col["alias"] else col["name"],
+                    type=AgentType.mcp,
+                    url=col["server_url"],
+                    agent_schema=Tool(
+                        name=col["name"],
+                        description=col["description"],
+                        inputSchema=col["json_data1"],
+                        annotations=ToolAnnotations(**col["json_data2"])
+                        if col["json_data2"]
+                        else None,
+                    ).model_dump(mode="json"),
+                    created_at=created_at,
+                    updated_at=updated_at,
+                    is_active=True,
+                )
+
+                response.append(mcp_tool)
 
             if agent_type == "a2acards":
                 fields_to_pop = [

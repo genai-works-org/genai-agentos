@@ -264,7 +264,7 @@ class MCPServer(Base):
 
     server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
 
-    mcp_tools: Mapped[not_null_json_array_column]
+    mcp_tools: Mapped[List["MCPTool"]] = relationship(back_populates="mcp_server")
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -279,6 +279,22 @@ class MCPServer(Base):
 
     def __repr__(self) -> str:
         return f"<MCPServer(host={self.server_url!r}>"
+
+
+class MCPTool(Base):
+    id: Mapped[uuid_pk]
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(nullable=True)
+    inputSchema: Mapped[not_null_json_column]
+    annotations: Mapped[nullable_json_column]
+
+    alias: Mapped[str] = mapped_column(nullable=True)
+
+    mcp_server: Mapped["MCPServer"] = relationship(back_populates="mcp_tools")  # noqa: F821
+
+    mcp_server_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("mcpservers.id", ondelete="CASCADE"), nullable=True, index=True
+    )
 
 
 class A2ACard(Base):
@@ -355,5 +371,6 @@ class UserProfile(Base):
     )
     user: Mapped["User"] = relationship(back_populates="profile", single_parent=True)
 
-    max_last_messages: Mapped[int] = mapped_column(nullable=True)  # TODO: rm
+    # TODO: validate 1-20 range
+    max_last_messages: Mapped[int] = mapped_column(nullable=True)
     # TODO: config fields like user prompt, other credentials, etc
