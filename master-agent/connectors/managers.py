@@ -81,8 +81,7 @@ class A2AConnector(ConnectorStrategy):
                 request = SendMessageRequest(
                     params=MessageSendParams(**send_message_payload)
                 )
-
-                response = await client.send_message(request)
+                response = await client.send_message(request, http_kwargs={"timeout": None})
 
                 if isinstance(response.root, SendMessageSuccessResponse):
                     response_text = response.root.result.artifacts[0].parts[0].root.text
@@ -91,7 +90,7 @@ class A2AConnector(ConnectorStrategy):
 
                 trace.update(
                     {
-                        "output": response.model_dump(),
+                        "output": response.model_dump(mode="json"),
                         "is_success": isinstance(response.root, SendMessageSuccessResponse)
                     }
                 )
