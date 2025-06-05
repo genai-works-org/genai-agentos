@@ -15,14 +15,12 @@ from src.db.session import AsyncDBSession
 from src.repositories.chat import chat_repo
 from src.repositories.files import files_repo
 from src.repositories.model_config import model_config_repo
-from src.repositories.user import user_repo
 from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
 from src.schemas.api.chat.schemas import CreateChatMessage
 from src.schemas.ws.frontend import (
     AgentResponseDTO,
     IncomingFrontendMessage,
     LLMPropertiesDecryptCreds,
-    LLMPropertiesDTO,
 )
 from src.schemas.ws.ml import OutgoingMLRequestSchema
 from src.utils.enums import SenderType
@@ -210,6 +208,7 @@ async def handle_frontend_ws(
                         system_prompt=users_model_config.system_prompt,
                         user_prompt=users_model_config.user_prompt,
                         credentials=updated_credentials,
+                        max_last_messages=users_model_config.max_last_messages,
                     )
                 except ValueError:
                     await websocket.send_json(
@@ -236,18 +235,13 @@ async def handle_frontend_ws(
                     sender_type=SenderType.user, content=message_obj.message
                 ),
             )
-            user_profile = await user_repo.get_user_profile(
-                db=db, user_id=user_model.id
-            )
+
             ml_request = OutgoingMLRequestSchema(
                 user_id=user_model.id,
                 session_id=session_id,
                 timestamp=int(datetime.now().timestamp()),
-                configs=LLMPropertiesDTO(llm=enriched_llm_props.to_json()),
+                configs=enriched_llm_props.to_json(),
                 files=files,
-                max_last_messages=user_profile.max_last_messages
-                if user_profile
-                else None,
             )
 
             req_body = ml_request.model_dump(exclude_none=True)

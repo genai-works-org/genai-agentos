@@ -52,6 +52,7 @@ class LLMProperties(BaseModel):
     temperature: Optional[float] = Field(default=0.7)
     system_prompt: Optional[str] = None
     user_prompt: Optional[str] = None
+    max_last_messages: Optional[int] = Field(default=5)
 
     config_name: str
     credentials: Optional[dict] = {}
@@ -64,6 +65,7 @@ class LLMProperties(BaseModel):
             "system_prompt": self.system_prompt,
             "user_prompt": self.user_prompt,
             "config_name": self.config_name,
+            "max_last_messages": self.max_last_messages,
             **self.credentials,
         }
 

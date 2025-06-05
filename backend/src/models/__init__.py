@@ -243,6 +243,7 @@ class ModelConfig(Base):
 
     system_prompt: Mapped[str]
     user_prompt: Mapped[str]
+    max_last_messages: Mapped[int] = mapped_column(default=5, nullable=True)
     temperature: Mapped[float] = mapped_column(default=0.7)
 
     credentials: Mapped[not_null_json_column]  # api_key must be hashed
@@ -371,6 +372,4 @@ class UserProfile(Base):
     )
     user: Mapped["User"] = relationship(back_populates="profile", single_parent=True)
 
-    # TODO: validate 1-20 range
-    max_last_messages: Mapped[int] = mapped_column(nullable=True)
-    # TODO: config fields like user prompt, other credentials, etc
+    # TODO: config fields, other credentials, etc

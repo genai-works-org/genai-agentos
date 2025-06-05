@@ -4,16 +4,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 from src.schemas.api.files.dto import FileDTO
-from src.schemas.ws.frontend import LLMPropertiesDTO
 
 
 class OutgoingMLRequestSchema(BaseModel):
     session_id: UUID | str
     user_id: UUID | str
-    configs: LLMPropertiesDTO
+    configs: dict
     files: Optional[List[FileDTO]] = []
     timestamp: datetime | float | int  # posix ts
-    max_last_messages: Optional[int] = None
 
     @model_validator(mode="after")
     def validate_uuids(self) -> Self:

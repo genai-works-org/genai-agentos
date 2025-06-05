@@ -42,4 +42,3 @@ class TokenValidationInput(BaseModel):
 class UserProfileCRUDUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    max_last_messages: Optional[int] = None
