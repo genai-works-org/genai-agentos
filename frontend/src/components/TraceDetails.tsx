@@ -53,6 +53,8 @@ export const TraceDetails: FC<TraceDetailsProps> = ({ traceData }) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 mb: 1,
+                maxWidth: '100%',
+                overflowWrap: 'break-word',
               }}
             >
               <Typography variant="h6">{trace.name}</Typography>

@@ -44,7 +44,15 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
           bottom: -13,
         }}
       />
-      <Typography variant="subtitle1" sx={{ mb: data.flow ? 0.5 : 0 }}>
+      <Typography
+        variant="subtitle1"
+        sx={{
+          mb: data.flow ? 0.5 : 0,
+          maxWidth: '100%',
+          overflowWrap: 'break-word',
+          textAlign: 'center',
+        }}
+      >
         {data.label}
       </Typography>
       {data?.type && (
