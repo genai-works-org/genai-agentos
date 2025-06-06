@@ -91,15 +91,14 @@ const ChatMessage: FC<ChatMessageProps> = ({
         className={`flex max-w-3xl ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
       >
         <div
-          className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-            isUser
+          className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${isUser
               ? theme === 'light'
                 ? 'ml-4 bg-light-secondary-primary text-light-bg'
                 : 'ml-4 bg-dark-secondary-primary text-dark-bg'
               : theme === 'light'
                 ? 'mr-4 bg-light-secondary-secondary text-light-text'
                 : 'mr-4 bg-dark-secondary-secondary text-dark-text'
-          }`}
+            }`}
         >
           {isUser ? (
             <UserIcon className="h-5 w-5" />
@@ -136,15 +135,14 @@ const ChatMessage: FC<ChatMessageProps> = ({
         </div>
         <div className="wrap-break-word">
           <div
-            className={`inline-block ${
-              theme === 'light'
+            className={`inline-block ${theme === 'light'
                 ? isError
                   ? 'bg-red-100 text-red-800'
                   : 'bg-light-bg text-light-text'
                 : isError
                   ? 'bg-red-900 text-red-100'
                   : 'bg-dark-bg text-dark-text'
-            } rounded-lg px-4 py-2 shadow-sm`}
+              } rounded-lg px-4 py-2 shadow-sm`}
           >
             {renderContent()}
             {files && files.length > 0 && (
@@ -183,11 +181,10 @@ const ChatMessage: FC<ChatMessageProps> = ({
           </div>
           <div className="flex items-center justify-between space-x-2 mt-1">
             <span
-              className={`text-xs ${
-                theme === 'light'
+              className={`text-xs ${theme === 'light'
                   ? 'text-light-secondary-secondary'
                   : 'text-dark-secondary-secondary'
-              }`}
+                }`}
             >
               {new Date(timestamp).toLocaleTimeString([], {
                 hour: '2-digit',
@@ -202,22 +199,20 @@ const ChatMessage: FC<ChatMessageProps> = ({
                 <>
                   <button
                     onClick={handleViewFlow}
-                    className={`mx-1 p-1 rounded-full ${
-                      theme === 'light'
+                    className={`mx-1 p-1 rounded-full ${theme === 'light'
                         ? 'bg-light-secondary-primary text-light-bg hover:bg-light-secondary-secondary'
                         : 'bg-dark-secondary-primary text-dark-bg hover:bg-dark-secondary-secondary'
-                    }`}
+                      }`}
                     title="View Agent Trace"
                   >
                     <GitBranch className="h-4 w-4" />
                   </button>
                   <button
                     onClick={handleCopy}
-                    className={`mx-1 p-1 rounded-full ${
-                      theme === 'light'
+                    className={`mx-1 p-1 rounded-full ${theme === 'light'
                         ? 'bg-light-secondary-primary text-light-bg hover:bg-light-secondary-secondary'
                         : 'bg-dark-secondary-primary text-dark-bg hover:bg-dark-secondary-secondary'
-                    }`}
+                      }`}
                     title="Copy Message"
                     disabled={!content}
                   >
