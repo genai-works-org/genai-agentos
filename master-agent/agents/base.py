@@ -71,7 +71,7 @@ class BaseMasterAgent(ABC):
                 agent_config = MCPConfig(
                     id=agent_to_execute.get("id"),
                     name=remove_last_underscore_segment(agent_name),
-                    endpoint=agent_to_execute.get("url"),
+                    endpoint=f"{agent_to_execute.get("url")}/mcp",
                     arguments=agent_call["args"]
                 )
             elif agent_type == AgentTypeEnum.a2a.value:
