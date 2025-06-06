@@ -74,6 +74,8 @@ export const SettingsPage = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<ModelConfig | null>(null);
   const [config, setConfig] = useState<Settings>(settings);
+  const isMaxLastMessagesChanged =
+    config.max_last_messages !== settings.max_last_messages;
 
   useEffect(() => {
     setConfig(settings);
@@ -270,7 +272,10 @@ export const SettingsPage = () => {
                 variant="contained"
                 color="primary"
                 onClick={handleSave}
-                disabled={!isProviderSettingsSet(config, config.ai_provider)}
+                disabled={
+                  !isProviderSettingsSet(config, config.ai_provider) ||
+                  !isMaxLastMessagesChanged
+                }
               >
                 Save Settings
               </Button>

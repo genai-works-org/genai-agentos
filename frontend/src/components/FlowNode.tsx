@@ -11,7 +11,7 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
       const height = nodeRef.current.offsetHeight;
       // Emit height to parent through custom event
       const event = new CustomEvent('nodeHeight', {
-        detail: { nodeId: id, height }
+        detail: { nodeId: id, height },
       });
       window.dispatchEvent(event);
     }
@@ -33,7 +33,7 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
       <Handle
         type="target"
         position={Position.Top}
-        style={{ 
+        style={{
           top: -13,
         }}
       />
@@ -47,6 +47,23 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
       <Typography variant="subtitle1" sx={{ mb: data.flow ? 0.5 : 0 }}>
         {data.label}
       </Typography>
+      {data?.type && (
+        <Typography
+          variant="caption"
+          sx={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            padding: '0 4px',
+            fontSize: 8,
+            border: '1px solid #E65100',
+            color: '#E65100',
+            borderRadius: 2,
+          }}
+        >
+          {data.type}
+        </Typography>
+      )}
       {data.flow && (
         <Box
           sx={{
@@ -63,10 +80,10 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
             <Box
               key={index}
               id={`flow-node-${id}-${index}`}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 const event = new CustomEvent('flowStepClick', {
-                  detail: { step, nodeId: id }
+                  detail: { step, nodeId: id },
                 });
                 window.dispatchEvent(event);
               }}
@@ -85,7 +102,14 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
                 },
               }}
             >
-              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {step.name}
               </Typography>
             </Box>
@@ -94,4 +118,4 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
       )}
     </Box>
   );
-}; 
+};

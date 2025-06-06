@@ -53,6 +53,7 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
           input: trace.input,
           output: trace.output,
           flow: trace.flow,
+          type: trace?.type,
         },
         style: {
           border: `2px solid ${trace.is_success || trace.flow?.at(-1)?.is_success ? '#4CAF50' : '#F44336'}`,
