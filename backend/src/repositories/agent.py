@@ -30,6 +30,7 @@ from src.utils.helpers import (
     generate_alias,
     map_agent_model_to_dto,
     map_genai_agent_to_unified_dto,
+    mcp_tool_to_json_schema,
 )
 
 
@@ -439,7 +440,7 @@ SELECT
     NULL as jwt,
     m.creator_id,
     t."inputSchema" as json_data1,
-    NULL as server_url,
+    m.server_url as server_url,
     m.created_at,
     m.updated_at,
     NULL as last_invoked_at,
@@ -572,19 +573,22 @@ LIMIT :limit OFFSET :offset;
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                mcp_tool = AgentDTOPayload(
-                    id=col["id"],
-                    name=col["alias"] if col["alias"] else col["name"],
-                    type=AgentType.mcp,
-                    url=col["server_url"],
-                    agent_schema=Tool(
+                tool_schema = mcp_tool_to_json_schema(
+                    Tool(
                         name=col["name"],
                         description=col["description"],
                         inputSchema=col["json_data1"],
                         annotations=ToolAnnotations(**col["json_data2"])
                         if col["json_data2"]
                         else None,
-                    ).model_dump(mode="json"),
+                    )
+                )
+                mcp_tool = AgentDTOPayload(
+                    id=col["id"],
+                    name=tool_schema["title"],
+                    type=AgentType.mcp,
+                    url=col["server_url"],
+                    agent_schema=tool_schema,
                     created_at=created_at,
                     updated_at=updated_at,
                     is_active=True,
@@ -606,7 +610,6 @@ LIMIT :limit OFFSET :offset;
 
                 agent_schema = A2AAgentCard(
                     **col["json_data1"],
-                    id=col["id"],
                     name=col["name"],
                     description=col["description"],
                     url=col["server_url"],
@@ -615,6 +618,7 @@ LIMIT :limit OFFSET :offset;
                     agent_card=agent_schema,
                     created_at=created_at,
                     updated_at=updated_at,
+                    id_=col["id"],
                 )
 
                 response.append(agent_card)

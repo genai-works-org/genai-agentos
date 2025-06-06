@@ -26,9 +26,11 @@ def get_user_id_from_jwt(token: str) -> Optional[str]:
 
 
 def mcp_tool_to_json_schema(tool: Tool | MCPToolDTO) -> dict:
-    tool_dict = tool.model_dump()
+    tool_dict = tool.model_dump(exclude_none=True)
 
-    tool_dict.pop("annotations")
+    if tool_dict.get("annotations"):
+        tool_dict.pop("annotations")
+
     tool_dict.update(tool_dict.pop("inputSchema"))
     tool_dict["title"] = generate_alias(tool_dict.pop("name").replace(" ", "_"))
 
