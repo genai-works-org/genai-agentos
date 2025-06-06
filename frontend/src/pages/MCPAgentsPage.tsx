@@ -17,6 +17,16 @@ const MCPServersPage = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { getServers, createServer, deleteServer, isLoading } = useMcpAgents();
 
+  const groupedAgents = agents.reduce<Record<string, MCPAgent[]>>(
+    (acc, agent) => {
+      const url = agent.url;
+      if (!acc[url]) acc[url] = [];
+      acc[url].push(agent);
+      return acc;
+    },
+    {},
+  );
+
   const handleCreateServer = async (url: string) => {
     await createServer(url);
     const updatedAgents = await getServers();
@@ -63,10 +73,11 @@ const MCPServersPage = () => {
               disabled={false}
               tooltipMessage="Create a new MCP Server"
             />
-            {agents?.map(agent => (
+            {Object.entries(groupedAgents).map(([url, agentGroup]) => (
               <AgentCard
-                key={agent.id}
-                agent={agent}
+                key={url}
+                url={url}
+                tools={agentGroup}
                 setSelectedAgent={setSelectedAgent}
               />
             ))}
@@ -85,6 +96,7 @@ const MCPServersPage = () => {
       <AgentDetailModal
         open={!!selectedAgent}
         agent={selectedAgent}
+        tools={groupedAgents[selectedAgent?.url || '']}
         onClose={() => setSelectedAgent(null)}
         onDelete={() => setIsConfirmOpen(true)}
       />

@@ -10,6 +10,7 @@ import {
   CardContent,
   CircularProgress,
   InputAdornment,
+  Chip,
 } from '@mui/material';
 import { Save, Search, Pencil, Trash } from 'lucide-react';
 import ReactFlow, {
@@ -32,6 +33,11 @@ import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
 import { normalizeString } from '../utils/normalizeString';
+import { CustomNode } from '../components/CustomNode';
+
+const nodeTypes = {
+  customNode: CustomNode,
+};
 
 const getDefaultFlowName = () => `Agents-flow-${Date.now()}`;
 
@@ -190,14 +196,16 @@ export const AgentFlowsEditPage: FC = () => {
           const flowNodes: Node[] = flowData.flow.map((flowItem, index) => {
             const agent = agentsData.find(a => a.id === flowItem.agent_id);
             const nodeId = `${flowItem.agent_id}::${Date.now() + index}`;
+
             return {
               id: nodeId,
-              type: 'default',
+              type: 'customNode',
               position: { x: 0, y: index * 75 },
               data: {
                 label: normalizeString(agent?.name || flowItem.agent_id),
                 description: agent?.agent_schema.description,
                 agent_id: flowItem.agent_id,
+                type: agent?.type,
               },
               style: {
                 border: `2px solid ${getAgentColor(flowItem.agent_id)}`,
@@ -330,14 +338,16 @@ export const AgentFlowsEditPage: FC = () => {
       };
 
       const color = getAgentColor(agent.id);
+
       const newNode: Node = {
         id: `${agent.id}::${Date.now()}`,
-        type: 'default',
+        type: 'customNode',
         position: boundedPosition,
         data: {
           label: normalizeString(agent.name),
           description: agent.agent_schema.description,
           color,
+          type: agent.type,
         },
         style: {
           border: `2px solid ${color}`,
@@ -528,6 +538,7 @@ export const AgentFlowsEditPage: FC = () => {
               onConnect={onConnect}
               onDrop={onDrop}
               onDragOver={onDragOver}
+              nodeTypes={nodeTypes}
               fitView
             >
               <Background />
@@ -627,21 +638,39 @@ export const AgentFlowsEditPage: FC = () => {
                     }
                   >
                     <CardContent>
-                      <Typography
-                        variant="subtitle1"
-                        fontWeight={600}
+                      <Box
                         sx={{
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word',
-                          whiteSpace: 'normal',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
                         }}
                       >
-                        {highlightMatch(
-                          normalizeString(agent.name || ''),
-                          search,
-                          false,
-                        )}
-                      </Typography>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight={600}
+                          sx={{
+                            wordBreak: 'break-word',
+                            overflowWrap: 'break-word',
+                            whiteSpace: 'normal',
+                          }}
+                        >
+                          {highlightMatch(
+                            normalizeString(agent.name || ''),
+                            search,
+                            false,
+                          )}
+                        </Typography>
+                        <Chip
+                          label={agent.type}
+                          size="small"
+                          sx={{
+                            fontWeight: 500,
+                            backgroundColor: '#FFE0B2',
+                            color: '#E65100',
+                            textTransform: 'lowercase',
+                          }}
+                        />
+                      </Box>
                       <Typography
                         variant="body2"
                         color="text.secondary"

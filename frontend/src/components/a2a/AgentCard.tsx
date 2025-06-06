@@ -37,7 +37,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
             {normalizeString(agent.name)}
           </Typography>
           <Chip
-            label="A2A"
+            label={agent.type}
             size="small"
             sx={{
               fontWeight: 600,
@@ -47,9 +47,9 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
             }}
           />
         </Box>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
           {agent.description}
-        </Typography>
+        </Typography> */}
         <Typography
           variant="subtitle2"
           fontWeight={600}
@@ -59,7 +59,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           Skills:
         </Typography>
         <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
-          {agent.card_content.skills.map(skill => (
+          {agent.agent_schema.skills.map(skill => (
             <Chip
               key={skill.id}
               label={normalizeString(skill.id)}

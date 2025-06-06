@@ -63,6 +63,7 @@ export interface AgentFlowUpdate {
 
 export interface AgentTrace {
   name: string;
+  type?: string;
   input: {
     content: string;
     [key: string]: any;
@@ -133,12 +134,11 @@ export interface ActiveAgentsResponse {
 export interface IAgent {
   id: string;
   name: string;
-  description: string;
-  server_url: string;
+  type: string;
+  url: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  creator_id: string;
 }
 
 export interface AgentSkill {
@@ -158,14 +158,26 @@ export interface CardContent {
 }
 
 export interface McpTool {
+  id: string;
+  type: string;
   title: string;
   description: string;
+  mcp_server_id: string;
+  properties: Record<
+    string,
+    {
+      type: string;
+      title: string;
+      default?: string;
+    }
+  >;
+  required: string[];
 }
 
 export interface A2AAgent extends IAgent {
-  card_content: CardContent;
+  agent_schema: CardContent;
 }
 
 export interface MCPAgent extends IAgent {
-  mcp_tools: McpTool[];
+  agent_schema: McpTool;
 }

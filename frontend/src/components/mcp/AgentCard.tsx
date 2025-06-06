@@ -4,14 +4,15 @@ import { MCPAgent } from '../../types/agent';
 import { normalizeString } from '../../utils/normalizeString';
 
 interface AgentCardProps {
-  agent: MCPAgent;
+  url: string;
+  tools: MCPAgent[];
   setSelectedAgent: (agent: MCPAgent) => void;
 }
 
-const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
+const AgentCard: FC<AgentCardProps> = ({ url, tools, setSelectedAgent }) => {
   return (
     <Card
-      onClick={() => setSelectedAgent(agent)}
+      onClick={() => setSelectedAgent(tools[0])}
       sx={{
         cursor: 'pointer',
         borderRadius: '0.5rem',
@@ -34,10 +35,10 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           mb={1}
         >
           <Typography variant="h6" fontWeight={600} color="text.primary">
-            {agent.server_url}
+            {url}
           </Typography>
           <Chip
-            label="MCP"
+            label={tools[0].type}
             size="small"
             sx={{
               fontWeight: 600,
@@ -57,10 +58,10 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           </Typography>
 
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {agent.mcp_tools?.map(tool => (
+            {tools?.map(tool => (
               <Chip
-                key={tool.title}
-                label={`${normalizeString(tool.title)}`}
+                key={tool.agent_schema.id}
+                label={`${normalizeString(tool.agent_schema.title)}`}
                 size="small"
                 sx={{
                   fontSize: '0.75rem',
