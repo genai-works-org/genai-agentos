@@ -31,11 +31,13 @@ class MCPConnector(ConnectorStrategy):
                     trace.update(
                         {
                             "output": response.model_dump(),
-                            "is_success": response.isError,
+                            "is_success": not response.isError,
                         }
                     )
+                    if response.content:
+                        return response.content[0].text, trace
+                    return "Success", trace
 
-                    return response.content[0].text, trace
         except Exception as e:
             error_message = f"Unexpected error while invoking MCP tool: {e}"
             logger.exception(error_message, exc_info=e)
