@@ -2,6 +2,7 @@ import {
   UPPERCASE_CHAR,
   SPECIAL_CHAR,
   LOWERCASE_CHAR,
+  DIGIT_CHAR,
 } from '../constants/regex';
 
 export interface ValidationRule {
@@ -44,6 +45,10 @@ export const validationRules: ValidationRules = {
     {
       validate: (value: string) => SPECIAL_CHAR.test(value),
       message: 'Password must contain at least one special character',
+    },
+    {
+      validate: (value: string) => DIGIT_CHAR.test(value),
+      message: 'Password must contain at least one digit',
     },
   ],
   maxLastMessages: [
