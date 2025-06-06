@@ -49,11 +49,7 @@ async def lookup_mcp_server(
 
     # `url` will be of string type only whenever celery beat task will invoke this lookup function.
     # In this case, trailing slash is trimmed
-    url = (
-        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
-        if isinstance(url, AnyHttpUrl)
-        else url[:-1]
-    )
+    url = strip_endpoints_from_url(url=url)
     try:
         async with streamablehttp_client(
             url=str(url),
