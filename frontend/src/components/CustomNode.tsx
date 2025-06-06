@@ -11,7 +11,16 @@ export const CustomNode = ({ data }: NodeProps) => {
         background: '#fff',
       }}
     >
-      {data.label}
+      <Typography
+        variant="subtitle1"
+        sx={{
+          maxWidth: '100%',
+          overflowWrap: 'break-word',
+          textAlign: 'center',
+        }}
+      >
+        {data.label}
+      </Typography>
       <Typography
         variant="caption"
         sx={{
