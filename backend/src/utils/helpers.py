@@ -4,6 +4,7 @@ import string
 from typing import Any, Optional
 
 from mcp.types import Tool
+from pydantic import AnyHttpUrl
 from src.auth.jwt import TokenLifespanType, validate_token
 from src.models import Agent
 from src.schemas.api.agent.dto import MLAgentJWTDTO
@@ -110,3 +111,11 @@ def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails
 
         return IntegrityErrorDetails(column=column, value=value)
     return None
+
+
+def strip_endpoints_from_url(url: AnyHttpUrl | str) -> str:
+    return (
+        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
+        if isinstance(url, AnyHttpUrl)
+        else url[:-1]
+    )

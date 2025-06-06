@@ -5,6 +5,7 @@ from uuid import UUID
 
 from aiohttp import ClientSession
 from fastapi import HTTPException
+from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,15 +24,17 @@ from src.utils.helpers import (
     generate_alias,
     get_agent_description_from_skills,
     prettify_integrity_error_details,
+    strip_endpoints_from_url,
 )
 
 logger = logging.getLogger(__name__)
 
 
 async def lookup_agent_well_known(
-    base_url: str, headers: Optional[dict] = None
+    url: AnyHttpUrl | str, headers: Optional[dict] = None
 ) -> Optional[A2AAgentCardSchema]:
-    async with ClientSession(base_url=base_url, headers=headers) as session:
+    url = strip_endpoints_from_url(url=url)
+    async with ClientSession(base_url=url, headers=headers) as session:
         try:
             async with session.get("/.well-known/agent.json") as resp:
                 if resp.status == 200:
@@ -42,7 +45,7 @@ async def lookup_agent_well_known(
                 return None
 
         except OSError:
-            logger.warning(f"Could not connect to agent on {base_url}")
+            logger.warning(f"Could not connect to agent on {url}")
             return A2AAgentCardSchema(is_active=False)
 
 
@@ -76,7 +79,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
     async def add_url(
         self, db: AsyncSession, user_model: User, data_in: A2ACreateAgentSchema
     ):
-        a2a_card_dto = await lookup_agent_well_known(base_url=str(data_in.server_url))
+        a2a_card_dto = await lookup_agent_well_known(url=data_in.server_url)
         if not a2a_card_dto.is_active:
             raise HTTPException(
                 detail=f"Cannot retrieve data about a2a card on url: {data_in.server_url}",
@@ -85,7 +88,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
 
         a2a_card = a2a_card_dto.card
         # full card content, including name, descr, agent card url
-        card_content = a2a_card.model_dump(mode="json")
+        card_content = a2a_card.model_dump(mode="json", exclude_none=True)
 
         # values for separate columns
         card_name = card_content.pop("name")

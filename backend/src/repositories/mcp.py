@@ -20,7 +20,11 @@ from src.schemas.mcp.dto import MCPServerDTO, MCPToolDTO
 from src.schemas.mcp.schemas import MCPCreateServer, MCPServerData, MCPToolSchema
 from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
-from src.utils.helpers import mcp_tool_to_json_schema, prettify_integrity_error_details
+from src.utils.helpers import (
+    mcp_tool_to_json_schema,
+    prettify_integrity_error_details,
+    strip_endpoints_from_url,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +47,7 @@ async def lookup_mcp_server(
 
     # `url` will be of string type only whenever celery beat task will invoke this lookup function.
     # In this case, trailing slash is trimmed
-    url = (
-        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
-        if isinstance(url, AnyHttpUrl)
-        else url[:-1]
-    )
+    url = strip_endpoints_from_url(url=url)
     try:
         async with streamablehttp_client(
             f"{url}/mcp",
