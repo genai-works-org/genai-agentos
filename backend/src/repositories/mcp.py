@@ -44,6 +44,11 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
+    # During initial lookup of the server (during POST request to add a MCP server)
+    # `url` will be of type AnyHttpUrl, which is used here to construct a base_url for the server
+
+    # `url` will be of string type only whenever celery beat task will invoke this lookup function.
+    # In this case, trailing slash is trimmed
     url = (
         f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
         if isinstance(url, AnyHttpUrl)
