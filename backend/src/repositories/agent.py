@@ -660,6 +660,7 @@ LIMIT :limit OFFSET :offset;
                     agent_card=agent_schema,
                     created_at=created_at,
                     updated_at=updated_at,
+                    id_=col["id"],
                 )
 
                 agent_card = a2a_repo.agent_card_to_dto(
