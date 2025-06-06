@@ -38,6 +38,11 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
+    # During initial lookup of the server (during POST request to add a MCP server)
+    # `url` will be of type AnyHttpUrl, which is used here to construct a base_url for the server
+
+    # `url` will be of string type only whenever celery beat task will invoke this lookup function.
+    # In this case, trailing slash is trimmed
     url = (
         f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
         if isinstance(url, AnyHttpUrl)
@@ -61,6 +66,7 @@ async def lookup_mcp_server(
 
                 return MCPServerData(
                     mcp_tools=tools.tools,
+                    server_url=url,
                     is_active=True,
                 )
 
@@ -137,7 +143,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
                 status_code=400,
             )
 
-        server_url = str(data_in.server_url)
+        server_url = str(mcp_server.server_url)
 
         # AnyHttpUrl always returns url with trailing slash,
         # trimming slash here to ensure consistency across all urls and to painlessly append suffixes like '/mcp'

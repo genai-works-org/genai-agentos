@@ -53,6 +53,7 @@ class MCPServerData(BaseModel):
     is_active: bool
     meta: Optional[Any] = None
     nextCursor: Optional[Any] = None
+    server_url: Optional[str] = None
 
 
 class MCPCreateServer(BaseModel):
