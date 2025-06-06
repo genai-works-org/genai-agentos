@@ -1,12 +1,16 @@
+import asyncio
 import random
 import re
 import string
 from typing import Any, Optional
+from uuid import UUID
 
 from mcp.types import Tool
 from pydantic import AnyHttpUrl
+from sqlalchemy import and_, select
 from src.auth.jwt import TokenLifespanType, validate_token
-from src.models import Agent
+from src.db.session import async_session
+from src.models import A2ACard, Agent, MCPServer, MCPTool
 from src.schemas.api.agent.dto import MLAgentJWTDTO
 from src.schemas.api.exceptions import IntegrityErrorDetails
 from src.schemas.base import AgentDTOPayload
@@ -114,8 +118,109 @@ def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails
 
 
 def strip_endpoints_from_url(url: AnyHttpUrl | str) -> str:
+    port = f":{url.port}" if url.port and url.host in ("localhost", "0.0.0.0") else ""
     return (
-        f"{url.scheme}://{str(url.host)}{f':{url.port}' if url.port else ''}"
+        f"{url.scheme}://{str(url.host)}{port}"
         if isinstance(url, AnyHttpUrl)
         else url[:-1]
     )
+
+
+class FlowValidator:
+    async def _validate_genai_ids(self, genai_ids: list[Optional[str]], user_id: UUID):
+        async with async_session() as db:
+            q = await db.scalars(
+                select(Agent.id).where(
+                    and_(
+                        Agent.id.in_(genai_ids),
+                        Agent.is_active.is_(True),
+                        Agent.creator_id == user_id,
+                    )
+                )
+            )
+            return q.all()
+
+    async def _validate_mcp_tools(
+        self, mcp_tools_ids: list[Optional[str]], user_id: UUID
+    ):
+        async with async_session() as db:
+            q = await db.scalars(
+                select(MCPTool.id)
+                .join(MCPServer, MCPTool.mcp_server_id == MCPServer.id)
+                .where(
+                    and_(
+                        MCPTool.id.in_(mcp_tools_ids),
+                        MCPServer.is_active.is_(True),
+                        MCPServer.creator_id == user_id,
+                    )
+                )
+            )
+        return q.all()
+
+    async def _validate_a2a_cards(
+        self, a2a_cards_ids: list[Optional[str]], user_id: UUID
+    ):
+        async with async_session() as db:
+            q = await db.scalars(
+                select(A2ACard.id).where(
+                    and_(
+                        A2ACard.id.in_(a2a_cards_ids),
+                        A2ACard.is_active.is_(True),
+                        A2ACard.creator_id == user_id,
+                    )
+                )
+            )
+        return q.all()
+
+    async def validate_all_agents_types(
+        self,
+        genai_ids: list[Optional[str]],
+        mcp_ids: list[Optional[str]],
+        a2a_ids: list[Optional[str]],
+        user_id: UUID,
+    ):
+        tasks = []
+
+        tasks.append(
+            asyncio.create_task(
+                self._validate_genai_ids(genai_ids=genai_ids, user_id=user_id)
+            )
+        )
+        tasks.append(
+            asyncio.create_task(
+                self._validate_mcp_tools(mcp_tools_ids=mcp_ids, user_id=user_id)
+            )
+        )
+        tasks.append(
+            asyncio.create_task(
+                self._validate_a2a_cards(a2a_cards_ids=a2a_ids, user_id=user_id)
+            )
+        )
+
+        result: list[list[Optional[UUID]]] = await asyncio.gather(*tasks)
+
+        valid_agents = []
+        for r in result:
+            r = [str(v) for v in r]
+            valid_agents.extend(r)
+        return valid_agents
+
+    async def validate_is_active_of_all_agent_types(
+        self, agent_ids: list[dict[str], str], user_id: UUID
+    ):
+        genai_ids = []
+        mcp_ids = []
+        a2a_ids = []
+        for i in agent_ids:
+            if genai := i.get("agent_id"):
+                genai_ids.append(genai)
+
+            if mcp := i.get("mcp_tool_id"):
+                mcp_ids.append(mcp)
+
+            if a2a := i.get("a2a_agent_id"):
+                a2a_ids.append(a2a)
+
+        return await self.validate_all_agents_types(
+            genai_ids=genai_ids, mcp_ids=mcp_ids, a2a_ids=a2a_ids, user_id=user_id
+        )

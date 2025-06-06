@@ -2,7 +2,6 @@ import copy
 import logging
 import traceback
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
@@ -37,8 +36,6 @@ ws_router = APIRouter()
 async def handle_frontend_ws(
     websocket: WebSocket,
     db: AsyncDBSession,
-    token: str,
-    session_id: Optional[str] = None,
 ):
     """
         WS endpoint to receive messages from frontend and proxy them to ML
@@ -126,6 +123,7 @@ async def handle_frontend_ws(
     if not user_model:
         return
 
+    session_id = query_params.get("session_id")
     if not session_id:
         # session_id was not provided
         session_id = str(uuid4())

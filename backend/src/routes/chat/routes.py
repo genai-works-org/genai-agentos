@@ -2,12 +2,13 @@ from typing import Annotated, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Header, HTTPException, Query, Response
+from sqlalchemy.exc import IntegrityError
 from src.auth.dependencies import CurrentUserDependency
 from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.chat import chat_repo
 from src.schemas.api.chat.schemas import CreateConversation, UpdateConversation
-from src.utils.helpers import get_user_id_from_jwt
+from src.utils.helpers import get_user_id_from_jwt, prettify_integrity_error_details
 
 chat_router = APIRouter(tags=["chat"])
 settings = get_settings()
@@ -83,9 +84,17 @@ async def create_new_chat(
     user_model: CurrentUserDependency,
     message_in: CreateConversation,
 ):
-    return await chat_repo.create_chat_by_session_id(
-        db=db, user_model=user_model, session_id=message_in.session_id
-    )
+    try:
+        return await chat_repo.create_chat_by_session_id(
+            db=db, user_model=user_model, session_id=message_in.session_id
+        )
+    except IntegrityError as e:
+        msg = str(e._message())
+        detail = prettify_integrity_error_details(msg=msg)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Chat with {detail.column.capitalize()} - '{detail.value}' already exists",
+        )
 
 
 @chat_router.patch("/chat")

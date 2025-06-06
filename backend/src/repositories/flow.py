@@ -4,7 +4,6 @@ from fastapi import HTTPException
 from sqlalchemy import and_, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import Agent, AgentWorkflow, User
-from src.repositories.agent import agent_repo
 from src.repositories.base import CRUDBase
 from src.schemas.api.flow.schemas import (
     AgentFlowAlias,
@@ -12,7 +11,7 @@ from src.schemas.api.flow.schemas import (
     AgentFlowUpdate,
     FlowAgentId,
 )
-from src.utils.helpers import generate_alias
+from src.utils.helpers import FlowValidator, generate_alias
 
 
 class AgentWorkflowRepository(
@@ -100,7 +99,9 @@ class AgentWorkflowRepository(
         db_obj = self.model(
             name=obj_in.name,
             description=obj_in.description,
-            flow=[flow.model_dump(mode="json") for flow in obj_in.flow],
+            flow=[
+                flow.model_dump(mode="json", exclude_none=True) for flow in obj_in.flow
+            ],
             creator_id=user_model.id,
             alias=generate_alias(obj_in.name),
         )
@@ -165,11 +166,16 @@ class AgentWorkflowRepository(
         obj_in: Union[AgentFlowCreate, AgentFlowUpdate],
         user_model: User,
     ) -> Optional[list[str]]:
-        agent_ids = [agent.agent_id for agent in obj_in.flow]
-        valid_agents = await agent_repo.get_agents_by_ids(
-            db=db, agent_ids=agent_ids, user_model=user_model
+        agent_ids = [f.to_json() for f in obj_in.flow]
+        flow_validator = FlowValidator()
+        valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
+            agent_ids=agent_ids, user_id=user_model.id
         )
-        if non_active_agents := list(set(agent_ids) - set(valid_agents)):
+
+        # get first key of the valid agent, as there's always one key present
+        agents_in = [a[list(a.keys())[0]] for a in agent_ids]
+
+        if non_active_agents := list(set(agents_in) - set(valid_agents)):
             raise HTTPException(
                 status_code=400,
                 detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}. Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501

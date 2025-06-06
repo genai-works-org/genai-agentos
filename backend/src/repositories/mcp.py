@@ -1,4 +1,5 @@
 import logging
+import traceback
 from datetime import timedelta
 from typing import Optional
 from uuid import UUID
@@ -70,8 +71,8 @@ async def lookup_mcp_server(
                     is_active=True,
                 )
 
-    except* (OSError, httpx.ConnectError, McpError) as e:
-        logger.warning(f"Could not connect to {url}. Details: {e.exceptions[0]}")
+    except* (OSError, httpx.ConnectError, McpError):
+        logger.warning(f"Could not connect to {url}. Details: {traceback.format_exc()}")
 
     return MCPServerData(is_active=False)
 

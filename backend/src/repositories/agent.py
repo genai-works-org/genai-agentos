@@ -21,12 +21,13 @@ from src.schemas.api.agent.dto import (
     MLAgentSchema,
 )
 from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdate
-from src.schemas.api.flow.schemas import FlowSchema
+from src.schemas.api.flow.schemas import AgentFlowAlias, FlowAgentId, FlowSchema
 from src.schemas.base import AgentDTOPayload
 from src.schemas.mcp.dto import ActiveMCPToolDTO
 from src.utils.enums import ActiveAgentTypeFilter, AgentType
 from src.utils.filters import AgentFilter
 from src.utils.helpers import (
+    FlowValidator,
     generate_alias,
     map_agent_model_to_dto,
     map_genai_agent_to_unified_dto,
@@ -497,6 +498,15 @@ LIMIT :limit OFFSET :offset;
                     if func.get("description"):
                         input_params["function"]["description"] = flow.description
 
+                agent_ids = []
+                for f in flow.flow:
+                    if agent_id := f.get("agent_id"):
+                        agent_ids.append(agent_id)
+                    if mcp_tool_id := f.get("mcp_tool_id"):
+                        agent_ids.append(mcp_tool_id)
+                    if a2a_agent_id := f.get("a2a_agent_id"):
+                        agent_ids.append(a2a_agent_id)
+
                 flow_schema = AgentDTOPayload(
                     id=flow.id,
                     name=flow.alias,
@@ -504,7 +514,7 @@ LIMIT :limit OFFSET :offset;
                     agent_schema=input_params,
                     created_at=flow.created_at,
                     updated_at=flow.updated_at,
-                    flow=[f["agent_id"] for f in flow.flow if f],
+                    flow=agent_ids,
                 )
                 return flow_schema
 
@@ -519,12 +529,20 @@ LIMIT :limit OFFSET :offset;
             return []
 
         valid_flows = []
+        flow_validator = FlowValidator()
+
         for f in flows:
-            all_agents_active = await self.lookup_genai_agents_are_active_in_flow(
-                db=db, agent_ids=[a["agent_id"] for a in f.flow]
+            flow = AgentFlowAlias(
+                name=f.name,
+                description=f.description,
+                flow=[FlowAgentId(**a) for a in f.flow],
+                alias=f.alias,
             )
-            print(f"{all_agents_active=}")
-            if not all_agents_active:
+            valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
+                agent_ids=[a.to_json() for a in flow.flow], user_id=user_id
+            )
+
+            if len(valid_agents) < len(flow.flow):
                 continue
 
             flow = await self.orm_flow_to_dto(f, db=db)
