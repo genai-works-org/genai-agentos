@@ -4,14 +4,15 @@ import { MCPAgent, AgentType } from '../../types/agent';
 import { normalizeString } from '../../utils/normalizeString';
 
 interface AgentCardProps {
-  agent: MCPAgent;
+  url: string;
+  tools: MCPAgent[];
   setSelectedAgent: (agent: MCPAgent) => void;
 }
 
-const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
+const AgentCard: FC<AgentCardProps> = ({ url, tools, setSelectedAgent }) => {
   return (
     <Card
-      onClick={() => setSelectedAgent(agent)}
+      onClick={() => setSelectedAgent(tools[0])}
       sx={{
         width: '350px',
         cursor: 'pointer',
@@ -63,7 +64,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           </Typography>
 
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {agent.mcp_tools?.map(tool => (
+            {tools?.map(tool => (
               <Chip
                 key={tool.id}
                 label={normalizeString(tool.name)}

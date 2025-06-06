@@ -43,15 +43,15 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
           />
         </Box>
 
-        <Box>
+        {/* <Box>
           <Typography variant="subtitle2">Description:</Typography>
           <Typography variant="body2">{agent.description}</Typography>
-        </Box>
+        </Box> */}
 
         <Box>
           <Typography variant="subtitle2">Expected Input:</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
-            {agent.card_content.defaultInputModes.map(mode => (
+            {agent.agent_schema.defaultInputModes.map(mode => (
               <Chip key={mode} label={mode} size="small" />
             ))}
           </Stack>
@@ -60,7 +60,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
         <Box>
           <Typography variant="subtitle2">Expected Output:</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
-            {agent.card_content.defaultOutputModes.map(mode => (
+            {agent.agent_schema.defaultOutputModes.map(mode => (
               <Chip key={mode} label={mode} size="small" />
             ))}
           </Stack>
@@ -69,7 +69,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
         <Box>
           <Typography variant="subtitle2">Skills:</Typography>
           <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
-            {agent.card_content.skills.map(skill => (
+            {agent.agent_schema.skills.map(skill => (
               <Chip
                 key={skill.id}
                 label={normalizeString(skill.id)}

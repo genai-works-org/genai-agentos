@@ -14,6 +14,7 @@ import { normalizeString } from '../../utils/normalizeString';
 interface AgentDetailModalProps {
   open: boolean;
   agent: MCPAgent | null;
+  tools: MCPAgent[];
   onClose: () => void;
   onDelete: () => void;
 }
@@ -21,13 +22,14 @@ interface AgentDetailModalProps {
 const AgentDetailModal: FC<AgentDetailModalProps> = ({
   open,
   agent,
+  tools,
   onClose,
   onDelete,
 }) => {
   if (!agent) return null;
 
   return (
-    <Modal isOpen={open} onClose={onClose} title={agent.server_url}>
+    <Modal isOpen={open} onClose={onClose} title={agent.url}>
       <Stack spacing={2}>
         <Box>
           <Typography variant="subtitle2">Type:</Typography>
@@ -45,7 +47,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
           </Typography>
 
           <Stack direction="row" gap={1} flexWrap="wrap">
-            {agent.mcp_tools?.map(tool => (
+            {tools?.map(tool => (
               <Box
                 key={tool.id}
                 px={1.5}
