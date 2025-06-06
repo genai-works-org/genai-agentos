@@ -63,7 +63,6 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
         self, db: AsyncSession, server_url: str, card_in: A2AAgentCardSchema
     ):
         card = await self.get_card_by_server_url(db=db, server_url=server_url)
-        # obj_data = card.__dict__
 
         if card_in.card:
             setattr(card, "card_content", card_in.card.model_dump(mode="json"))
@@ -104,13 +103,16 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             db.add(a2a_agent)
             await db.commit()
             await db.refresh(a2a_agent)
-            return A2ACardDTO(
+            return AgentDTOPayload(
                 id=a2a_agent.id,
                 name=a2a_agent.name,
-                description=a2a_agent.description,
-                server_url=a2a_agent.server_url,
-                card_content=a2a_agent.card_content,
-            )
+                type=AgentType.a2a,
+                agent_schema=card_content,
+                created_at=a2a_agent.created_at,
+                updated_at=a2a_agent.updated_at,
+                is_active=a2a_agent.is_active,
+            ).model_dump(mode="json", exclude_none=True)
+
         except IntegrityError as e:
             msg = str(e._message())
             detail = prettify_integrity_error_details(msg=msg)

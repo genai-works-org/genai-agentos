@@ -8,6 +8,8 @@ from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.a2a import a2a_repo
 from src.schemas.a2a.schemas import A2ACreateAgentSchema
+from src.schemas.base import AgentDTOPayload
+from src.utils.enums import AgentType
 
 a2a_router = APIRouter(tags=["a2a"], prefix="/a2a")
 
@@ -26,14 +28,42 @@ async def add_agent_url(
 
 @a2a_router.get("/agents")
 async def list_all_agent_cards(db: AsyncDBSession, user_model: CurrentUserDependency):
-    return await a2a_repo.get_multiple_by_user(db=db, user_model=user_model)
+    cards = await a2a_repo.get_multiple_by_user(db=db, user_model=user_model)
+    return [
+        AgentDTOPayload(
+            id=c.id,
+            name=c.name,
+            type=AgentType.a2a,
+            url=c.server_url,
+            agent_schema=c.card_content,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
+            is_active=c.is_active,
+        ).model_dump(exclude_none=True, mode="json")
+        for c in cards
+    ]
 
 
 @a2a_router.get("/agents/{agent_id}")
 async def get_agent_card(
     db: AsyncDBSession, user_model: CurrentUserDependency, agent_id: UUID
 ):
-    return await a2a_repo.get_by_user(db=db, id_=agent_id, user_model=user_model)
+    card = await a2a_repo.get_by_user(db=db, id_=agent_id, user_model=user_model)
+    if not card:
+        raise HTTPException(
+            detail=f"A2A agent with id: '{agent_id}' does not exist ", status_code=400
+        )
+
+    return AgentDTOPayload(
+        id=card.id,
+        name=card.name,
+        type=AgentType.a2a,
+        url=card.server_url,
+        agent_schema=card.card_content,
+        created_at=card.created_at,
+        updated_at=card.updated_at,
+        is_active=card.is_active,
+    ).model_dump(exclude_none=True, mode="json")
 
 
 @a2a_router.delete("/agents/{agent_id}")
