@@ -146,7 +146,6 @@ export interface IAgent {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  creator_id: string;
 }
 
 export interface AgentSkill {
@@ -186,9 +185,9 @@ export interface McpTool {
 }
 
 export interface A2AAgent extends IAgent {
-  card_content: CardContent;
+  agent_schema: CardContent;
 }
 
 export interface MCPAgent extends IAgent {
-  mcp_tools: McpTool[];
+  agent_schema: McpTool;
 }
