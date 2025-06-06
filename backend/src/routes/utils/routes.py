@@ -1,16 +1,18 @@
+import logging
+import traceback
 from typing import Optional
 from uuid import UUID
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.exc import IntegrityError
-from src.schemas.api.model_config.dto import ModelConfigDTO, ModelPromptDTO
+
 from src.auth.dependencies import CurrentUserDependency
-from src.repositories.model_config import model_config_repo
 from src.db.session import AsyncDBSession
+from src.repositories.model_config import model_config_repo
+from src.schemas.api.model_config.dto import ModelConfigDTO, ModelPromptDTO
 from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
-import traceback
-import logging
 
 logger = logging.getLogger(__name__)
 utils_router = APIRouter(prefix="/llm", tags=["LLM"])

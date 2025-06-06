@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Menu, Sun, Moon, LogOut } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Container } from '@mui/material';
 import { useTheme } from '../contexts/ThemeContext';
 import { getThemeColors } from '../utils/themeUtils';
@@ -13,7 +13,11 @@ interface MainLayoutProps {
   handleReturn?: () => void;
 }
 
-export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage, handleReturn }) => {
+export const MainLayout: FC<MainLayoutProps> = ({
+  children,
+  currentPage,
+  handleReturn,
+}) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 768);
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
@@ -35,8 +39,21 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage, handleR
   };
 
   return (
-    <Container maxWidth="false" disableGutters sx={{ height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflowX: 'hidden', overflowY: 'auto' }}>
-      <div className={`min-h-screen flex flex-col ${theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'}`}>
+    <Container
+      maxWidth={false}
+      disableGutters
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflowX: 'hidden',
+        overflowY: 'auto',
+      }}
+    >
+      <div
+        className={`min-h-screen flex flex-col ${theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'}`}
+      >
         {/* Header */}
         <header className={`h-16 ${colors.bgAlt} shadow-sm z-10 w-full`}>
           <div className="h-full px-4 flex items-center justify-between">
@@ -61,22 +78,26 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage, handleR
 
         {/* Main Content Area with Sidebar */}
         <div className="flex flex-1 relative overflow-x-hidden overflow-y-auto">
-
-
           {/* Left Sidebar - Always mounted but animated */}
-          <div className={`absolute inset-y-0 left-0 overflow-x-hidden z-10 ${(isSidebarOpen && window.innerWidth < 768) ? 'top-0 z-50' : ''}`}>
-            {isSidebarOpen && <Sidebar
-              isOpen={isSidebarOpen}
-              onClose={() => setIsSidebarOpen(false)}
-              handleReturn={handleReturn}
-              side="left"
-            />}
+          <div
+            className={`absolute inset-y-0 left-0 overflow-x-hidden z-10 ${isSidebarOpen && window.innerWidth < 768 ? 'top-0 z-50' : ''}`}
+          >
+            {isSidebarOpen && (
+              <Sidebar
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                handleReturn={handleReturn}
+                side="left"
+              />
+            )}
           </div>
 
           {/* Page Content */}
-          <main className={`flex-1 transition-all duration-200 ease-in-out ${
-            isSidebarOpen ? 'ml-64' : 'ml-0'
-          }`}>
+          <main
+            className={`flex-1 transition-all duration-200 ease-in-out ${
+              isSidebarOpen ? 'ml-64' : 'ml-0'
+            }`}
+          >
             {children}
           </main>
         </div>

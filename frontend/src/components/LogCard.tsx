@@ -1,14 +1,7 @@
 import type { FC } from 'react';
-import {
-  Box,
-  Typography,
-  Paper,
-  ListItem,
-  useTheme,
-} from '@mui/material';
+import { Box, Typography, Paper, ListItem } from '@mui/material';
 import { LogEntry, LogLevel } from '../types/log';
 import { JSONTree } from 'react-json-tree';
-import { jsonTreeTheme } from '../constants/jsonTreeTheme';
 
 interface LogCardProps {
   log: LogEntry;
@@ -41,38 +34,37 @@ const getLogColor = (level: LogLevel) => {
       return {
         text: 'error.main',
         border: 'error.light',
-        bg: 'error.lighter'
+        bg: 'error.lighter',
       };
     case LogLevel.WARNING:
       return {
         text: 'warning.main',
         border: 'warning.light',
-        bg: 'warning.lighter'
+        bg: 'warning.lighter',
       };
     case LogLevel.CRITICAL:
       return {
         text: 'error.main',
         border: 'error.light',
-        bg: 'error.lighter'
+        bg: 'error.lighter',
       };
     case LogLevel.DEBUG:
       return {
         text: 'secondary.main',
         border: 'secondary.light',
-        bg: 'secondary.lighter'
+        bg: 'secondary.lighter',
       };
     case LogLevel.INFO:
     default:
       return {
         text: 'info.main',
         border: 'info.light',
-        bg: 'info.lighter'
+        bg: 'info.lighter',
       };
   }
 };
 
 export const LogCard: FC<LogCardProps> = ({ log, agentName }) => {
-  const theme = useTheme();
   const colors = getLogColor(log.log_level);
 
   // Try to parse the message as JSON, if it fails, treat it as a regular string
@@ -85,53 +77,66 @@ export const LogCard: FC<LogCardProps> = ({ log, agentName }) => {
   })();
 
   return (
-    <ListItem 
-      sx={{ 
-        flexDirection: 'column', 
+    <ListItem
+      sx={{
+        flexDirection: 'column',
         alignItems: 'flex-start',
         mb: 2,
-        p: 0
+        p: 0,
       }}
     >
-      <Paper 
-        elevation={1} 
-        sx={{ 
+      <Paper
+        elevation={1}
+        sx={{
           width: '100%',
           p: 2,
           border: `1px solid`,
           borderColor: colors.border,
           backgroundColor: colors.bg,
-          overflow: 'hidden'
+          overflow: 'hidden',
         }}
       >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-          <Typography variant="subtitle1" sx={{ color: colors.text, fontWeight: 'bold' }}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={1}
+        >
+          <Typography
+            variant="subtitle1"
+            sx={{ color: colors.text, fontWeight: 'bold' }}
+          >
             {log.log_level.toUpperCase()}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {new Date(log.created_at).toLocaleString()}
           </Typography>
         </Box>
-        
+
         <Box sx={{ mb: 1 }}>
-          <Box sx={{ 
-            overflowX: 'auto',
-            '&::-webkit-scrollbar': {
-              height: '8px',
-            },
-            '&::-webkit-scrollbar-track': {
-              background: 'transparent',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: colors.border,
-              borderRadius: '4px',
-            },
-            '&::-webkit-scrollbar-thumb:hover': {
-              background: colors.text,
-            }
-          }}>
+          <Box
+            sx={{
+              overflowX: 'auto',
+              '&::-webkit-scrollbar': {
+                height: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: colors.border,
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb:hover': {
+                background: colors.text,
+              },
+            }}
+          >
             {typeof parsedMessage === 'string' ? (
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', minWidth: 'min-content' }}>
+              <Typography
+                variant="body2"
+                sx={{ whiteSpace: 'pre-wrap', minWidth: 'min-content' }}
+              >
                 {parsedMessage}
               </Typography>
             ) : (
@@ -143,8 +148,13 @@ export const LogCard: FC<LogCardProps> = ({ log, agentName }) => {
             )}
           </Box>
         </Box>
-        
-        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mt={1}
+        >
           <Typography variant="caption" color="text.secondary">
             Agent: {agentName}
           </Typography>
@@ -155,4 +165,4 @@ export const LogCard: FC<LogCardProps> = ({ log, agentName }) => {
       </Paper>
     </ListItem>
   );
-}; 
+};

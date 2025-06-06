@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { FC, ReactNode } from 'react';
-import { Settings, MoreVertical, PlusIcon, LogOut } from 'lucide-react';
+import { Settings, MoreVertical, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { getThemeColors } from '../utils/themeUtils';
@@ -28,9 +28,11 @@ const pages: PageLink[] = [
   { path: '/chat', title: 'Chat', plusBtnNav: '/chat/new' },
   { path: '/agents', title: 'Agents' },
   { path: '/agent-flows', title: 'Agent Flows', plusBtnNav: '/agent-flows/new' },
+  { path: '/a2a-agents', title: 'A2A Agents' },
+  { path: '/mcp-agents', title: 'MCP Agents' },
 ];
 
-const Sidebar: FC<SidebarProps> = ({ isOpen, onClose, side }) => {
+const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
   const navigate = useNavigate();

@@ -1,11 +1,12 @@
 from typing import Any, Optional
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.models import Agent
-from src.schemas.api.flow.schemas import FlowSchema
+from src.models import Agent, User
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
 from src.schemas.api.agent.dto import MLAgentSchema
+from src.schemas.api.flow.schemas import FlowSchema
 from src.schemas.ws.dto.response import AgentAndFlowsDTO
 
 
@@ -19,7 +20,7 @@ async def validate_all_agents_are_active_within_flow(
 
 async def query_agents_and_flows(
     db: AsyncSession,
-    # current_user: User,
+    user_model: User,
     limit: int = 100,
     offset: int = 0,
 ) -> AgentAndFlowsDTO:
@@ -42,18 +43,22 @@ async def query_agents_and_flows(
     creation.
     """
     agents = []
-    for agent in await agent_repo.get_multi(db=db, offset=offset, limit=limit):
+    for agent in await agent_repo.get_multiple_by_user(
+        db=db, user_model=user_model, offset=offset, limit=limit
+    ):
         if agent:
             if agent.is_active:
                 schema = MLAgentSchema(
                     agent_id=str(agent.id),
                     agent_name=agent.name,
                     agent_description=agent.description,
-                    agent_input_schema=agent.input_parameters,
+                    agent_schema=agent.input_parameters,
                 )
                 agents.append(schema)
 
-    for flow in await agentflow_repo.get_multi(db=db, offset=offset, limit=limit):
+    for flow in await agentflow_repo.get_multiple_by_user(
+        db=db, user_model=user_model, offset=offset, limit=limit
+    ):
         all_agents_active = await validate_all_agents_are_active_within_flow(
             db=db, flow=flow.flow
         )
@@ -79,7 +84,7 @@ async def query_agents_and_flows(
                         agent_id=str(flow.id),
                         agent_name=flow.name,
                         agent_description=flow.description,
-                        agent_input_schema=input_params,
+                        agent_schema=input_params,
                         flow=[flow.get("agent_id") for flow in flow.flow],
                     )
                     agents.append(flow_schema)

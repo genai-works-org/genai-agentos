@@ -4,13 +4,12 @@ import { AIModel } from '../services/apiService';
 import { AIModelCard } from './AIModelCard';
 import { AIModelCreateCard } from './AIModelCreateCard';
 import { ModelConfig } from '../services/modelService';
-import { useSettings } from '../contexts/SettingsContext';
 
 interface AIModelGridProps {
   models: AIModel[];
   disabledModelCreate: boolean;
   tooltipMessage: string;
-  selectedModel: AIModel | null ;
+  selectedModel: AIModel | null;
   onModelSelect: (model: AIModel) => void;
   onModelCreate: () => void;
   onModelEdit: (model: ModelConfig) => void;
@@ -18,14 +17,16 @@ interface AIModelGridProps {
 }
 
 export const AIModelGrid: FC<AIModelGridProps> = ({
-  models = [{
-    id: 'create',
-    name: 'Create New Model',
-    provider: 'Create New Model',
-    model: 'GRP',
-    system_prompt: 'Do this and that',
-    temperature: 0.5,
-  }],
+  models = [
+    {
+      id: 'create',
+      name: 'Create New Model',
+      provider: 'Create New Model',
+      model: 'GRP',
+      system_prompt: 'Do this and that',
+      temperature: 0.5,
+    },
+  ],
   disabledModelCreate,
   tooltipMessage,
   selectedModel,
@@ -37,15 +38,17 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const modelsPerRow = 4; // Number of models to show in the first row
-  
+
   // Sort models: selected model first, then alphabetically
   const sortedModels = [...models].sort((a, b) => {
     if (a.name === selectedModel?.name) return -1;
     if (b.name === selectedModel?.name) return 1;
     return a.name.localeCompare(b.name);
   });
-  
-  const displayedModels = isExpanded ? sortedModels : sortedModels.slice(0, modelsPerRow);
+
+  const displayedModels = isExpanded
+    ? sortedModels
+    : sortedModels.slice(0, modelsPerRow);
 
   return (
     <div className="space-y-4">
@@ -57,16 +60,17 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
             tooltipMessage={tooltipMessage}
           />
         )}
-        {displayedModels.length > 0 && (displayedModels.map((model) => (
-          <AIModelCard
-            key={model.id}
-            modelData={model}
-            isSelected={model.id === selectedModel?.id}
-            onSelect={onModelSelect}
-            onEdit={() => onModelEdit(model as ModelConfig)}
-            onDelete={() => onModelDelete(model as ModelConfig)}
-          />
-        )))}
+        {displayedModels.length > 0 &&
+          displayedModels.map(model => (
+            <AIModelCard
+              key={model.id}
+              modelData={model}
+              isSelected={model.id === selectedModel?.id}
+              onSelect={onModelSelect}
+              onEdit={() => onModelEdit(model as ModelConfig)}
+              onDelete={() => onModelDelete(model as ModelConfig)}
+            />
+          ))}
       </div>
       {sortedModels.length > modelsPerRow && (
         <div className="text-center">
@@ -74,10 +78,12 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-blue-500 hover:text-blue-600 font-medium"
           >
-            {isExpanded ? 'Show Less' : `Show More (${sortedModels.length - modelsPerRow} more)`}
+            {isExpanded
+              ? 'Show Less'
+              : `Show More (${sortedModels.length - modelsPerRow} more)`}
           </button>
         </div>
       )}
     </div>
   );
-}; 
+};

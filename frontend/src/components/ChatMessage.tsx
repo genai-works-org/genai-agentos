@@ -8,10 +8,10 @@ import { getThemeColors } from '../utils/themeUtils';
 import FilePreviewCard from './FilePreviewCard';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw'
-import rehypeKatex from 'rehype-katex'
-import remarkMath from 'remark-math'
-import 'katex/dist/katex.min.css'
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
+import 'katex/dist/katex.min.css';
 import { JSONTree } from 'react-json-tree';
 import { jsonTreeTheme } from '../constants/jsonTreeTheme';
 import { extractFileName } from '../utils/extractFileName';
@@ -19,19 +19,22 @@ import { extractFileName } from '../utils/extractFileName';
 type ChatMessageProps = IChatMessage;
 
 const sanitize = (content: string) => {
-  return content.replace(/```\w*\n/g, '').replace(/```/g, '').replace(/markdown/g, '');
-}
+  return content
+    .replace(/```\w*\n/g, '')
+    .replace(/```/g, '')
+    .replace(/markdown/g, '');
+};
 
-const ChatMessage: FC<ChatMessageProps> = ({ 
-  content, 
-  isUser, 
+const ChatMessage: FC<ChatMessageProps> = ({
+  content,
+  isUser,
   timestamp,
   executionTime,
   requestId,
   agentsPlan,
   agents_trace,
   isError,
-  files
+  files,
 }) => {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -64,7 +67,9 @@ const ChatMessage: FC<ChatMessageProps> = ({
   };
 
   const handleViewFlow = () => {
-    navigate(`/agents-trace?requestId=${requestId}`, { state: { traceData: agents_trace } });
+    navigate(`/agents-trace?requestId=${requestId}`, {
+      state: { traceData: agents_trace },
+    });
   };
 
   const handleCopy = () => {
@@ -74,7 +79,10 @@ const ChatMessage: FC<ChatMessageProps> = ({
   };
 
   const renderContent = () => {
-    if (!content) return <span className={`${colors.textSecondary}`}>Ops, you broke it!</span>;
+    if (!content)
+      return (
+        <span className={`${colors.textSecondary}`}>Ops, you broke it!</span>
+      );
 
     try {
       // Try to parse as JSON
@@ -104,17 +112,23 @@ const ChatMessage: FC<ChatMessageProps> = ({
   };
 
   return (
-    <div className={`flex w-full py-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex max-w-3xl ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-          isUser
-            ? theme === 'light'
-              ? 'ml-4 bg-light-secondary-primary text-light-bg'
-              : 'ml-4 bg-dark-secondary-primary text-dark-bg'
-            : theme === 'light'
-              ? 'mr-4 bg-light-secondary-secondary text-light-text'
-              : 'mr-4 bg-dark-secondary-secondary text-dark-text'
-        }`}>
+    <div
+      className={`flex w-full py-4 ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
+      <div
+        className={`flex max-w-3xl ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+      >
+        <div
+          className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+            isUser
+              ? theme === 'light'
+                ? 'ml-4 bg-light-secondary-primary text-light-bg'
+                : 'ml-4 bg-dark-secondary-primary text-dark-bg'
+              : theme === 'light'
+                ? 'mr-4 bg-light-secondary-secondary text-light-text'
+                : 'mr-4 bg-dark-secondary-secondary text-dark-text'
+          }`}
+        >
           {isUser ? (
             <UserIcon className="h-5 w-5" />
           ) : (
@@ -148,56 +162,64 @@ const ChatMessage: FC<ChatMessageProps> = ({
             </svg>
           )}
         </div>
-        <div className={`${isUser ? 'text-right' : 'text-left'}`}>
-          <div className={`inline-block ${
-            theme === 'light'
-              ? isError 
-                ? 'bg-red-100 text-red-800'
-                : 'bg-light-bg text-light-text'
-              : isError
-                ? 'bg-red-900 text-red-100'
-                : 'bg-dark-bg text-dark-text'
-          } rounded-lg px-4 py-2 shadow-sm`}>
+        <div className="wrap-break-word">
+          <div
+            className={`inline-block ${
+              theme === 'light'
+                ? isError
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-light-bg text-light-text'
+                : isError
+                  ? 'bg-red-900 text-red-100'
+                  : 'bg-dark-bg text-dark-text'
+            } rounded-lg px-4 py-2 shadow-sm`}
+          >
             {renderContent()}
             {!isUser && !isError && agentsPlan && agentsPlan.length > 0 && (
-              <div className="mt-2">
-                {agentsPlan.map(renderAgentPlan)}
-              </div>
+              <div className="mt-2">{agentsPlan.map(renderAgentPlan)}</div>
             )}
             {files && files.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {files
-                  .filter(file => isUser ? !file.from_agent : file.from_agent)
-                  .map((file: {
-                    id: string;
-                    session_id: string;
-                    request_id: string;
-                    original_name: string;
-                    mimetype: string;
-                    internal_id: string;
-                    internal_name: string;
-                    from_agent: boolean;
-                  }) => (
-                    <FilePreviewCard
-                      key={file.id}
-                      fileData={{
-                        id: file.id,
-                        clientId: file.id,
-                        name: extractFileName(file.original_name || file.internal_name),
-                        type: file.mimetype,
-                        size: 0, // Will be updated when file is loaded
-                        loading: false,
-                        fromAgent: file.from_agent
-                      }}
-                    />
-                  ))}
+                  .filter(file => (isUser ? !file.from_agent : file.from_agent))
+                  .map(
+                    (file: {
+                      id: string;
+                      session_id: string;
+                      request_id: string;
+                      original_name: string;
+                      mimetype: string;
+                      internal_id: string;
+                      internal_name: string;
+                      from_agent: boolean;
+                    }) => (
+                      <FilePreviewCard
+                        key={file.id}
+                        fileData={{
+                          id: file.id,
+                          clientId: file.id,
+                          name: extractFileName(
+                            file.original_name || file.internal_name,
+                          ),
+                          type: file.mimetype,
+                          size: 0, // Will be updated when file is loaded
+                          loading: false,
+                          fromAgent: file.from_agent,
+                        }}
+                      />
+                    ),
+                  )}
               </div>
             )}
           </div>
           <div className="flex items-center justify-between space-x-2 mt-1">
-            <span className={`text-xs ${
-              theme === 'light' ? 'text-light-secondary-secondary' : 'text-dark-secondary-secondary'
-            }`}>
+            <span
+              className={`text-xs ${
+                theme === 'light'
+                  ? 'text-light-secondary-secondary'
+                  : 'text-dark-secondary-secondary'
+              }`}
+            >
               {timestamp}
             </span>
             <div className="flex items-center justify-between">

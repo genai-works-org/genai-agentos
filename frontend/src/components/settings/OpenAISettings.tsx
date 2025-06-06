@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ChangeEvent, FC } from 'react';
-import { Box, TextField, SelectChangeEvent, IconButton, InputAdornment } from '@mui/material';
+import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { Settings } from '../../contexts/SettingsContext';
 import { AIModelGrid } from '../AIModelGrid';
@@ -19,20 +19,22 @@ interface OpenAISettingsProps {
   onModelDelete: (model: ModelConfig) => void;
 }
 
-export const OpenAISettings: FC<OpenAISettingsProps> = ({ 
+export const OpenAISettings: FC<OpenAISettingsProps> = ({
   settings,
   availableModels,
   disabledModelCreate,
   tooltipMessage,
-  onSettingsChange, 
+  onSettingsChange,
   onModelSelect,
   onModelCreate,
   onModelEdit,
   onModelDelete,
 }) => {
   const [showApiKey, setShowApiKey] = useState(false);
-  const handleApiKeyChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const {  value } = e.target;
+  const handleApiKeyChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { value } = e.target;
     onSettingsChange({ openAi: { api_key: value.trim() } });
   };
 
@@ -41,7 +43,7 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
       <Box>
         <TextField
           fullWidth
-          type={showApiKey ? "text" : "password"}
+          type={showApiKey ? 'text' : 'password'}
           name="openaiApiKey"
           label="API Key"
           value={settings.openAi.api_key || ''}
@@ -80,4 +82,4 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
       </Box>
     </>
   );
-}; 
+};

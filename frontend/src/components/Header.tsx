@@ -1,22 +1,26 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { LogOutIcon, SunIcon, MoonIcon } from 'lucide-react';
+import { LogOutIcon } from 'lucide-react';
 import { getThemeColors } from '../utils/themeUtils';
 import { useLogout } from '../hooks/useLogout';
 
 const Header = () => {
   const { user } = useAuth();
   const { logout } = useLogout();
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
   const colors = getThemeColors(theme);
 
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
 
   const getRandomColor = (name: string) => {
     const colors = [
-      theme === 'light' ? 'bg-light-secondary-primary' : 'bg-dark-secondary-primary',
-      theme === 'light' ? 'bg-light-secondary-secondary' : 'bg-dark-secondary-secondary',
+      theme === 'light'
+        ? 'bg-light-secondary-primary'
+        : 'bg-dark-secondary-primary',
+      theme === 'light'
+        ? 'bg-light-secondary-secondary'
+        : 'bg-dark-secondary-secondary',
     ];
     const index = name.length % colors.length;
     return colors[index];
@@ -27,9 +31,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link to="/" className="flex items-center">
-            <span className={`text-2xl font-bold ${colors.text}`}>
-              GENAI
-            </span>
+            <span className={`text-2xl font-bold ${colors.text}`}>GENAI</span>
           </Link>
           <div className="flex items-center space-x-4">
             {/* <button
@@ -40,7 +42,9 @@ const Header = () => {
             </button> */}
             {user ? (
               <div className="flex items-center space-x-4">
-                <div className={`w-8 h-8 rounded-full ${getRandomColor(user.username)} flex items-center justify-center ${colors.text} font-medium`}>
+                <div
+                  className={`w-8 h-8 rounded-full ${getRandomColor(user.username)} flex items-center justify-center ${colors.text} font-medium`}
+                >
                   {getInitial(user.username)}
                 </div>
                 <button
