@@ -80,6 +80,8 @@ services:
   migration_svc:
     build:
       context: ./backend
+    depends_on:
+      - postgres
     env_file:
       - .env
     networks:

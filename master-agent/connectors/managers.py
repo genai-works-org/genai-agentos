@@ -9,6 +9,7 @@ from mcp.client.session import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
 from connectors.entities import ConnectorStrategy, A2AConfig, GenAIConfig, MCPConfig, GenAIFlowConfig
+from utils.tracing import trace_execution_time
 
 
 class MCPConnector(ConnectorStrategy):
@@ -27,7 +28,9 @@ class MCPConnector(ConnectorStrategy):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
 
-                    response = await session.call_tool(config.name, config.arguments)
+                    async with trace_execution_time(trace=trace):
+                        response = await session.call_tool(config.name, config.arguments)
+
                     trace.update(
                         {
                             "output": response.model_dump(),
@@ -40,7 +43,7 @@ class MCPConnector(ConnectorStrategy):
 
         except Exception as e:
             error_message = f"Unexpected error while invoking MCP tool: {e}"
-            logger.exception(error_message, exc_info=e)
+            logger.exception(error_message)
 
             trace.update(
                 {
@@ -83,7 +86,9 @@ class A2AConnector(ConnectorStrategy):
                 request = SendMessageRequest(
                     params=MessageSendParams(**send_message_payload)
                 )
-                response = await client.send_message(request, http_kwargs={"timeout": None})
+
+                async with trace_execution_time(trace=trace):
+                    response = await client.send_message(request, http_kwargs={"timeout": None})
 
                 if isinstance(response.root, SendMessageSuccessResponse):
                     response_text = response.root.result.artifacts[0].parts[0].root.text
@@ -102,7 +107,7 @@ class A2AConnector(ConnectorStrategy):
         except Exception as e:
             error_message = f"Unexpected error while invoking A2A agent: {e}"
 
-            logger.exception(error_message, exc_info=e)
+            logger.exception(error_message)
 
             trace.update(
                 {
@@ -142,7 +147,7 @@ class GenAIConnector(ConnectorStrategy):
         except Exception as e:
             error_message = f"Unexpected error while invoking GenAI agent: {e}"
 
-            logger.exception(error_message, exc_info=e)
+            logger.exception(error_message)
 
             trace.update(
                 {
@@ -158,16 +163,18 @@ class GenAIFlowConnector(ConnectorStrategy):
         config = cast(GenAIFlowConfig, self.config)
         session: GenAISession = config.session
 
-        final_state = await config.flow_master_agent.graph.ainvoke(
-            input={"messages": config.messages.copy()},
-            config={"configurable": {"session": session}}
-        )
-        response = final_state["messages"][-1].content
-
         trace = {
             "id": config.id,
             "name": config.name,
-            "type": config.agent_type,
-            "flow": final_state["trace"]
+            "type": config.agent_type
         }
+
+        async with trace_execution_time(trace=trace):
+            final_state = await config.flow_master_agent.graph.ainvoke(
+                input={"messages": config.messages.copy()},
+                config={"configurable": {"session": session}}
+            )
+
+        response = final_state["messages"][-1].content
+        trace["flow"] = final_state["trace"]
         return response, trace

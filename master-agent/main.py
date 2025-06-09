@@ -79,7 +79,7 @@ async def receive_message(
 
     except Exception as e:
         error_message = f"Unexpected error while running Master Agent: {e}"
-        logger.exception(error_message, exc_info=e)
+        logger.exception(error_message)
 
         trace = {
             "name": "MasterAgent",
