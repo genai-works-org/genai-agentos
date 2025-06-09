@@ -1,92 +1,126 @@
 # 🧠 Master Agent (Supervisor)
 
-The Master Agent is a central orchestrator component of the platform, powered by an LLM. 
-It receives user queries and intelligently breaks them down into actionable steps, coordinating a set of 
-developer-defined tools and agents (including flows) to complete the task. 
-While the Master Agent itself is driven by an LLM, the tools and agents it manages can be anything the developer 
-defines—ranging from simple functions and external APIs to other LLM-powered agents. 
-It operates iteratively using the ReAct reasoning framework to plan and act step by step.
+The **Master Agent** is the central orchestrator of the platform, powered by a large language model (LLM).
+It receives user queries and intelligently decomposes them into actionable steps, coordinating a set of
+developer-defined tools and agents (including flows) to complete the task.
+
+While the Master Agent is LLM-driven, the tools and agents it manages can be anything defined by the developer —
+ranging from simple functions and external APIs to other LLM-powered agents.
+
+Currently, we support integration with:
+
+* **GenAI Agents** (created using the GenAI Protocol library)
+* **A2A Agents**
+* **MCP Tools**
+
+The Master Agent operates iteratively using the **ReAct** reasoning framework to plan and act step by step.
+
+---
 
 ## 🚀 Purpose
 
-The **Master Agent** serves as the **Supervisor** of the agent ecosystem. It doesn't solve tasks directly but:
-- Analyzes the user's query,
-- Breaks the problem down into substeps,
-- Selects and invokes the appropriate tools/agents to perform each step,
-- Aggregates results and produces a final response.
+The **Master Agent** acts as the **Supervisor** of the agent ecosystem. It does not solve tasks directly but:
 
-It acts as a **thinking-and-acting LLM agent**, using reasoning + action loops to achieve the task goal.
+* Analyzes the user's query
+* Breaks the problem down into substeps
+* Selects and invokes the appropriate tool, agent, or flow for each step
+* Aggregates the results and produces a final response
+
+It functions as a **thinking-and-acting LLM agent**, using reasoning + action loops to achieve task goals.
 
 ---
 
 ## 🧩 How It Works
 
-The Master Agent is built using the **LangGraph framework**, following the **ReAct (Reasoning + Acting)** paradigm. It operates in the following stages:
+The Master Agent is built using the **LangGraph** framework, following the **ReAct (Reasoning + Acting)** paradigm.
+It operates in the following stages:
 
 1. **Receive Inputs**
-   - User query
-   - List of available agents and tools (including **flows**)
-   - Optional files metadata
+
+   * Request metadata (session ID, user ID, LLM configuration)
+   * A list of available agents and tools (including **flows**) from the Backend API
+   * Chat history from the Backend API
+   * Optional file metadata
 
 2. **Plan and Decompose**
-   - Analyze the user query
-   - Break down into steps
+
+   * Analyze the user query
+   * Break it down into smaller steps
 
 3. **Select Flow or Agent**
-   - First, search for a **flow** capable of handling the current step.
-     - If found, expand the flow into its component agents and enqueue them.
-   - If no flow is suitable, select a **single agent/tool** capable of handling the step and enqueue it.
-   - If no suitable tool/agent is found, produce a final response.
+
+   * Search for a **tool, agent, or flow** capable of handling the current step
+   * If none are suitable, return a final response
 
 4. **Execute Agents**
-   - Pop the next agent from the queue.
-   - Call the remote agent/tool using the `GenAI Protocol` library.
-   - Append the result to chat messages.
-   - Repeat step 3 until task is completed or no agents are applicable.
 
-> ⚠️ If the **agent queue is not empty**, the Master Agent **must execute only the next agent** in the queue (part of an active flow). It cannot choose a new agent or flow in this state.
+   * Invoke the appropriate agent or tool using the relevant connector (GenAI Agents, MCP tools, A2A agents, flows)
+   * Append results to the chat history
+   * Repeat from step 3 until the task is complete or no further agents are applicable
+
+> ⚠️ **If a flow is executing**, the Master Agent **must only execute the next agent** in the flow's queue.
+> It cannot choose a different agent or flow during this state.
 
 ---
 
 ## 🏗️ Key Concepts
 
 ### 🔧 Agents & Tools
-Agents are developer-defined Python processes that are remotely callable via `GenAI Protocol`. Each agent advertises:
-- Its name and description
-- Accepted parameters
-- Expected input types
+
+Agents are developer-defined processes that can be remotely invoked via:
+
+* `GenAI Protocol` (for GenAI Agents)
+* `MCP SDK` (for MCP tools)
+* `Google ADK` (for A2A agents)
+
+Each agent or tool must advertise:
+
+* Its name and description
+* Accepted parameters
+* Expected input types
 
 ### 🔁 Flows
-A **flow** is a **predefined sequence of agents/tools** designed to complete a larger task. Flows:
-- Are not recursive (flows cannot contain other flows)
-- Can be decomposed and executed step-by-step by Master Agent
+
+A **flow** is a **predefined, linear sequence** of agents and/or tools designed to accomplish a broader task.
+Flows can:
+
+* Contain any mix of GenAI Agents, MCP tools, A2A agents, or other flows
+* Be decomposed and executed step-by-step by the Master Agent
+
+You don’t need to manually connect agent inputs and outputs — the Master Agent handles that automatically.
 
 ### 🧠 ReAct via LangGraph
-The Master Agent:
-- Thinks → "What step is needed?"
-- Acts → "Which tool can perform this step?"
-- Iterates until the task is complete or no tools apply
 
-### 📁 Files Support
-Master Agent does not process file contents but receives **metadata only**, such as:
+The Master Agent follows an iterative reasoning and acting process:
+
+* **Thinks** → “What step is needed?”
+* **Acts** → “Which tool can perform this step?”
+* **Iterates** until the task is complete or no suitable tools remain
+
+### 📁 File Support
+
+The Master Agent does **not** process file contents directly. It only receives **metadata**, such as:
+
 ```json
 {
   "original_name": "invoice.pdf",
   "mimetype": "application/pdf",
-  "internal_id": "abc123",
-  ...
+  "internal_id": "abc123"
 }
 ```
-If a step requires file input, Master Agent:
-- Selects file(s) based on metadata
-- Passes their IDs to the chosen agent
+
+If a step requires file input, the Master Agent will:
+
+* Select relevant files based on metadata
+* Pass their IDs to the appropriate agent
 
 ---
 
 ## 🧠 System Prompts
 
 ### 🔤 Default System Prompt
-Guides the Master Agent in tool selection and ReAct-based reasoning:
+
+This prompt guides the Master Agent in selecting tools and applying ReAct-based reasoning:
 
 ```text
 - Analyze user query
@@ -96,42 +130,35 @@ Guides the Master Agent in tool selection and ReAct-based reasoning:
 ```
 
 ### 📁 File-Aware Prompt
-Activates when files are included in the request, instructing the Master Agent to match tools to files via metadata.
+
+This prompt activates when files are included in the request. It instructs the Master Agent
+to match tools to files using available metadata.
 
 ---
 
 ## 🤖 LLM Compatibility
 
-The Master Agent supports any LLM that implements **tool-calling features**, including:
+The Master Agent supports any LLM that enables **tool-calling**, including:
 
-- 🔷 OpenAI models (via OpenAI API)
-- 🔷 Azure OpenAI models
-- 🟠 Ollama (local LLMs)
-
----
-
-## 📡 Integration with GenAI Protocol
-
-All tool/agent communication is done via `GenAI Protocol`, a platform-internal library enabling remote calls, session tracking, and streaming results.
+* 🔷 OpenAI models (via OpenAI API)
+* 🔷 Azure OpenAI models
+* 🟠 Ollama (for local LLMs)
 
 ---
 
-## ✅ Usage Summary
+## 📡 Integrations
 
-| Step  | Description                                 |
-|-------|---------------------------------------------|
-| 1     | Receive user query and agents/tools list    |
-| 2     | Decompose task into steps                   |
-| 3     | Find matching flow or agent                 |
-| 4     | Enqueue selected agents                     |
-| 5     | Execute agent via `GenAI Protocol`          |
-| 6     | Repeat until done or no agent is applicable |
+The Master Agent supports communication with a variety of agents and tools:
+
+* **GenAI Agents** via `GenAI Protocol` — a platform library for remote calls, session tracking, and streaming results
+* **MCP tools** via MCP Python SDK
+* **A2A Agents** via Google ADK
 
 ---
 
 ## 🧪 Development Tips
 
-- Ensure agents advertise correct input types (including file support)
-- Avoid overloading flows—each flow must be linear and non-nested
-- Test flow behavior: Master Agent will enforce strict queue ordering
-- Monitor tool-call logs and traces to debug ReAct cycles and agent decisions
+* Ensure that agents/tools advertise correct input types (especially for file support)
+* Avoid nested flows — prefer linear flows for better observability
+* Test flow execution: the Master Agent enforces strict sequential order in flows
+* Use tool-call logs and traces to debug ReAct loops and agent selection behavior
