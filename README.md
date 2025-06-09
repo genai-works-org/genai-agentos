@@ -8,6 +8,16 @@ This repository provides the complete infrastructure for running GenAI agents, i
 * PostgreSQL Database
 * Frontend
 
+## 🧠 Supported Agent Types
+
+The system supports multiple kinds of Agents:
+
+| Agent Type       | Description                                                                                   |
+|------------------|-----------------------------------------------------------------------------------------------|
+| **GenAI Agents** | Connected via [`genai-protocol`](https://pypi.org/project/genai-protocol/) library interface. |
+| **MCP Servers**  | MCP (Model Context Protocol) servers can be added by pasting their URL in the UI.             |
+| **A2A Servers**  | A2A (Agent to Agent Protocol) servers can be added by pasting their URL in the UI.            |
+
 ## 📦 Prerequisites
 
 Make sure you have the following installed:
