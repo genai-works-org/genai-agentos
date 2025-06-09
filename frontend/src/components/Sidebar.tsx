@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import type { FC, ReactNode } from 'react';
+import { useState, useEffect, FC, ReactNode, memo } from 'react';
 import { Settings, MoreVertical, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Divider } from '@mui/material';
 import { useTheme } from '../contexts/ThemeContext';
 import { getThemeColors } from '../utils/themeUtils';
 import UserAvatar from './UserAvatar';
@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLogout } from '../hooks/useLogout';
 import PageCard from './PageCard';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
+import ChatList from './ChatList';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,12 +28,17 @@ interface PageLink {
 const pages: PageLink[] = [
   { path: '/chat', title: 'Chat', plusBtnNav: '/chat/new' },
   { path: '/agents', title: 'Agents' },
-  { path: '/agent-flows', title: 'Agent Flows', plusBtnNav: '/agent-flows/new' },
+  {
+    path: '/agent-flows',
+    title: 'Agent Flows',
+    plusBtnNav: '/agent-flows/new',
+  },
   { path: '/a2a-agents', title: 'A2A Agents' },
   { path: '/mcp-agents', title: 'MCP Agents' },
 ];
 
-const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
+const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
   const navigate = useNavigate();
@@ -40,8 +46,6 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const { logout } = useLogout();
   const { clearMessages } = useChatHistory();
-
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -66,7 +70,7 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
     >
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-        {pages.map((page) => (
+        {pages.map(page => (
           <PageCard
             key={page.path}
             title={page.title}
@@ -79,6 +83,8 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
             }}
           />
         ))}
+        <Divider className="!my-4" />
+        <ChatList />
       </nav>
 
       {/* User Section */}
@@ -98,9 +104,11 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
               <MoreVertical className="h-5 w-5" />
             </button>
             {isUserMenuOpen && (
-              <div className={`absolute bottom-full right-0 mb-2 w-48 rounded-lg shadow-lg ${
-                colors.bg
-              } ring-1 ring-black ring-opacity-5`}>
+              <div
+                className={`absolute bottom-full right-0 mb-2 w-48 rounded-lg shadow-lg ${
+                  colors.bg
+                } ring-1 ring-black ring-opacity-5`}
+              >
                 <div className="py-1">
                   <button
                     className={`flex items-center w-full px-4 py-2 text-sm ${colors.text} hover:bg-gray-100`}
@@ -111,16 +119,16 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
                 <div className="py-1">
-                <button
-                  onClick={() => {
-                    logout();
-                    clearMessages();
-                  }}
-                  className={`flex items-center w-full px-4 py-2 text-sm ${colors.text} hover:bg-gray-100`}
-                  aria-label="Logout"
-                >
-                  <LogOut className="h-4 w-4 mr-3" /> Logout
-                </button>
+                  <button
+                    onClick={() => {
+                      logout();
+                      clearMessages();
+                    }}
+                    className={`flex items-center w-full px-4 py-2 text-sm ${colors.text} hover:bg-gray-100`}
+                    aria-label="Logout"
+                  >
+                    <LogOut className="h-4 w-4 mr-3" /> Logout
+                  </button>
                 </div>
               </div>
             )}
@@ -129,6 +137,6 @@ const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default Sidebar;

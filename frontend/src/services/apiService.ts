@@ -264,11 +264,13 @@ export class ApiService {
   async patch<T>(
     endpoint: string,
     data: any,
-    options: RequestInit = {},
+    options: RequestInit & { params?: Record<string, string> } = {},
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await this.makeRequest<T>(endpoint, {
-        ...options,
+      const { params, ...requestOptions } = options;
+      const url = this.buildUrlWithParams(endpoint, params);
+      const response = await this.makeRequest<T>(url, {
+        ...requestOptions,
         method: 'PATCH',
         body: JSON.stringify(data),
         headers: {
@@ -284,11 +286,13 @@ export class ApiService {
 
   async delete<T>(
     endpoint: string,
-    options: RequestInit = {},
+    options: RequestInit & { params?: Record<string, string> } = {},
   ): Promise<ApiResponse<T>> {
     try {
-      const response = await this.makeRequest<T>(endpoint, {
-        ...options,
+      const { params, ...requestOptions } = options;
+      const url = this.buildUrlWithParams(endpoint, params);
+      const response = await this.makeRequest<T>(url, {
+        ...requestOptions,
         method: 'DELETE',
       });
       return response;

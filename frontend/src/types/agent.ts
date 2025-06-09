@@ -37,28 +37,37 @@ export interface AgentCreate {
 }
 
 export interface Flow {
-  agent_id: string;
+  id: string;
+  name: string;
+  type: string;
+  agent_schema: AgentSchema;
+  flow: string[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AgentFlowDTO {
   id: string;
   name: string;
   description: string;
-  flow: Flow[];
+  flow: {
+    agent_id: string | null;
+    mcp_tool_id: string | null;
+    a2a_card_id: string | null;
+  }[];
   created_at: string;
   updated_at: string;
 }
 
-export interface AgentFlowCreate {
-  name: string;
-  description: string;
-  flow: Flow[];
-}
+export type FlowItem =
+  | { agent_id: string }
+  | { mcp_tool_id: string }
+  | { a2a_card_id: string };
 
-export interface AgentFlowUpdate {
+export interface AgentFlowBody {
   name: string;
   description: string;
-  flow: Flow[];
+  flow: FlowItem[];
 }
 
 export interface AgentTrace {
@@ -124,6 +133,7 @@ export interface ActiveConnection {
   };
   created_at: string;
   updated_at: string;
+  is_active?: boolean;
 }
 
 export interface ActiveAgentsResponse {

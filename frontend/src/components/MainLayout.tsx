@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FC, ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
@@ -37,6 +37,10 @@ export const MainLayout: FC<MainLayoutProps> = ({
     const path = location.pathname.split('/')[1];
     return path.charAt(0).toUpperCase() + path.slice(1) || 'Home';
   };
+
+  const handleSidebarClose = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
 
   return (
     <Container
@@ -85,7 +89,7 @@ export const MainLayout: FC<MainLayoutProps> = ({
             {isSidebarOpen && (
               <Sidebar
                 isOpen={isSidebarOpen}
-                onClose={() => setIsSidebarOpen(false)}
+                onClose={handleSidebarClose}
                 handleReturn={handleReturn}
                 side="left"
               />
