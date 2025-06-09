@@ -71,12 +71,14 @@ const DescriptionBox = styled(Box)({
 
 interface AgentFlowCardProps {
   flow: AgentFlowDTO;
+  isActive: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   flow,
+  isActive,
   onEdit,
   onDelete,
 }) => {
