@@ -101,7 +101,7 @@ class BaseMasterAgent(ABC):
 
         except Exception as e:
             error_message = f"Unexpected error while invoking {agent_name}: {e}"
-            logger.exception(error_message, exc_info=e)
+            logger.exception(error_message)
 
             trace = {
                 "name": "MasterAgent",
