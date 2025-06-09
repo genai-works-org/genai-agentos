@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AgentFlowDTO } from '../types/agent';
+import { ActiveConnection, AgentFlowDTO, AgentType } from '../types/agent';
 import {
   Container,
   IconButton,
@@ -16,6 +16,7 @@ import { useAgent } from '../hooks/useAgent';
 import ConfirmModal from '../components/ConfirmModal';
 
 export const AgentFlowsPage: FC = () => {
+  const [agents, setAgents] = useState<ActiveConnection[]>([]);
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -25,6 +26,7 @@ export const AgentFlowsPage: FC = () => {
 
   useEffect(() => {
     loadFlows();
+    loadAgents();
   }, []);
 
   const loadFlows = async () => {
