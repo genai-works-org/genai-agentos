@@ -27,13 +27,14 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { MainLayout } from '../components/MainLayout';
-import { AgentFlowCreate } from '../types/agent';
+import { FlowItem } from '../types/agent';
 import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
 import { normalizeString } from '../utils/normalizeString';
 import { CustomNode } from '../components/CustomNode';
+import { useAgent } from '../hooks/useAgent';
 
 const nodeTypes = {
   customNode: CustomNode,
@@ -79,6 +80,19 @@ const highlightMatch = (
   }
 };
 
+const getFlowKey = (type: string) => {
+  switch (type) {
+    case 'genai':
+      return 'agent_id';
+    case 'mcp':
+      return 'mcp_tool_id';
+    case 'a2a':
+      return 'a2a_card_id';
+    default:
+      return 'agent_id';
+  }
+};
+
 export const transformEdgesToNodes = (
   edges: any[],
   agents: any[] = [],
@@ -95,13 +109,14 @@ export const transformEdgesToNodes = (
   if (!headNodeId) return nodes;
 
   // Start with the head node
-  const headAgent = agents.find(a => a.agent_id === headNodeId.split('::')[0]);
+  const headAgent = agents.find(a => a.id === headNodeId.split('::')[0]);
   nodes.push({
     id: headNodeId,
     agent_id: headNodeId.split('::')[0],
     name: headAgent?.agent_name || headNodeId,
     color: usedAgentColors[headNodeId.split('::')[0]] || '#000000',
     nextId: null,
+    type: headAgent?.type,
   });
   processedIds.add(headNodeId);
 
@@ -114,13 +129,14 @@ export const transformEdgesToNodes = (
     const nextId = nextEdge.target;
     if (processedIds.has(nextId)) break; // Prevent cycles
 
-    const nextAgent = agents.find(a => a.agent_id === nextId.split('::')[0]);
+    const nextAgent = agents.find(a => a.id === nextId.split('::')[0]);
     nodes.push({
       id: nextId,
       agent_id: nextId.split('::')[0],
       name: nextAgent?.agent_name || nextId,
       color: usedAgentColors[nextId.split('::')[0]] || '#000000',
       nextId: null,
+      type: nextAgent?.type,
     });
     processedIds.add(nextId);
     currentId = nextId;
@@ -152,6 +168,7 @@ export const AgentFlowsEditPage: FC = () => {
     Record<string, string>
   >({});
   const [links, setLinks] = useState<any[]>([]);
+  const { getAgentFlow, createAgentFlow, updateAgentFlow } = useAgent();
 
   // Generate a random color for an agent
   const getAgentColor = useCallback(
@@ -177,8 +194,11 @@ export const AgentFlowsEditPage: FC = () => {
         const agentsData = (
           await agentService.getActiveAgents({ agent_type: AgentType.ALL })
         ).active_connections;
+        const filteredAgents = agentsData.filter(
+          agent => agent.type !== AgentType.FLOW,
+        );
 
-        setAgents(agentsData);
+        setAgents(filteredAgents);
 
         if (isNewFlow) {
           clearFlow();
@@ -186,29 +206,29 @@ export const AgentFlowsEditPage: FC = () => {
           return;
         }
 
-        const flowData = await agentService.getAgentFlow(id!);
+        const flowData = await getAgentFlow(id!);
 
         if (flowData) {
           setFlowName(flowData.name);
-          setFlowDescription(flowData.description || '');
+          setFlowDescription(flowData.agent_schema.function.description || '');
 
           // Create nodes from flow data with unique IDs
-          const flowNodes: Node[] = flowData.flow.map((flowItem, index) => {
-            const agent = agentsData.find(a => a.id === flowItem.agent_id);
-            const nodeId = `${flowItem.agent_id}::${Date.now() + index}`;
+          const flowNodes: Node[] = flowData.flow.map((id, index) => {
+            const agent = agentsData.find(a => a.id === id);
+            const nodeId = `${id}::${Date.now() + index}`;
 
             return {
               id: nodeId,
               type: 'customNode',
               position: { x: 0, y: index * 75 },
               data: {
-                label: normalizeString(agent?.name || flowItem.agent_id),
+                label: normalizeString(agent?.name || id),
                 description: agent?.agent_schema.description,
-                agent_id: flowItem.agent_id,
+                agent_id: id,
                 type: agent?.type,
               },
               style: {
-                border: `2px solid ${getAgentColor(flowItem.agent_id)}`,
+                border: `2px solid ${getAgentColor(id)}`,
                 borderRadius: '8px',
               },
             };
@@ -368,16 +388,20 @@ export const AgentFlowsEditPage: FC = () => {
   const handleSave = async () => {
     setSaving(true);
     setSaveError(null);
-    const flow: AgentFlowCreate = {
+    const flow = {
       name: flowName,
       description: flowDescription,
-      flow: links.map(n => ({ agent_id: n.agent_id })),
+      flow: links.map(n => {
+        const key = getFlowKey(n.type);
+        return { [key]: n.agent_id } as FlowItem;
+      }),
     };
+
     try {
       if (isNewFlow) {
-        await agentService.createAgentFlow(flow);
+        await createAgentFlow(flow);
       } else {
-        await agentService.updateAgentFlow(id!, flow);
+        await updateAgentFlow(id!, flow);
       }
       navigate('/agent-flows');
     } catch (e) {

@@ -71,12 +71,14 @@ const DescriptionBox = styled(Box)({
 
 interface AgentFlowCardProps {
   flow: AgentFlowDTO;
+  isActive: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   flow,
+  isActive,
   onEdit,
   onDelete,
 }) => {
@@ -86,7 +88,7 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await onDelete(flow.id);
+      onDelete(flow.id);
     } finally {
       setIsDeleting(false);
     }
@@ -99,8 +101,7 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
         borderRadius: '0.5rem',
         boxShadow:
           '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        border: '1px solid',
-        borderColor: 'rgba(229, 231, 235, 1)',
+        border: `2px solid ${isActive ? '#0c7c59' : '#c1121f'}`,
         maxHeight: expanded ? '400px' : '200px',
         transition: 'max-height 0.3s ease-in-out',
       }}

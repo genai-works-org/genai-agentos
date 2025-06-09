@@ -2,11 +2,11 @@ import {
   AgentDTO,
   AgentCreate,
   AgentFlowDTO,
-  AgentFlowCreate,
-  AgentFlowUpdate,
+  AgentFlowBody,
   ActiveAgentsResponse,
   A2AAgent,
   MCPAgent,
+  Flow,
 } from '../types/agent';
 import { apiService } from './apiService';
 
@@ -43,19 +43,17 @@ export const agentService = {
     await apiService.delete<void>(`/api/agents/${id}`);
   },
 
-  async getAgentFlows(): Promise<AgentFlowDTO[]> {
+  async getAgentFlows() {
     const response = await apiService.get<AgentFlowDTO[]>('/api/agentflows/');
     return response.data;
   },
 
-  async getAgentFlow(id: string): Promise<AgentFlowDTO> {
-    const response = await apiService.get<AgentFlowDTO>(
-      `/api/agentflows/${id}`,
-    );
+  async getAgentFlow(id: string) {
+    const response = await apiService.get<Flow>(`/api/agentflows/${id}`);
     return response.data;
   },
 
-  async createAgentFlow(flow: AgentFlowCreate): Promise<AgentFlowDTO> {
+  async createAgentFlow(flow: AgentFlowBody) {
     const response = await apiService.post<AgentFlowDTO>(
       '/api/agentflows/register-flow',
       flow,
@@ -63,12 +61,12 @@ export const agentService = {
     return response.data;
   },
 
-  async updateAgentFlow(id: string, flow: AgentFlowUpdate): Promise<void> {
-    await apiService.patch<void>(`/api/agentflows/${id}`, flow);
+  async updateAgentFlow(id: string, flow: AgentFlowBody) {
+    await apiService.patch<AgentFlowDTO>(`/api/agentflows/${id}`, flow);
   },
 
-  async deleteAgentFlow(id: string): Promise<void> {
-    await apiService.delete<void>(`/api/agentflows/${id}`);
+  async deleteAgentFlow(id: string) {
+    await apiService.delete(`/api/agentflows/${id}`);
   },
 
   // A2A
