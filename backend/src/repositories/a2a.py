@@ -124,6 +124,22 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
                 detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
             )
 
+    async def _orm_card_to_dto(self, card: A2ACardDTO) -> dict:
+        return a2a_repo.agent_card_to_dto(
+            agent_card=A2AAgentCard(
+                **card.card_content,
+                name=card.name,
+                description=card.description,
+                url=card.server_url,
+            ),
+            created_at=card.created_at,
+            updated_at=card.updated_at,
+            id_=card.id,
+        ).model_dump(exclude_none=True, mode="json")
+
+    async def _orm_cards_to_dto(self, cards: list[A2ACardDTO]) -> list[dict]:
+        return [await self._orm_card_to_dto(card=c) for c in cards]
+
     async def list_active_cards(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
     ):
@@ -140,20 +156,35 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             .offset(offset=offset)
         )
         cards = [A2ACardDTO(**c.__dict__) for c in q.all()]
-        return [
-            a2a_repo.agent_card_to_dto(
-                agent_card=A2AAgentCard(
-                    **c.card_content,
-                    name=c.name,
-                    description=c.description,
-                    url=c.server_url,
-                ),
-                created_at=c.created_at,
-                updated_at=c.updated_at,
-                id_=c.id,
+        return await self._orm_cards_to_dto(cards=cards)
+
+    async def list_all_cards(
+        self, db: AsyncSession, user_id: UUID, limit: int, offset: int
+    ):
+        q = await db.scalars(
+            select(self.model)
+            .where(
+                and_(
+                    self.model.creator_id == user_id,
+                )
             )
-            for c in cards
-        ]
+            .order_by(self.model.created_at.desc())
+            .limit(limit=limit)
+            .offset(offset=offset)
+        )
+        cards = [A2ACardDTO(**c.__dict__) for c in q.all()]
+        return await self._orm_cards_to_dto(cards=cards)
+
+    async def get_one_card(
+        self, db: AsyncSession, user_model: User, id_: UUID
+    ) -> AgentDTOPayload:
+        q = await db.scalar(
+            select(self.model).where(
+                and_(self.model.creator_id == user_model.id, self.model.id == id_)
+            )
+        )
+        card = A2ACardDTO(**q.__dict__)
+        return await self._orm_card_to_dto(card=card)
 
     @staticmethod
     def _agent_card_to_json_schema(agent_card: A2AAgentCard):

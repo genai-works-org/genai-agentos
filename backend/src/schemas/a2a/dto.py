@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,3 +30,19 @@ class A2ACardJsonSchema(BaseModel):
     type: AgentType = Field(default=AgentType.a2a)
     url: str
     agent_schema: A2AJsonSchema
+
+
+class A2AFirstAgentInFlow(BaseModel):
+    name: str
+    description: str
+    properties: dict[str, Any] = Field(
+        default={
+            "task": {
+                "type": "string",
+                "description": "A meaningful, well-formulated task for the agent",
+            },
+            "text": {"type": "string"},
+        },
+    )
+    required: list[Optional[str]] = ["task", "text"]
+    type: str = Field(default="object")

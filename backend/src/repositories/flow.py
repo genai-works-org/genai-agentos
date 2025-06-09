@@ -90,8 +90,8 @@ class AgentWorkflowRepository(
                 Validates that all agents in the flow exist and are owned by the user before
         creating the workflow.
         """
-        valid_flow = await self.validate_flow_agent_exists(
-            db=db, flow=obj_in.flow, user_model=user_model
+        valid_flow = await self.validate_all_agents_in_flow_are_active(
+            db=db, obj_in=obj_in, user_model=user_model
         )
         if not valid_flow:
             raise self.get_empty_flow_exception()

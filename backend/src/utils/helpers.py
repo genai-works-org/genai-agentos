@@ -39,6 +39,8 @@ def mcp_tool_to_json_schema(tool: Tool | MCPToolDTO) -> dict:
     tool_dict.update(tool_dict.pop("inputSchema"))
     tool_dict["title"] = generate_alias(tool_dict.pop("name").replace(" ", "_"))
 
+    if not tool_dict.get("properties", {}):
+        tool_dict["requried"] = []
     return tool_dict
 
 

@@ -28,3 +28,9 @@ class ActiveAgentTypeFilter(Enum):
     mcp = "mcp"
     a2a = "a2a"
     all = "all"
+
+
+class AgentIdType(Enum):
+    agent_id = "agent_id"
+    mcp_tool_id = "mcp_tool_id"
+    a2a_card_id = "a2a_card_id"

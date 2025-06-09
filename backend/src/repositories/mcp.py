@@ -260,5 +260,9 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             )
         return tools
 
+    async def get_tool_by_id(self, db: AsyncSession, id_: UUID):
+        q = await db.scalar(select(MCPTool).where(MCPTool.id == id_))
+        return q
+
 
 mcp_repo = MCPRepository(MCPServer)
