@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLogout } from '../hooks/useLogout';
 import PageCard from './PageCard';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-// import ChatList from './ChatList';
+import ChatList from './ChatList';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ interface PageLink {
 }
 
 const pages: PageLink[] = [
-  { path: '/chat', title: 'Chat', plusBtnNav: '/chat/new' },
+  { path: '/chat/new', title: 'New Chat' },
   { path: '/agents', title: 'Agents' },
   {
     path: '/agent-flows',
@@ -84,7 +84,7 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
           />
         ))}
         <Divider className="!my-4" />
-        {/* <ChatList /> */}
+        <ChatList />
       </nav>
 
       {/* User Section */}
