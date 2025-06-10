@@ -7,11 +7,11 @@ from pydantic import BaseModel
 from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, create_access_token, validate_token
-from src.models import Agent, AgentWorkflow, User
+from src.models import A2ACard, Agent, AgentWorkflow, MCPTool, User
 from src.repositories.a2a import a2a_repo
 from src.repositories.base import CRUDBase
 from src.repositories.mcp import mcp_repo
-from src.schemas.a2a.dto import ActiveA2ACardDTO
+from src.schemas.a2a.dto import A2AFirstAgentInFlow, ActiveA2ACardDTO
 from src.schemas.a2a.schemas import A2AAgentCard
 from src.schemas.api.agent.dto import (
     ActiveAgentsDTO,
@@ -23,12 +23,13 @@ from src.schemas.api.agent.dto import (
 from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdate
 from src.schemas.api.flow.schemas import AgentFlowAlias, FlowAgentId, FlowSchema
 from src.schemas.base import AgentDTOPayload
-from src.schemas.mcp.dto import ActiveMCPToolDTO
-from src.utils.enums import ActiveAgentTypeFilter, AgentType
+from src.schemas.mcp.dto import ActiveMCPToolDTO, MCPToolDTO
+from src.utils.enums import ActiveAgentTypeFilter, AgentIdType, AgentType
 from src.utils.filters import AgentFilter
 from src.utils.helpers import (
     FlowValidator,
     generate_alias,
+    get_agent_description_from_skills,
     map_agent_model_to_dto,
     map_genai_agent_to_unified_dto,
     mcp_tool_to_json_schema,
@@ -483,14 +484,50 @@ LIMIT :limit OFFSET :offset;
         return result.fetchall()
 
     async def orm_flow_to_dto(self, flow: AgentWorkflow, db: AsyncSession):
-        first_agent_id = flow.flow[0].get("agent_id")
-        first_agent = await agent_repo.get(
-            db=db,
-            id_=first_agent_id,
-        )
-        if first_agent:
-            if flow:
-                input_params = first_agent.input_parameters
+        if not flow.flow:
+            return None  # TODO: raise?
+
+        first_agent = flow.flow[0]
+
+        first_agent_id = list(first_agent.values())[0]
+        first_agent_type = list(first_agent.keys())[0]
+
+        first_existing_agent = None
+        if first_agent_type == AgentIdType.agent_id.value:
+            first_genai_agent = await agent_repo.get(
+                db=db,
+                id_=first_agent_id,
+            )
+            if not first_genai_agent:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'GenAI agent with id: {first_agent_id} was not found. Make sure you have passed "agent_id": "your id" in the flow correctly',  # noqa: E501
+                )
+            first_existing_agent = first_genai_agent
+
+        if first_agent_type == AgentIdType.mcp_tool_id.value:
+            first_mcp_tool = await mcp_repo.get_tool_by_id(db=db, id_=first_agent_id)
+            if not first_mcp_tool:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'MCP tool with id: {first_agent_id} was not found. Make sure you have passed "mcp_tool_id": "your id" in the flow correctly',  # noqa: E501
+                )
+            first_existing_agent = first_mcp_tool
+
+        if first_agent_type == AgentIdType.a2a_card_id.value:
+            first_a2a_card = await a2a_repo.get(db=db, id_=first_agent_id)
+            if not first_a2a_card:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'A2A card with id: {first_agent_id} was not found. Make sure you have passed "a2a_card_id": "your id" in the flow correctly',  # noqa: E501
+                )
+            first_existing_agent = first_a2a_card
+
+        if first_existing_agent:
+            input_params = None
+            if isinstance(first_existing_agent, Agent):
+                input_params = first_existing_agent.input_parameters
+                # TODO: check is genai_agent
                 if func := input_params.get("function"):
                     if func.get("name"):
                         input_params["function"]["name"] = flow.alias
@@ -498,25 +535,45 @@ LIMIT :limit OFFSET :offset;
                     if func.get("description"):
                         input_params["function"]["description"] = flow.description
 
-                agent_ids = []
-                for f in flow.flow:
-                    if agent_id := f.get("agent_id"):
-                        agent_ids.append(agent_id)
-                    if mcp_tool_id := f.get("mcp_tool_id"):
-                        agent_ids.append(mcp_tool_id)
-                    if a2a_agent_id := f.get("a2a_agent_id"):
-                        agent_ids.append(a2a_agent_id)
-
-                flow_schema = AgentDTOPayload(
-                    id=flow.id,
-                    name=flow.alias,
-                    type=AgentType.flow,
-                    agent_schema=input_params,
-                    created_at=flow.created_at,
-                    updated_at=flow.updated_at,
-                    flow=agent_ids,
+            if isinstance(first_existing_agent, MCPTool):
+                input_params = mcp_tool_to_json_schema(
+                    MCPToolDTO(**first_existing_agent.__dict__)
                 )
-                return flow_schema
+
+            if isinstance(first_existing_agent, A2ACard):
+                dto = A2AAgentCard(
+                    **first_existing_agent.card_content,
+                    name=first_existing_agent.name,
+                    description=first_existing_agent.description,
+                    url=first_existing_agent.server_url,
+                ).model_dump(exclude_none=True)
+                input_params = A2AFirstAgentInFlow(
+                    name=first_existing_agent.name,
+                    description=get_agent_description_from_skills(
+                        description=first_existing_agent.description,
+                        skills=dto.get("skills", []),
+                    ),
+                ).model_dump(mode="json")
+
+            agent_ids = []
+            for f in flow.flow:
+                if agent_id := f.get("agent_id"):
+                    agent_ids.append(agent_id)
+                if mcp_tool_id := f.get("mcp_tool_id"):
+                    agent_ids.append(mcp_tool_id)
+                if a2a_card_id := f.get("a2a_card_id"):
+                    agent_ids.append(a2a_card_id)
+
+            flow_schema = AgentDTOPayload(
+                id=flow.id,
+                name=flow.alias,
+                type=AgentType.flow,
+                agent_schema=input_params,
+                created_at=flow.created_at,
+                updated_at=flow.updated_at,
+                flow=agent_ids,
+            )
+            return flow_schema
 
     async def _get_all_flows_by_user(
         self, db: AsyncSession, user_id: UUID
@@ -718,9 +775,7 @@ LIMIT :limit OFFSET :offset;
         )
         return ActiveAgentsDTO(
             count_active_connections=len(result),
-            active_connections=[
-                r.model_dump(mode="json", exclude_none=True) for r in result
-            ],
+            active_connections=result,
         )
 
     async def get_active_agents_by_filter(

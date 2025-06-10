@@ -7,6 +7,7 @@ from loguru import logger
 from agents.base import BaseMasterAgent
 from models.states import MasterAgentState
 from utils.agents import select_agent_and_resolve_parameters
+from utils.tracing import trace_execution_time
 
 
 class ReActMasterAgent(BaseMasterAgent):
@@ -32,31 +33,36 @@ class ReActMasterAgent(BaseMasterAgent):
         Acts as main supervisor node.
         """
         messages = state.messages
+        trace = {
+            "name": "MasterAgent",
+            "input": messages[-1].model_dump(),
+        }
         logger.info("Selecting agent to execute")
 
         try:
-            response = await select_agent_and_resolve_parameters(
-                model=self.model,
-                messages=messages,
-                agents=self._agents_to_bind_to_llm
-            )
+            async with trace_execution_time(trace=trace):
+                response = await select_agent_and_resolve_parameters(
+                    model=self.model,
+                    messages=messages,
+                    agents=self._agents_to_bind_to_llm
+                )
 
             if response.tool_calls:
                 logger.success(f"Selected {response.tool_calls[0]["name"]} with args {response.tool_calls[0]["args"]}")
             else:
                 logger.success(f"No agent is selected, generating final response")
 
-            trace = {
-                "name": "MasterAgent",
-                "input": messages[-1].model_dump(),
-                "output": response.model_dump(),
-                "is_success": True
-            }
+            trace.update(
+                {
+                    "output": response.model_dump(),
+                    "is_success": True
+                }
+            )
             return {"messages": [response], "trace": [trace]}
 
         except Exception as e:
             error_message = f"Unexpected error while selecting agent: {e}"
-            logger.exception(error_message, exc_info=e)
+            logger.exception(error_message)
 
             trace = {
                 "name": "MasterAgent",

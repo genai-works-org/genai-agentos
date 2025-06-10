@@ -39,6 +39,8 @@ def mcp_tool_to_json_schema(tool: Tool | MCPToolDTO) -> dict:
     tool_dict.update(tool_dict.pop("inputSchema"))
     tool_dict["title"] = generate_alias(tool_dict.pop("name").replace(" ", "_"))
 
+    if not tool_dict.get("properties", {}):
+        tool_dict["requried"] = []
     return tool_dict
 
 
@@ -118,7 +120,11 @@ def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails
 
 
 def strip_endpoints_from_url(url: AnyHttpUrl | str) -> str:
-    port = f":{url.port}" if url.port and url.host in ("localhost", "0.0.0.0") else ""
+    port = (
+        f":{url.port}"
+        if url.port and url.host in ("localhost", "0.0.0.0", "host.docker.internal")
+        else ""
+    )
     return (
         f"{url.scheme}://{str(url.host)}{port}"
         if isinstance(url, AnyHttpUrl)
@@ -218,46 +224,9 @@ class FlowValidator:
             if mcp := i.get("mcp_tool_id"):
                 mcp_ids.append(mcp)
 
-            if a2a := i.get("a2a_agent_id"):
+            if a2a := i.get("a2a_card_id"):
                 a2a_ids.append(a2a)
 
         return await self.validate_all_agents_types(
             genai_ids=genai_ids, mcp_ids=mcp_ids, a2a_ids=a2a_ids, user_id=user_id
         )
-
-
-# async def orm_flow_to_dto(self, flow: AgentWorkflow, db: AsyncSession):
-#     first_agent_id = flow.flow[0].get("agent_id")
-#     first_agent = await agent_repo.get(
-#         db=db,
-#         id_=first_agent_id,
-#     )
-#     if first_agent:
-#         if flow:
-#             input_params = first_agent.input_parameters
-#             if func := input_params.get("function"):
-#                 if func.get("name"):
-#                     input_params["function"]["name"] = flow.alias
-
-#                 if func.get("description"):
-#                     input_params["function"]["description"] = flow.description
-
-#             agent_ids = []
-#             for f in flow.flow:
-#                 if agent_id := f.get("agent_id"):
-#                     agent_ids.append(agent_id)
-#                 if mcp_tool_id := f.get("mcp_tool_id"):
-#                     agent_ids.append(mcp_tool_id)
-#                 if a2a_agent_id := f.get("a2a_agent_id"):
-#                     agent_ids.append(a2a_agent_id)
-
-#             flow_schema = AgentDTOPayload(
-#                 id=flow.id,
-#                 name=flow.alias,
-#                 type=AgentType.flow,
-#                 agent_schema=input_params,
-#                 created_at=flow.created_at,
-#                 updated_at=flow.updated_at,
-#                 flow=agent_ids,
-#             )
-#             return flow_schema
