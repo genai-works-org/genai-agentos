@@ -79,19 +79,6 @@ const highlightMatch = (
   }
 };
 
-const getFlowKey = (type: string) => {
-  switch (type) {
-    case 'genai':
-      return 'agent_id';
-    case 'mcp':
-      return 'mcp_tool_id';
-    case 'a2a':
-      return 'a2a_card_id';
-    default:
-      return 'agent_id';
-  }
-};
-
 export const transformEdgesToNodes = (
   edges: any[],
   agents: any[] = [],

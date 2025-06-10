@@ -57,6 +57,14 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
     }
   }, [flowName]);
 
+  useEffect(() => {
+    if (!FLOW_NAME_REGEX.test(flowName)) {
+      setFlowNameError('Invalid flow name');
+    } else {
+      setFlowNameError(null);
+    }
+  }, [flowName]);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Save Agent Flow">
       <Box display="flex" flexDirection="column" gap={2}>

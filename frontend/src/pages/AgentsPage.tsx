@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import { AgentDTO, AgentType } from '../types/agent';
+import { AgentDTO } from '../types/agent';
 import { AgentCard } from '../components/AgentCard';
 import {
   Container,
@@ -81,7 +81,7 @@ export const AgentsPage: FC = () => {
           >
             <CircularProgress />
           </Box>
-        ) : filteredAgents.length === 0 ? (
+        ) : agents.length === 0 ? (
           <Box
             display="flex"
             justifyContent="center"
