@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, redirect } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
@@ -56,6 +56,12 @@ export const router = createBrowserRouter([
         </Suspense>
       </ProtectedRoute>
     ),
+    children: [
+      {
+        index: true,
+        loader: () => redirect('/chat/new'),
+      },
+    ],
   },
   {
     path: '/login',
@@ -86,33 +92,11 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: '/chat',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <ChatPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: '/chat/:id',
     element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <ChatPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/chat/new',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <ChatPage />
-        </Suspense>
-      </ProtectedRoute>
+      <Suspense fallback={<LoadingFallback />}>
+        <ChatPage />
+      </Suspense>
     ),
   },
   {

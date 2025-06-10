@@ -11,8 +11,8 @@ import 'react-toastify/dist/ReactToastify.css';
 export function App() {
   return (
     <ThemeProvider>
-      <ChatHistoryProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ChatHistoryProvider>
           <SettingsProvider>
             <LogProvider>
               <RouterProvider router={router} />
@@ -30,8 +30,8 @@ export function App() {
               />
             </LogProvider>
           </SettingsProvider>
-        </AuthProvider>
-      </ChatHistoryProvider>
+        </ChatHistoryProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

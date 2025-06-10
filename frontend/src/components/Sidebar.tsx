@@ -26,7 +26,7 @@ interface PageLink {
 }
 
 const pages: PageLink[] = [
-  { path: '/chat', title: 'Chat', plusBtnNav: '/chat/new' },
+  { path: '/chat/new', title: 'New Chat' },
   { path: '/agents', title: 'Agents' },
   {
     path: '/agent-flows',
