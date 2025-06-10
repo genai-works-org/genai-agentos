@@ -8,7 +8,7 @@ import UserAvatar from './UserAvatar';
 import { useAuth } from '../contexts/AuthContext';
 import PageCard from './PageCard';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-import ChatList from './ChatList';
+// import ChatList from './ChatList';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
           />
         ))}
         <Divider className="!my-4" />
-        <ChatList />
+        {/* <ChatList /> */}
       </nav>
 
       {/* User Section */}
