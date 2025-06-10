@@ -143,12 +143,13 @@ export interface ActiveAgentsResponse {
 
 export interface IAgent {
   id: string;
-  name: string;
-  type: string;
-  url: string;
+  name: string | null;
+  description: string | null;
+  server_url: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  creator_id: string;
 }
 
 export interface AgentSkill {
@@ -169,25 +170,28 @@ export interface CardContent {
 
 export interface McpTool {
   id: string;
-  type: string;
-  title: string;
+  name: string;
   description: string;
   mcp_server_id: string;
-  properties: Record<
-    string,
-    {
-      type: string;
-      title: string;
-      default?: string;
-    }
-  >;
-  required: string[];
+  inputSchema: {
+    title: string;
+    type: string;
+    properties: Record<
+      string,
+      {
+        type: string;
+        title: string;
+        default?: string;
+      }
+    >;
+    required: string[];
+  };
 }
 
 export interface A2AAgent extends IAgent {
-  agent_schema: CardContent;
+  card_content: CardContent;
 }
 
 export interface MCPAgent extends IAgent {
-  agent_schema: McpTool;
+  mcp_tools: McpTool[];
 }

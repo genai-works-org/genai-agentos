@@ -15,15 +15,11 @@ from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
-from src.schemas.api.agent.dto import AgentDTOWithJWT
+from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
 from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
-from src.utils.helpers import (
-    get_user_id_from_jwt,
-    map_agent_model_to_dto,
-    map_genai_agent_to_unified_dto,
-)
+from src.utils.helpers import get_user_id_from_jwt, map_agent_model_to_dto
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -88,10 +84,20 @@ async def list_all_agents(
     result = await agent_repo.query_by_filter(
         db=db, user_model=user, filter_field=filter, offset=offset, limit=limit
     )
-    if isinstance(result, list):
-        return result
 
-    return result
+    return [
+        MLAgentJWTDTO(
+            agent_id=str(agent.id),
+            agent_name=agent.name,
+            agent_description=agent.description,
+            agent_schema=agent.input_parameters,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            is_active=agent.is_active,
+            agent_jwt=agent.jwt,
+        )
+        for agent in result
+    ]
 
 
 @agent_router.get("/{agent_id}")
@@ -106,8 +112,15 @@ async def get_data(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
-    return map_genai_agent_to_unified_dto(agent=agent).model_dump(
-        mode="json", exclude_none=True
+    return MLAgentJWTDTO(
+        agent_id=str(agent.id),
+        agent_name=agent.name,
+        agent_description=agent.description,
+        agent_schema=agent.input_parameters,
+        created_at=agent.created_at,
+        updated_at=agent.updated_at,
+        is_active=agent.is_active,
+        agent_jwt=agent.jwt,
     )
 
 

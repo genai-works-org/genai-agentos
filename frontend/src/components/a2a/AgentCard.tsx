@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Card, CardContent, Chip, Stack, Typography, Box } from '@mui/material';
-import { A2AAgent } from '../../types/agent';
+import { A2AAgent, AgentType } from '../../types/agent';
 import { normalizeString } from '../../utils/normalizeString';
 
 interface AgentCardProps {
@@ -34,10 +34,10 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           mb={1}
         >
           <Typography variant="h6" fontWeight={600} color="text.primary">
-            {normalizeString(agent.name)}
+            {normalizeString(agent.name || '')}
           </Typography>
           <Chip
-            label={agent.type}
+            label={AgentType.A2A}
             size="small"
             sx={{
               fontWeight: 600,
@@ -47,9 +47,9 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
             }}
           />
         </Box>
-        {/* <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary">
           {agent.description}
-        </Typography> */}
+        </Typography>
         <Typography
           variant="subtitle2"
           fontWeight={600}
@@ -59,7 +59,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           Skills:
         </Typography>
         <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
-          {agent.agent_schema.skills.map(skill => (
+          {agent.card_content.skills.map(skill => (
             <Chip
               key={skill.id}
               label={normalizeString(skill.id)}

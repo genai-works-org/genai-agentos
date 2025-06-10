@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { A2AAgent } from '../../types/agent';
+import { A2AAgent, AgentType } from '../../types/agent';
 import { Modal } from '../Modal';
 import { normalizeString } from '../../utils/normalizeString';
 
@@ -27,27 +27,31 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
   if (!agent) return null;
 
   return (
-    <Modal isOpen={open} onClose={onClose} title={normalizeString(agent.name)}>
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={normalizeString(agent.name || '')}
+    >
       <Stack spacing={2}>
         <Box>
           <Typography variant="subtitle2">Type:</Typography>
           <Chip
-            label={agent.type}
+            label={AgentType.A2A}
             color="primary"
             size="small"
             sx={{ mt: 0.5 }}
           />
         </Box>
 
-        {/* <Box>
+        <Box>
           <Typography variant="subtitle2">Description:</Typography>
           <Typography variant="body2">{agent.description}</Typography>
-        </Box> */}
+        </Box>
 
         <Box>
           <Typography variant="subtitle2">Expected Input:</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
-            {agent.agent_schema.defaultInputModes.map(mode => (
+            {agent.card_content.defaultInputModes.map(mode => (
               <Chip key={mode} label={mode} size="small" />
             ))}
           </Stack>
@@ -56,7 +60,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
         <Box>
           <Typography variant="subtitle2">Expected Output:</Typography>
           <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
-            {agent.agent_schema.defaultOutputModes.map(mode => (
+            {agent.card_content.defaultOutputModes.map(mode => (
               <Chip key={mode} label={mode} size="small" />
             ))}
           </Stack>
@@ -65,7 +69,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
         <Box>
           <Typography variant="subtitle2">Skills:</Typography>
           <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
-            {agent.agent_schema.skills.map(skill => (
+            {agent.card_content.skills.map(skill => (
               <Chip
                 key={skill.id}
                 label={normalizeString(skill.id)}
