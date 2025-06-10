@@ -144,7 +144,7 @@ class WebSocketService {
     // Remove automatic connection
   }
 
-  public connect(): void {
+  public connect(sessionId?: string): void {
     // Check if user is authenticated
     const token = tokenService.getToken();
     if (!token) {
@@ -157,29 +157,36 @@ class WebSocketService {
       console.log('Reusing existing WebSocket connection');
       return;
     }
-    
+
     // If socket exists but is not in OPEN state, close it first
     if (this.socket) {
-      console.log('Closing existing WebSocket connection before creating new one');
+      console.log(
+        'Closing existing WebSocket connection before creating new one',
+      );
       this.socket.close();
       this.socket = null;
     }
 
     console.log('Creating new WebSocket connection');
-    this.attemptConnection();
+
+    this.attemptConnection(sessionId);
   }
 
-  private attemptConnection(): void {
+  private attemptConnection(sessionId?: string): void {
     try {
-      const token = tokenService.getToken()
-      this.socket = new WebSocket(`${this.getWebSocketUrl()}?token=${token}`);
+      const token = tokenService.getToken();
+      const url = sessionId
+        ? `${this.getWebSocketUrl()}?token=${token}&session_id=${sessionId}`
+        : `${this.getWebSocketUrl()}?token=${token}`;
+
+      this.socket = new WebSocket(url);
 
       this.socket.onopen = () => {
         this.reconnectAttempts = 0;
         this.notifyConnectionState(true);
       };
 
-      this.socket.onmessage = (event) => {
+      this.socket.onmessage = event => {
         try {
           const message = JSON.parse(event.data);
           this.notifyMessageHandlers(message);
@@ -193,7 +200,7 @@ class WebSocketService {
         this.handleReconnect();
       };
 
-      this.socket.onerror = (error) => {
+      this.socket.onerror = error => {
         // console.error('WebSocket error:', error);
       };
     } catch (error) {
@@ -256,4 +263,4 @@ class WebSocketService {
   }
 }
 
-export const websocketService = new WebSocketService(); 
+export const websocketService = new WebSocketService();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AgentFlowDTO } from '../types/agent';
+import { ActiveConnection, AgentFlowDTO, AgentType } from '../types/agent';
 import {
   Container,
   IconButton,
@@ -13,8 +13,10 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/MainLayout';
 import { AgentFlowCard } from '../components/AgentFlowCard';
 import { useAgent } from '../hooks/useAgent';
+import { agentService } from '../services/agentService';
 
 export const AgentFlowsPage: FC = () => {
+  const [agents, setAgents] = useState<ActiveConnection[]>([]);
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export const AgentFlowsPage: FC = () => {
 
   useEffect(() => {
     loadFlows();
+    loadAgents();
   }, []);
 
   const loadFlows = async () => {
@@ -29,6 +32,18 @@ export const AgentFlowsPage: FC = () => {
     try {
       const data = await getAgentFlows();
       setFlows(data);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadAgents = async () => {
+    setIsLoading(true);
+    try {
+      const data = await agentService.getActiveAgents({
+        agent_type: AgentType.ALL,
+      });
+      setAgents(data.active_connections);
     } finally {
       setIsLoading(false);
     }
@@ -100,14 +115,24 @@ export const AgentFlowsPage: FC = () => {
           </Box>
         ) : (
           <Box>
-            {flows.map(flow => (
-              <AgentFlowCard
-                key={flow.id}
-                flow={flow}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-              />
-            ))}
+            {flows.map(flow => {
+              const isActive = flow.flow.every(step => {
+                const agentId =
+                  step.agent_id || step.mcp_tool_id || step.a2a_card_id;
+                return agents.some(
+                  agent => agent.id === agentId && agent?.is_active,
+                );
+              });
+              return (
+                <AgentFlowCard
+                  key={flow.id}
+                  flow={flow}
+                  isActive={isActive}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
           </Box>
         )}
       </Container>
