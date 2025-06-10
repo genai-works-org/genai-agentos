@@ -20,6 +20,7 @@ class BaseChatMessage(BaseModel):
 
 
 class GetChatMessage(BaseChatMessage):
+    request_id: UUID
     created_at: datetime
 
 

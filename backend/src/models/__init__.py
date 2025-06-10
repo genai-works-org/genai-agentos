@@ -322,6 +322,8 @@ class A2ACard(Base):
 class ChatMessage(Base):
     id: Mapped[uuid_pk]
 
+    request_id: Mapped[uuid.UUID] = mapped_column(nullable=True)
+
     sender_type: Mapped[SenderType]
     content: Mapped[str]
 

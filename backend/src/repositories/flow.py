@@ -101,7 +101,7 @@ class AgentWorkflowRepository(
             raise self.get_empty_flow_exception()
 
         db_obj = self.model(
-            name=obj_in.name,
+            name=obj_in.name.replace(" ", "-"),
             description=obj_in.description,
             flow=[
                 flow.model_dump(mode="json", exclude_none=True) for flow in obj_in.flow

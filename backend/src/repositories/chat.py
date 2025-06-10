@@ -92,7 +92,7 @@ class ChatRepository(
         return q.scalars().first()
 
     async def get_chat_history_by_session_id(
-        self, db: AsyncSession, user_model: User, session_id: UUID
+        self, db: AsyncSession, user_model: User, session_id: str
     ):
         q = await db.execute(
             select(self.model)
@@ -176,6 +176,7 @@ class ChatRepository(
         db: AsyncSession,
         user_model: User,
         session_id: str,
+        request_id: str,
         message_in: BaseChatMessage,
     ):
         user = copy.deepcopy(user_model)
@@ -193,6 +194,7 @@ class ChatRepository(
             sender_type=message_in.sender_type,
             content=message_in.content,
             conversation_id=session_id,
+            request_id=request_id,
         )
         db.add(new_message)
         await db.commit()

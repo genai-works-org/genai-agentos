@@ -184,8 +184,6 @@ async def handle_frontend_ws(
                         provider_name=users_model_config.provider,
                     )
                 )
-                updated_credentials = {}
-
                 # looking up existing config if credentials are available in the modelconfig
                 api_key = users_model_config.credentials.get("api_key")
                 if api_key:
@@ -229,6 +227,7 @@ async def handle_frontend_ws(
                 db=db,
                 user_model=user_model,
                 session_id=session_id,
+                request_id=request_id,
                 message_in=CreateChatMessage(
                     sender_type=SenderType.user, content=message_obj.message
                 ),
@@ -261,6 +260,7 @@ async def handle_frontend_ws(
                     db=db,
                     user_model=user_model,
                     session_id=session_id,
+                    request_id=request_id,
                     message_in=CreateChatMessage(
                         sender_type=SenderType.master_agent,
                         content=agent_response.response,
