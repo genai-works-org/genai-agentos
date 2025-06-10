@@ -15,7 +15,7 @@ from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
-from src.schemas.api.agent.dto import AgentDTOWithJWT
+from src.schemas.api.agent.dto import AgentDTOWithJWT, MLAgentJWTDTO
 from src.schemas.api.agent.schemas import AgentCRUDUpdate, AgentRegister
 from src.utils.enums import ActiveAgentTypeFilter
 from src.utils.filters import AgentFilter
@@ -84,10 +84,20 @@ async def list_all_agents(
     result = await agent_repo.query_by_filter(
         db=db, user_model=user, filter_field=filter, offset=offset, limit=limit
     )
-    if isinstance(result, list):
-        return result
 
-    return result
+    return [
+        MLAgentJWTDTO(
+            agent_id=str(agent.id),
+            agent_name=agent.name,
+            agent_description=agent.description,
+            agent_schema=agent.input_parameters,
+            created_at=agent.created_at,
+            updated_at=agent.updated_at,
+            is_active=agent.is_active,
+            agent_jwt=agent.jwt,
+        )
+        for agent in result
+    ]
 
     return [
         MLAgentJWTDTO(
