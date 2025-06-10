@@ -67,7 +67,11 @@ class AgentWorkflowRepository(
         return False  # empty flow
 
     async def create_by_user(
-        self, db: AsyncSession, *, obj_in: AgentFlowCreate, user_model: User
+        self,
+            db: AsyncSession,
+            *,
+            obj_in: AgentFlowCreate,
+            user_model: User
     ) -> AgentWorkflow:
         """
             Creates a new AgentWorkflow associated with the given user.
@@ -91,7 +95,7 @@ class AgentWorkflowRepository(
         creating the workflow.
         """
         valid_flow = await self.validate_all_agents_in_flow_are_active(
-            db=db, obj_in=obj_in, user_model=user_model
+            obj_in=obj_in, user_model=user_model
         )
         if not valid_flow:
             raise self.get_empty_flow_exception()
@@ -162,23 +166,20 @@ class AgentWorkflowRepository(
 
     async def validate_all_agents_in_flow_are_active(
         self,
-        db: AsyncSession,
         obj_in: Union[AgentFlowCreate, AgentFlowUpdate],
         user_model: User,
     ) -> Optional[list[str]]:
-        agent_ids = [f.to_json() for f in obj_in.flow]
         flow_validator = FlowValidator()
         valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
-            agent_ids=agent_ids, user_id=user_model.id
+            flow_agents=obj_in.flow,
+            user_id=user_model.id
         )
 
-        # get first key of the valid agent, as there's always one key present
-        agents_in = [a[list(a.keys())[0]] for a in agent_ids]
-
-        if non_active_agents := list(set(agents_in) - set(valid_agents)):
+        if non_active_agents := list(set([agent.id for agent in obj_in.flow]) - set(valid_agents)):
             raise HTTPException(
                 status_code=400,
-                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}. Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
+                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}."
+                       f" Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
             )
         return valid_agents
 
@@ -192,7 +193,7 @@ class AgentWorkflowRepository(
         alias = generate_alias(upd_data.name)
         upd_model = AgentFlowAlias(**upd_data.__dict__, alias=alias)
         valid_agents = await self.validate_all_agents_in_flow_are_active(
-            db=db, obj_in=upd_model, user_model=user_model
+            obj_in=upd_model, user_model=user_model
         )
         if valid_agents:
             return await self.update_by_id(

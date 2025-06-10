@@ -3,7 +3,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
-
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
@@ -47,16 +46,15 @@ async def get_agentflow_data(
     return dto.model_dump(exclude_none=True)
 
 
-@flow_router.post("/register-flow")
+@flow_router.post("/register")
 async def register_agentflow(
     db: AsyncDBSession,
     user: CurrentUserDependency,
     agentflow_in: AgentFlowCreate,
 ):
     await agentflow_repo.validate_all_agents_in_flow_are_active(
-        db=db, obj_in=agentflow_in, user_model=user
+        obj_in=agentflow_in, user_model=user
     )
-
     result = await agentflow_repo.create_by_user(
         db=db, obj_in=agentflow_in, user_model=user
     )

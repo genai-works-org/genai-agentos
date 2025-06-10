@@ -488,11 +488,12 @@ LIMIT :limit OFFSET :offset;
 
         first_agent = flow.flow[0]
 
-        first_agent_id = list(first_agent.values())[0]
-        first_agent_type = list(first_agent.keys())[0]
+        first_agent_id = first_agent.get("id")
+        first_agent_type = first_agent.get("type")
 
         first_existing_agent = None
-        if first_agent_type == AgentIdType.agent_id.value:
+
+        if first_agent_type == AgentType.genai.value:
             first_genai_agent = await agent_repo.get(
                 db=db,
                 id_=first_agent_id,
@@ -500,25 +501,28 @@ LIMIT :limit OFFSET :offset;
             if not first_genai_agent:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'GenAI agent with id: {first_agent_id} was not found. Make sure you have passed "agent_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f'GenAI agent with id: {first_agent_id} was not found.'
+                           f' Make sure you have passed "agent_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_genai_agent
 
-        if first_agent_type == AgentIdType.mcp_tool_id.value:
+        if first_agent_type == AgentType.mcp.value:
             first_mcp_tool = await mcp_repo.get_tool_by_id(db=db, id_=first_agent_id)
             if not first_mcp_tool:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'MCP tool with id: {first_agent_id} was not found. Make sure you have passed "mcp_tool_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f'MCP tool with id: {first_agent_id} was not found.'
+                           f' Make sure you have passed "mcp_tool_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_mcp_tool
 
-        if first_agent_type == AgentIdType.a2a_card_id.value:
+        if first_agent_type == AgentType.a2a.value:
             first_a2a_card = await a2a_repo.get(db=db, id_=first_agent_id)
             if not first_a2a_card:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'A2A card with id: {first_agent_id} was not found. Make sure you have passed "a2a_card_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f'A2A card with id: {first_agent_id} was not found.'
+                           f' Make sure you have passed "a2a_card_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_a2a_card
 
@@ -554,14 +558,6 @@ LIMIT :limit OFFSET :offset;
                     name=flow.alias, description=flow.description
                 ).model_dump(mode="json")
 
-            agent_ids = []
-            for f in flow.flow:
-                if agent_id := f.get("agent_id"):
-                    agent_ids.append(agent_id)
-                if mcp_tool_id := f.get("mcp_tool_id"):
-                    agent_ids.append(mcp_tool_id)
-                if a2a_card_id := f.get("a2a_card_id"):
-                    agent_ids.append(a2a_card_id)
 
             flow_schema = AgentDTOPayload(
                 id=flow.id,
@@ -570,7 +566,7 @@ LIMIT :limit OFFSET :offset;
                 agent_schema=input_params,
                 created_at=flow.created_at,
                 updated_at=flow.updated_at,
-                flow=agent_ids,
+                flow=[agent.get("id") for agent in flow.flow],
             )
             return flow_schema
 
@@ -595,7 +591,7 @@ LIMIT :limit OFFSET :offset;
                 alias=f.alias,
             )
             valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
-                agent_ids=[a.to_json() for a in flow.flow], user_id=user_id
+                flow_agents=flow.flow, user_id=user_id
             )
 
             if len(valid_agents) < len(flow.flow):

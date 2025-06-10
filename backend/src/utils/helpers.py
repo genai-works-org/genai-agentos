@@ -13,6 +13,7 @@ from src.db.session import async_session
 from src.models import A2ACard, Agent, MCPServer, MCPTool
 from src.schemas.api.agent.dto import MLAgentJWTDTO
 from src.schemas.api.exceptions import IntegrityErrorDetails
+from src.schemas.api.flow.schemas import FlowAgentId
 from src.schemas.base import AgentDTOPayload
 from src.schemas.mcp.dto import MCPToolDTO
 from src.utils.enums import AgentType
@@ -57,7 +58,7 @@ def validate_tool_name(tool_name: str) -> Optional[str]:
 
 
 def get_agent_description_from_skills(
-    description: str, skills: list[dict[str, Any]]
+        description: str, skills: list[dict[str, Any]]
 ) -> str:
     combined_skill_descriptions = "\n".join([skill["description"] for skill in skills])
     full_agent_description = f"{description}\nSKILLS:\n{combined_skill_descriptions}"
@@ -147,7 +148,7 @@ class FlowValidator:
             return q.all()
 
     async def _validate_mcp_tools(
-        self, mcp_tools_ids: list[Optional[str]], user_id: UUID
+            self, mcp_tools_ids: list[Optional[str]], user_id: UUID
     ):
         async with async_session() as db:
             q = await db.scalars(
@@ -164,7 +165,7 @@ class FlowValidator:
         return q.all()
 
     async def _validate_a2a_cards(
-        self, a2a_cards_ids: list[Optional[str]], user_id: UUID
+            self, a2a_cards_ids: list[Optional[str]], user_id: UUID
     ):
         async with async_session() as db:
             q = await db.scalars(
@@ -179,54 +180,47 @@ class FlowValidator:
         return q.all()
 
     async def validate_all_agents_types(
-        self,
-        genai_ids: list[Optional[str]],
-        mcp_ids: list[Optional[str]],
-        a2a_ids: list[Optional[str]],
-        user_id: UUID,
-    ):
-        tasks = []
-
-        tasks.append(
+            self,
+            genai_ids: list[Optional[str]],
+            mcp_ids: list[Optional[str]],
+            a2a_ids: list[Optional[str]],
+            user_id: UUID,
+    ) -> list[str]:
+        tasks = (
             asyncio.create_task(
                 self._validate_genai_ids(genai_ids=genai_ids, user_id=user_id)
-            )
-        )
-        tasks.append(
+            ),
             asyncio.create_task(
                 self._validate_mcp_tools(mcp_tools_ids=mcp_ids, user_id=user_id)
-            )
-        )
-        tasks.append(
-            asyncio.create_task(
+            ), asyncio.create_task(
                 self._validate_a2a_cards(a2a_cards_ids=a2a_ids, user_id=user_id)
             )
         )
 
         result: list[list[Optional[UUID]]] = await asyncio.gather(*tasks)
 
-        valid_agents = []
-        for r in result:
-            r = [str(v) for v in r]
-            valid_agents.extend(r)
-        return valid_agents
+        return [str(v) for r in result for v in r]
 
-    async def validate_is_active_of_all_agent_types(
-        self, agent_ids: list[dict[str], str], user_id: UUID
-    ):
+    async def validate_is_active_of_all_agent_types(self, flow_agents: list[FlowAgentId], user_id: UUID):
         genai_ids = []
         mcp_ids = []
         a2a_ids = []
-        for i in agent_ids:
-            if genai := i.get("agent_id"):
-                genai_ids.append(genai)
 
-            if mcp := i.get("mcp_tool_id"):
-                mcp_ids.append(mcp)
+        for agent in flow_agents:
+            agent_id = agent.id
 
-            if a2a := i.get("a2a_card_id"):
-                a2a_ids.append(a2a)
+            if agent.type == AgentType.genai.value:
+                genai_ids.append(agent_id)
+
+            if agent.type == AgentType.mcp.value:
+                mcp_ids.append(agent_id)
+
+            if agent.type == AgentType.a2a.value:
+                a2a_ids.append(agent_id)
 
         return await self.validate_all_agents_types(
-            genai_ids=genai_ids, mcp_ids=mcp_ids, a2a_ids=a2a_ids, user_id=user_id
+            genai_ids=genai_ids,
+            mcp_ids=mcp_ids,
+            a2a_ids=a2a_ids,
+            user_id=user_id
         )
