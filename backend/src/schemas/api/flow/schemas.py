@@ -35,46 +35,18 @@ class FlowAgentId(BaseModel):
     def to_json(self) -> dict:
         return {"id": self.id, "type": self.type}
 
-        try:
-            self.mcp_tool_id = str(UUID(self.mcp_tool_id)) if self.mcp_tool_id else None
-        except ValueError:
+    @field_validator("type")
+    def validate_type(cls, v) -> str:
+        if v not in (AgentType.genai.value, AgentType.mcp.value, AgentType.a2a.value):
             raise HTTPException(
                 status_code=400,
-                detail="MCP tool id provided into an agentflow is not a valid UUID",
+                detail=f"Agent type must be one of '{AgentType.genai.value}', '{AgentType.mcp.value}', or '{AgentType.a2a.value}'",
             )
 
-        try:
-            self.a2a_card_id = str(UUID(self.a2a_card_id)) if self.a2a_card_id else None
-        except ValueError:
-            raise HTTPException(
-                status_code=400,
-                detail="A2A agent id provided into an agentflow is not a valid UUID",
-            )
+        return v
 
-        if all([self.agent_id, self.mcp_tool_id, self.a2a_card_id]):
-            raise HTTPException(
-                status_code=400,
-                detail="'flow' expects either 'agent_id' or 'mcp_tool_id' or 'a2a_card_id' params, but not all of them at the same time.",  # noqa: E501
-            )
-        if (
-            len([v for v in (self.agent_id, self.mcp_tool_id, self.a2a_card_id) if v])
-            > 1
-        ):
-            raise HTTPException(
-                status_code=400,
-                detail="'flow' expects only one of 'agent_id' or 'mcp_tool_id' or 'a2a_card_id' params, but not multiple at the same time",  # noqa: E501
-            )
-        return self
-
-    def to_json(self):
-        if self.agent_id:
-            return {"agent_id": self.agent_id}
-
-        if self.mcp_tool_id:
-            return {"mcp_tool_id": self.mcp_tool_id}
-
-        if self.a2a_card_id:
-            return {"a2a_card_id": self.a2a_card_id}
+    def to_json(self) -> dict:
+        return {"id": self.id, "type": self.type}
 
 
 class AgentFlowBase(BaseModel):
