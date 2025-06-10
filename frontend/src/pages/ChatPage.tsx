@@ -1,16 +1,20 @@
-import { Box, Container } from '@mui/material';
-import ChatArea from '../components/ChatArea';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Box, Container, CircularProgress } from '@mui/material';
 import { websocketService } from '../services/websocketService';
-import { MainLayout } from '../components/MainLayout';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-import { useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useChat } from '../hooks/useChat';
+import ChatArea from '../components/ChatArea';
+import { MainLayout } from '../components/MainLayout';
+import { ChatHistory } from '../types/chat';
 
 const ChatPage = () => {
-  const location = useLocation();
-  const { clearMessages } = useChatHistory();
+  const [messages, setMessages] = useState<ChatHistory['items']>([]);
+  const { id } = useParams();
+  const { clearMessages, setChats } = useChatHistory();
   const { user } = useAuth();
+  const { getChatHistory, isLoading, getChatsList } = useChat();
 
   useEffect(() => {
     // Only connect if user is authenticated
@@ -19,34 +23,23 @@ const ChatPage = () => {
       return;
     }
 
-    if (location.pathname === '/chat/new') {
-      // For /chat/new route: clear messages, close old connection, and open new one
-      clearMessages();
-      websocketService.disconnect();
-      websocketService.connect();
-    } else if (location.pathname === '/chat') {
-      // For /chat route: ensure connection exists
-      websocketService.connect();
+    if (id && id !== 'new') {
+      getChatHistory(id).then(res => {
+        setMessages(res.items);
+      });
     }
 
     // Cleanup function
     return () => {
       websocketService.disconnect();
+      clearMessages();
+      if (id === 'new') {
+        getChatsList().then(res => {
+          setChats(res.chats);
+        });
+      }
     };
-  }, [location.pathname, user, clearMessages]);
-
-  useEffect(() => {
-    // Add connection state handler
-    const handleConnectionState = () => {
-      // Remove console.log statement
-    };
-
-    websocketService.addConnectionStateHandler(handleConnectionState);
-
-    return () => {
-      websocketService.removeConnectionStateHandler(handleConnectionState);
-    };
-  }, []);
+  }, [user, clearMessages, id]);
 
   return (
     <MainLayout currentPage="Chat">
@@ -54,9 +47,19 @@ const ChatPage = () => {
         maxWidth="xl"
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 2 }}
       >
-        {/* Messages area */}
         <Box sx={{ flex: 1, overflow: 'auto', mb: 1 }}>
-          <ChatArea />
+          {isLoading ? (
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              minHeight="500px"
+            >
+              <CircularProgress />
+            </Box>
+          ) : (
+            <ChatArea content={messages} id={id} />
+          )}
         </Box>
       </Container>
     </MainLayout>

@@ -46,135 +46,142 @@ const LoadingFallback = () => (
   </div>
 );
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: (
-      <ProtectedRoute>
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <ChatPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+      children: [
+        {
+          index: true,
+          loader: () => redirect('/chat/new'),
+        },
+      ],
+    },
+    {
+      path: '/login',
+      element: (
+        <PublicRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <LoginPage />
+          </Suspense>
+        </PublicRoute>
+      ),
+    },
+    {
+      path: '/signup',
+      element: (
+        <PublicRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <SignupPage />
+          </Suspense>
+        </PublicRoute>
+      ),
+    },
+    {
+      path: '/settings',
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <SettingsPage />
+        </Suspense>
+      ),
+    },
+    {
+      path: '/chat/:id',
+      element: (
         <Suspense fallback={<LoadingFallback />}>
           <ChatPage />
         </Suspense>
-      </ProtectedRoute>
-    ),
-    children: [
-      {
-        index: true,
-        loader: () => redirect('/chat/new'),
-      },
-    ],
-  },
-  {
-    path: '/login',
-    element: (
-      <PublicRoute>
+      ),
+    },
+    {
+      path: '/agents',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <AgentsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/agents/:id/details',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <AgentDetailsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/agent-flows',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <AgentFlowsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/agent-flows/:id',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <AgentFlowsEditPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/agents-trace',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <AgentsTracePage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/a2a-agents',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <A2AAgentsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/mcp-agents',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <MCPAgentsPage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '*',
+      element: (
         <Suspense fallback={<LoadingFallback />}>
-          <LoginPage />
+          <NotFoundPage />
         </Suspense>
-      </PublicRoute>
-    ),
-  },
+      ),
+    },
+  ],
   {
-    path: '/signup',
-    element: (
-      <PublicRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <SignupPage />
-        </Suspense>
-      </PublicRoute>
-    ),
+    future: {
+      v7_relativeSplatPath: true,
+    },
   },
-  {
-    path: '/settings',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <SettingsPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/chat/:id',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <ChatPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/agents',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <AgentsPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/agents/:id/details',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <AgentDetailsPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/agent-flows',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <AgentFlowsPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/agent-flows/:id',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <AgentFlowsEditPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/agents-trace',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <AgentsTracePage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/a2a-agents',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <A2AAgentsPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/mcp-agents',
-    element: (
-      <ProtectedRoute>
-        <Suspense fallback={<LoadingFallback />}>
-          <MCPAgentsPage />
-        </Suspense>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '*',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <NotFoundPage />
-      </Suspense>
-    ),
-  },
-]);
+);
