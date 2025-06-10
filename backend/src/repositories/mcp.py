@@ -212,24 +212,8 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             .limit(limit=limit)
             .offset(offset=offset)
         )
-        tools_dtos = []
-        for s in q.all():
-            tools = s.mcp_tools
-            for t in tools:
-                agent_schema = mcp_tool_to_json_schema(MCPToolDTO(**t.__dict__))
-                tools_dtos.append(
-                    AgentDTOPayload(
-                        id=s.id,
-                        name=agent_schema["title"],
-                        type=AgentType.mcp,
-                        url=s.server_url,
-                        agent_schema=agent_schema,
-                        created_at=s.created_at,
-                        updated_at=s.updated_at,
-                        is_active=s.is_active,
-                    ).model_dump(exclude_none=True, mode="json")
-                )
-        return tools_dtos
+
+        return q.all()
 
     async def get_all_mcp_tools_from_single_server(
         self, db: AsyncSession, user_model: User, id_: UUID
@@ -258,7 +242,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
                     is_active=s.is_active,
                 ).model_dump(mode="json", exclude_none=True)
             )
-        return tools
+        return s
 
     async def get_tool_by_id(self, db: AsyncSession, id_: UUID):
         q = await db.scalar(select(MCPTool).where(MCPTool.id == id_))
