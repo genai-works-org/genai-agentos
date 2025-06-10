@@ -34,7 +34,7 @@ async def list_all_agent_cards(db: AsyncDBSession, user_model: CurrentUserDepend
 async def get_agent_card(
     db: AsyncDBSession, user_model: CurrentUserDependency, agent_id: UUID
 ):
-    card = await a2a_repo.get_one_card(db=db, id_=agent_id, user_model=user_model)
+    card = await a2a_repo.get_by_user(db=db, id_=agent_id, user_model=user_model)
     if not card:
         raise HTTPException(
             detail=f"A2A agent with id: '{agent_id}' does not exist ", status_code=400
