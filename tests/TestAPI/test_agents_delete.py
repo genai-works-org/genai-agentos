@@ -1,12 +1,13 @@
-from typing import Awaitable, Callable
-import uuid
-import pytest
 import asyncio
 import logging
+import uuid
+from typing import Awaitable, Callable
+
+import pytest
+from genai_session.session import GenAISession
 
 from tests.http_client.AsyncHTTPClient import AsyncHTTPClient
-from genai_session.session import GenAISession
-from tests.conftest import DummyAgent
+from tests.schemas import AgentDTOWithJWT
 
 ENDPOINT = "/api/agents/{agent_id}"
 
@@ -16,12 +17,12 @@ http_client = AsyncHTTPClient(timeout=10)
 @pytest.mark.asyncio
 async def test_agents_delete_active_agent(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    genai_agent_register_response_factory: Callable[[str, str, str, str], dict],
 ):
-    dummy_agent = agent_factory()
+    dummy_agent = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN = dummy_agent.jwt
 
     session = GenAISession(jwt_token=JWT_TOKEN)
 
@@ -66,12 +67,11 @@ async def test_agents_delete_active_agent(
 async def test_agents_delete_agent_using_invalid_agent_id(
     agent_id,
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
 ):
-    dummy_agent = agent_factory()
+    dummy_agent = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN = dummy_agent.jwt
 
     session = GenAISession(jwt_token=JWT_TOKEN)
 
@@ -116,12 +116,11 @@ async def test_agents_delete_agent_using_invalid_agent_id(
 async def test_agents_delete_agent_using_wrong_agent_id(
     agent_id,
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
 ):
-    dummy_agent = agent_factory()
+    dummy_agent = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN = dummy_agent.jwt
 
     session = GenAISession(jwt_token=JWT_TOKEN)
 
