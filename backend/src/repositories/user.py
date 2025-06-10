@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union
 from uuid import UUID
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.hashing import get_password_hash, verify_password
@@ -71,6 +72,11 @@ class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
         self, db: AsyncSession, user_id: UUID, data_in: UserProfileCRUDUpdate
     ):
         user_profile = await self.get_user_profile(db=db, user_id=user_id)
+        if not user_profile:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Profile with of user with id '{user_id}' was not found",
+            )
         return await self.update(db=db, db_obj=user_profile, obj_in=data_in)
 
 
