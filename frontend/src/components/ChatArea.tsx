@@ -130,6 +130,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id }) => {
           isUser,
           timestamp: item.created_at,
           agents_trace: trace,
+          requestId: item.request_id,
         };
       });
 

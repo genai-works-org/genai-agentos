@@ -11,5 +11,6 @@ export interface ChatHistory {
     content: string;
     sender_type: string;
     created_at: string;
+    request_id: string;
   }[];
 }

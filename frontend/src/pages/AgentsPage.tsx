@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import { AgentDTO, AgentType } from '../types/agent';
+import { AgentDTO } from '../types/agent';
 import { AgentCard } from '../components/AgentCard';
 import {
   Container,
@@ -17,8 +17,7 @@ export const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const { isLoading, getAgents, deleteAgent } = useAgent();
 
-  const filteredAgents = agents.filter(agent => agent.type !== AgentType.FLOW);
-  const activeAgents = filteredAgents.filter(agent => agent.is_active);
+  const activeAgents = agents.filter(agent => agent.is_active);
 
   useEffect(() => {
     loadAgents();
@@ -41,7 +40,7 @@ export const AgentsPage: FC = () => {
           {!isLoading && (
             <Box>
               <Typography variant="h5" component="h3">
-                {filteredAgents.length} agents ({activeAgents.length} active)
+                {agents.length} agents ({activeAgents.length} active)
               </Typography>
             </Box>
           )}
@@ -65,7 +64,7 @@ export const AgentsPage: FC = () => {
           >
             <CircularProgress />
           </Box>
-        ) : filteredAgents.length === 0 ? (
+        ) : agents.length === 0 ? (
           <Box
             display="flex"
             justifyContent="center"
@@ -86,8 +85,8 @@ export const AgentsPage: FC = () => {
             }}
             gap={3}
           >
-            {filteredAgents.map(agent => (
-              <Box key={agent.id}>
+            {agents.map(agent => (
+              <Box key={agent.agent_id}>
                 <AgentCard
                   agent={agent}
                   onDelete={deleteAgent}

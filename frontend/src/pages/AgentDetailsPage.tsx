@@ -76,7 +76,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={agent.id}
+                value={agent.agent_id}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
@@ -89,7 +89,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={normalizeString(agent.name)}
+                value={normalizeString(agent.agent_name)}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}

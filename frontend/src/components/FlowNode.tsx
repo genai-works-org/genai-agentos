@@ -2,9 +2,11 @@ import type { FC } from 'react';
 import { useRef, useEffect } from 'react';
 import { Box, Typography } from '@mui/material';
 import { NodeProps, Handle, Position } from 'reactflow';
+import { ShieldX } from 'lucide-react';
 
 export const FlowNode: FC<NodeProps> = ({ data, id }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
+  const isActive = data.isActive === true || data.isActive === undefined;
 
   useEffect(() => {
     if (nodeRef.current) {
@@ -53,7 +55,16 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
           textAlign: 'center',
         }}
       >
-        {data.label}
+        {isActive ? (
+          data.label
+        ) : (
+          <Typography
+            component="span"
+            sx={{ display: 'flex', gap: 1, color: '#c1121f' }}
+          >
+            <ShieldX /> Inactive
+          </Typography>
+        )}
       </Typography>
       {data?.type && (
         <Typography

@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 import {
   Box,
   TextField,
@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { Modal } from './Modal';
 import { FlowChain } from './FlowChain';
+import { FLOW_NAME_REGEX } from '../constants/regex';
 
 interface SaveFlowModalProps {
   isOpen: boolean;
@@ -35,11 +36,21 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
   saving,
   onSave,
 }) => {
+  const [flowNameError, setFlowNameError] = useState<string | null>(null);
+
   const isReadyToSave =
     saving ||
     links.length === 0 ||
     flowDescription.trim().length === 0 ||
     flowName.trim().length === 0;
+
+  useEffect(() => {
+    if (!FLOW_NAME_REGEX.test(flowName)) {
+      setFlowNameError('Invalid flow name');
+    } else {
+      setFlowNameError(null);
+    }
+  }, [flowName]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Save Agent Flow">
@@ -49,6 +60,8 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
           value={flowName}
           onChange={e => onFlowNameChange(e.target.value)}
           fullWidth
+          error={!!flowNameError}
+          helperText={flowNameError}
         />
         <TextField
           label="Description"

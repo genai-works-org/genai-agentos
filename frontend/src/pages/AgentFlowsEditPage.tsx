@@ -27,17 +27,17 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { MainLayout } from '../components/MainLayout';
-import { FlowItem } from '../types/agent';
 import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
 import { normalizeString } from '../utils/normalizeString';
-import { CustomNode } from '../components/CustomNode';
+import { FlowNode } from '../components/FlowNode';
 import { useAgent } from '../hooks/useAgent';
+import { FLOW_NAME_REGEX } from '../constants/regex';
 
 const nodeTypes = {
-  customNode: CustomNode,
+  customNode: FlowNode,
 };
 
 const getDefaultFlowName = () => `Agents-flow-${Date.now()}`;
@@ -77,19 +77,6 @@ const highlightMatch = (
         {end < text.length ? '...' : ''}
       </>
     );
-  }
-};
-
-const getFlowKey = (type: string) => {
-  switch (type) {
-    case 'genai':
-      return 'agent_id';
-    case 'mcp':
-      return 'mcp_tool_id';
-    case 'a2a':
-      return 'a2a_card_id';
-    default:
-      return 'agent_id';
   }
 };
 
@@ -163,6 +150,7 @@ export const AgentFlowsEditPage: FC = () => {
   const [search, setSearch] = useState('');
   const [searchResults, setSearchResults] = useState<ActiveConnection[]>([]);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [usedAgentColors, setUsedAgentColors] = useState<
     Record<string, string>
@@ -209,7 +197,7 @@ export const AgentFlowsEditPage: FC = () => {
         const flowData = await getAgentFlow(id!);
 
         if (flowData) {
-          setFlowName(flowData.name);
+          setFlowName(normalizeString(flowData.name));
           setFlowDescription(flowData.agent_schema.function.description || '');
 
           // Create nodes from flow data with unique IDs
@@ -222,14 +210,19 @@ export const AgentFlowsEditPage: FC = () => {
               type: 'customNode',
               position: { x: 0, y: index * 75 },
               data: {
-                label: normalizeString(agent?.name || id),
+                label: normalizeString(agent?.name || ''),
                 description: agent?.agent_schema.description,
                 agent_id: id,
                 type: agent?.type,
+                isActive: agent?.is_active || false,
               },
               style: {
-                border: `2px solid ${getAgentColor(id)}`,
+                border: '2px solid',
+                borderColor: agent?.is_active ? getAgentColor(id) : '#c1121f',
                 borderRadius: '8px',
+                padding: '10px',
+                width: '180px',
+                backgroundColor: '#fff',
               },
             };
           });
@@ -372,6 +365,9 @@ export const AgentFlowsEditPage: FC = () => {
         style: {
           border: `2px solid ${color}`,
           borderRadius: '8px',
+          padding: '10px',
+          width: '180px',
+          backgroundColor: '#fff',
         },
       };
       setNodes(nds => nds.concat(newNode));
@@ -391,10 +387,7 @@ export const AgentFlowsEditPage: FC = () => {
     const flow = {
       name: flowName,
       description: flowDescription,
-      flow: links.map(n => {
-        const key = getFlowKey(n.type);
-        return { [key]: n.agent_id } as FlowItem;
-      }),
+      flow: links.map(n => ({ id: n.agent_id, type: n.type })),
     };
 
     try {
@@ -436,6 +429,19 @@ export const AgentFlowsEditPage: FC = () => {
     setUsedAgentColors({});
   }, []);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.slice(0, 100);
+    setFlowName(value);
+    setError(!!value && !FLOW_NAME_REGEX.test(value));
+  };
+
+  const handleBlur = () => {
+    setIsEditingName(false);
+    if (flowName && !FLOW_NAME_REGEX.test(flowName)) {
+      setError(true);
+    }
+  };
+
   if (isLoading) {
     return (
       <MainLayout currentPage={layoutTitle}>
@@ -469,8 +475,8 @@ export const AgentFlowsEditPage: FC = () => {
                 <TextField
                   inputRef={nameInputRef}
                   value={flowName}
-                  onChange={e => setFlowName(e.target.value.slice(0, 100))}
-                  onBlur={() => setIsEditingName(false)}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
                   onKeyDown={e => {
                     if (e.key === 'Enter') setIsEditingName(false);
                   }}
@@ -485,7 +491,12 @@ export const AgentFlowsEditPage: FC = () => {
                   inputProps={{
                     maxLength: 100,
                   }}
-                  helperText={`${flowName.length}/100 characters`}
+                  error={error}
+                  helperText={
+                    error
+                      ? 'Invalid flow name'
+                      : `${flowName.length}/100 characters`
+                  }
                 />
               ) : (
                 <Box display="flex" alignItems="center" gap={1}>

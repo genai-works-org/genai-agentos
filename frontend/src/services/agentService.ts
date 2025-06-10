@@ -12,7 +12,7 @@ import { apiService } from './apiService';
 
 export const agentService = {
   async getAgents(): Promise<AgentDTO[]> {
-    const response = await apiService.get<AgentDTO[]>('/api/agents');
+    const response = await apiService.get<AgentDTO[]>('/api/agents/');
     return response.data;
   },
 
@@ -54,8 +54,8 @@ export const agentService = {
   },
 
   async createAgentFlow(flow: AgentFlowBody) {
-    const response = await apiService.post<AgentFlowDTO>(
-      '/api/agentflows/register-flow',
+    const response = await apiService.post<Flow>(
+      '/api/agentflows/register',
       flow,
     );
     return response.data;

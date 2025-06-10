@@ -18,12 +18,11 @@ export interface AgentSchema {
 }
 
 export interface AgentDTO {
-  id: string;
-  name: string;
-  type: string;
+  agent_id: string;
+  agent_name: string;
+  agent_description: string;
   created_at: string;
   updated_at: string;
-  url?: string | null;
   agent_schema: AgentSchema;
   is_active?: boolean;
 }
@@ -51,23 +50,20 @@ export interface AgentFlowDTO {
   name: string;
   description: string;
   flow: {
-    agent_id: string | null;
-    mcp_tool_id: string | null;
-    a2a_card_id: string | null;
+    id: string;
+    type: string;
   }[];
   created_at: string;
   updated_at: string;
 }
 
-export type FlowItem =
-  | { agent_id: string }
-  | { mcp_tool_id: string }
-  | { a2a_card_id: string };
-
 export interface AgentFlowBody {
   name: string;
   description: string;
-  flow: FlowItem[];
+  flow: {
+    id: string;
+    type: string;
+  }[];
 }
 
 export interface AgentTrace {

@@ -50,7 +50,7 @@ export const AgentCard: FC<AgentCardProps> = ({
   };
 
   const handleCardClick = () => {
-    navigate(`/agents/${agent.id}/details`);
+    navigate(`/agents/${agent.agent_id}/details`);
   };
 
   const handleDelete = async (e: MouseEvent) => {
@@ -58,7 +58,7 @@ export const AgentCard: FC<AgentCardProps> = ({
     if (onDelete) {
       setIsDeleting(true);
       try {
-        await onDelete(agent.id);
+        await onDelete(agent.agent_id);
       } finally {
         setIsDeleting(false);
         onDeleted();
@@ -134,7 +134,7 @@ export const AgentCard: FC<AgentCardProps> = ({
           }}
         >
           <Typography variant="h6" component="div">
-            {normalizeString(agent.name)}
+            {normalizeString(agent.agent_name)}
           </Typography>
           {onDelete && (
             <IconButton

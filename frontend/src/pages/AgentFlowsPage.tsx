@@ -117,10 +117,8 @@ export const AgentFlowsPage: FC = () => {
           <Box>
             {flows.map(flow => {
               const isActive = flow.flow.every(step => {
-                const agentId =
-                  step.agent_id || step.mcp_tool_id || step.a2a_card_id;
                 return agents.some(
-                  agent => agent.id === agentId && agent?.is_active,
+                  agent => agent.id === step.id && agent.is_active,
                 );
               });
               return (
