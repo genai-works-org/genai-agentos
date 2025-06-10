@@ -243,7 +243,7 @@ class ModelConfig(Base):
 
     system_prompt: Mapped[str]
     user_prompt: Mapped[str]
-    max_last_messages: Mapped[int] = mapped_column(default=5, nullable=True)
+    max_last_messages: Mapped[int] = mapped_column(default=5, nullable=False)
     temperature: Mapped[float] = mapped_column(default=0.7)
 
     credentials: Mapped[not_null_json_column]  # api_key must be hashed
