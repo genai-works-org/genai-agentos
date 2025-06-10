@@ -10,6 +10,8 @@ from langgraph.constants import END, START
 from langgraph.graph.state import CompiledStateGraph, StateGraph
 from loguru import logger
 
+from models.enums import Nodes
+from models.exceptions import UnknownAgentTypeException
 from models.states import MasterAgentState
 from utils.common import filter_and_order_by_ids, remove_last_underscore_segment
 
@@ -22,16 +24,15 @@ class BaseMasterAgent(ABC):
 
     @abstractmethod
     def select_agent(self, state: MasterAgentState):
-        return NotImplemented
+        pass
 
     def should_continue(self, state: MasterAgentState):
         """
         Continues the flow if any agent/flow has been selected, ends the flow otherwise.
         """
         last_message = state.messages[-1]
-        if hasattr(last_message, "tool_calls"):
-            if last_message.tool_calls:
-                return "execute_agent"
+        if getattr(last_message, "tool_calls", None):
+            return Nodes.execute_agent.value
         return END
 
     async def execute_agent(self, state: MasterAgentState, config: RunnableConfig):
@@ -84,7 +85,7 @@ class BaseMasterAgent(ABC):
                     text=agent_call["args"]["text"]
                 )
             else:
-                raise ValueError("Unknown agent type")
+                raise UnknownAgentTypeException(f"Unknown agent type: {agent_type}")
 
             connector = ConnectorFactory.get_connector(agent_config)
 
@@ -124,12 +125,16 @@ class BaseMasterAgent(ABC):
         """
         workflow = StateGraph(MasterAgentState)
 
-        workflow.add_node("supervisor", self.select_agent)
-        workflow.add_node("execute_agent", self.execute_agent)
+        workflow.add_node(Nodes.supervisor.value, self.select_agent)
+        workflow.add_node(Nodes.execute_agent.value, self.execute_agent)
 
-        workflow.add_edge(START, "supervisor")
-        workflow.add_conditional_edges("supervisor", self.should_continue, ["execute_agent", END])
-        workflow.add_edge("execute_agent", "supervisor")
+        workflow.add_edge(START, Nodes.supervisor.value)
+        workflow.add_conditional_edges(
+            Nodes.supervisor.value,
+            self.should_continue,
+            [Nodes.execute_agent.value, END]
+        )
+        workflow.add_edge(Nodes.execute_agent.value, Nodes.supervisor.value)
 
         compiled_graph = workflow.compile()
         return compiled_graph

@@ -66,8 +66,6 @@ class GenAIFlowConfig(AgentConfig):
     flow_master_agent: FlowMasterAgent = field(init=False)
 
     def __post_init__(self):
-        from agents.flow_master_agent import FlowMasterAgent
-
         self.agent_type = AgentTypeEnum.flow.value
         self.flow_master_agent = FlowMasterAgent(
             model=self.model,
