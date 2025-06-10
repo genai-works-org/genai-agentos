@@ -17,7 +17,7 @@ const LoginPage = () => {
     setError(''); // Clear any previous errors
     try {
       await login(name, password);
-      navigate('/chat');
+      navigate('/chat/new');
     } catch (err: any) {
       setError(err.message || 'Failed to login');
     }

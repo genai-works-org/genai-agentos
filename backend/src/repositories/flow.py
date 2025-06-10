@@ -67,11 +67,7 @@ class AgentWorkflowRepository(
         return False  # empty flow
 
     async def create_by_user(
-        self,
-            db: AsyncSession,
-            *,
-            obj_in: AgentFlowCreate,
-            user_model: User
+        self, db: AsyncSession, *, obj_in: AgentFlowCreate, user_model: User
     ) -> AgentWorkflow:
         """
             Creates a new AgentWorkflow associated with the given user.
@@ -171,15 +167,16 @@ class AgentWorkflowRepository(
     ) -> Optional[list[str]]:
         flow_validator = FlowValidator()
         valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
-            flow_agents=obj_in.flow,
-            user_id=user_model.id
+            flow_agents=obj_in.flow, user_id=user_model.id
         )
 
-        if non_active_agents := list(set([agent.id for agent in obj_in.flow]) - set(valid_agents)):
+        if non_active_agents := list(
+            set([agent.id for agent in obj_in.flow]) - set(valid_agents)
+        ):
             raise HTTPException(
                 status_code=400,
                 detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}."
-                       f" Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
+                f" Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
             )
         return valid_agents
 
@@ -196,9 +193,22 @@ class AgentWorkflowRepository(
             obj_in=upd_model, user_model=user_model
         )
         if valid_agents:
-            return await self.update_by_id(
-                db=db, id_=flow_id, obj_in=upd_data, user_model=user_model
+            return await self.update_flow_by_id(
+                db=db, flow_id=flow_id, upd_data=upd_data, user_model=user_model
             )
+
+    async def update_flow_by_id(
+        self,
+        db: AsyncSession,
+        flow_id: str,
+        upd_data: AgentFlowUpdate,
+        user_model: User,
+    ):
+        flow_upd_data = upd_data.model_dump(mode="json")
+        flow_upd_data["alias"] = generate_alias(upd_data.name)
+        return await self.update_by_user(
+            db=db, id_=flow_id, obj_in=flow_upd_data, user=user_model
+        )
 
 
 agentflow_repo = AgentWorkflowRepository(AgentWorkflow)

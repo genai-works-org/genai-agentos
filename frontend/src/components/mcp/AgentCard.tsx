@@ -1,18 +1,16 @@
 import { FC } from 'react';
 import { Card, CardContent, Chip, Stack, Typography, Box } from '@mui/material';
-import { MCPAgent } from '../../types/agent';
-import { normalizeString } from '../../utils/normalizeString';
+import { MCPAgent, AgentType } from '../../types/agent';
 
 interface AgentCardProps {
-  url: string;
-  tools: MCPAgent[];
+  agent: MCPAgent;
   setSelectedAgent: (agent: MCPAgent) => void;
 }
 
-const AgentCard: FC<AgentCardProps> = ({ url, tools, setSelectedAgent }) => {
+const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
   return (
     <Card
-      onClick={() => setSelectedAgent(tools[0])}
+      onClick={() => setSelectedAgent(agent)}
       sx={{
         cursor: 'pointer',
         borderRadius: '0.5rem',
@@ -35,10 +33,10 @@ const AgentCard: FC<AgentCardProps> = ({ url, tools, setSelectedAgent }) => {
           mb={1}
         >
           <Typography variant="h6" fontWeight={600} color="text.primary">
-            {url}
+            {agent.server_url}
           </Typography>
           <Chip
-            label={tools[0].type}
+            label={AgentType.MCP}
             size="small"
             sx={{
               fontWeight: 600,
@@ -58,10 +56,10 @@ const AgentCard: FC<AgentCardProps> = ({ url, tools, setSelectedAgent }) => {
           </Typography>
 
           <Stack direction="row" flexWrap="wrap" gap={1}>
-            {tools?.map(tool => (
+            {agent.mcp_tools.map(tool => (
               <Chip
-                key={tool.agent_schema.id}
-                label={`${normalizeString(tool.agent_schema.title)}`}
+                key={tool.id}
+                label={tool.name}
                 size="small"
                 sx={{
                   fontSize: '0.75rem',
