@@ -3,7 +3,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
-
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
