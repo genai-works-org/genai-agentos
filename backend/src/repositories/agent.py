@@ -29,7 +29,6 @@ from src.utils.filters import AgentFilter
 from src.utils.helpers import (
     FlowValidator,
     generate_alias,
-    get_agent_description_from_skills,
     map_agent_model_to_dto,
     map_genai_agent_to_unified_dto,
     mcp_tool_to_json_schema,
@@ -537,22 +536,22 @@ LIMIT :limit OFFSET :offset;
 
             if isinstance(first_existing_agent, MCPTool):
                 input_params = mcp_tool_to_json_schema(
-                    MCPToolDTO(**first_existing_agent.__dict__)
+                    MCPToolDTO(
+                        id=first_existing_agent.id,
+                        name=flow.name,
+                        description=flow.description,
+                        alias=flow.alias,
+                        inputSchema=first_existing_agent.inputSchema,
+                        annotations=first_existing_agent.annotations,
+                        mcp_server_id=first_existing_agent.mcp_server_id,
+                    )
                 )
+                input_params["title"] = flow.alias
+                input_params["description"] = flow.description
 
             if isinstance(first_existing_agent, A2ACard):
-                dto = A2AAgentCard(
-                    **first_existing_agent.card_content,
-                    name=first_existing_agent.name,
-                    description=first_existing_agent.description,
-                    url=first_existing_agent.server_url,
-                ).model_dump(exclude_none=True)
                 input_params = A2AFirstAgentInFlow(
-                    name=first_existing_agent.name,
-                    description=get_agent_description_from_skills(
-                        description=first_existing_agent.description,
-                        skills=dto.get("skills", []),
-                    ),
+                    name=flow.alias, description=flow.description
                 ).model_dump(mode="json")
 
             agent_ids = []
