@@ -1,5 +1,6 @@
 import { environment } from '../common/environment';
 import { tokenService } from './apiService';
+import { authService } from './authService';
 // Message types
 export interface UserMessage {
   message: string;
@@ -207,7 +208,9 @@ class WebSocketService {
         try {
           const message = JSON.parse(event.data);
           this.notifyMessageHandlers(message);
-        } catch {}
+        } catch {
+          console.error('Failed to parse WebSocket message:', event.data);
+        }
       };
 
       this.socket.onclose = () => {
@@ -215,6 +218,13 @@ class WebSocketService {
       };
 
       this.socket.onerror = error => {
+        console.error('WebSocket error:', error);
+
+        if (this.socket?.readyState !== WebSocket.OPEN) {
+          this.socket?.close();
+          authService.logout();
+        }
+
         reject(error);
       };
     });

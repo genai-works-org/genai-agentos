@@ -13,7 +13,7 @@ import {
   Chip,
   Tooltip,
 } from '@mui/material';
-import { Save, Search, Pencil, Trash } from 'lucide-react';
+import { Save, Search, Pencil, Eraser } from 'lucide-react';
 import ReactFlow, {
   Background,
   Controls,
@@ -40,8 +40,6 @@ import { FLOW_NAME_REGEX } from '../constants/regex';
 const nodeTypes = {
   customNode: FlowNode,
 };
-
-const getDefaultFlowName = () => `Agents-flow-${Date.now()}`;
 
 const highlightMatch = (
   text: string,
@@ -142,7 +140,7 @@ export const AgentFlowsEditPage: FC = () => {
   // Flow state
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [flowName, setFlowName] = useState(getDefaultFlowName());
+  const [flowName, setFlowName] = useState(() => `Agents-flow-${Date.now()}`);
   const [isEditingName, setIsEditingName] = useState(false);
   const [flowDescription, setFlowDescription] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -427,13 +425,12 @@ export const AgentFlowsEditPage: FC = () => {
     setNodes([]);
     setEdges([]);
     setLinks([]);
-    setFlowName(getDefaultFlowName());
     setFlowDescription('');
     setUsedAgentColors({});
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.slice(0, 100);
+    const value = e.target.value.slice(0, 55);
     setFlowName(value);
     setError(!!value && !FLOW_NAME_REGEX.test(value));
   };
@@ -498,7 +495,7 @@ export const AgentFlowsEditPage: FC = () => {
                   helperText={
                     error
                       ? 'Only letters, numbers, underscores and hyphens are allowed'
-                      : `${flowName.length}/100 characters`
+                      : `${flowName.length}/55 characters`
                   }
                 />
               ) : (
@@ -552,7 +549,7 @@ export const AgentFlowsEditPage: FC = () => {
                 }}
                 size="large"
               >
-                <Trash />
+                <Eraser />
               </IconButton>
               <Tooltip
                 title={

@@ -65,7 +65,7 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
         <TextField
           label="Flow Name"
           value={flowName}
-          onChange={e => onFlowNameChange(e.target.value)}
+          onChange={e => onFlowNameChange(e.target.value.slice(0, 55))}
           fullWidth
           error={!!flowNameError}
           helperText={flowNameError}
