@@ -18,7 +18,6 @@ http_client = AsyncHTTPClient(timeout=10)
 async def test_agents_delete_active_agent(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    genai_agent_register_response_factory: Callable[[str, str, str, str], dict],
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
