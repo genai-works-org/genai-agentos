@@ -17,6 +17,7 @@ dependencies = [
     "gtts>=2.5.4",
     "httpx>=0.28.1",
     "loguru>=0.7.3",
+    "mcp[cli]>=1.9.3",
     "multidict==6.4.3",
     "opencv-python>=4.11.0.86",
     "pillow>=11.2.1",
