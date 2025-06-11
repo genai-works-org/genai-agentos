@@ -1,11 +1,12 @@
 import os
 import random
 import string
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable, Callable, Generator, Optional
 
 import aiohttp
 import jwt
 import pytest_asyncio
+from mcp.server import FastMCP
 from pydantic import BaseModel, Field
 
 from tests.constants import SPECIAL_CHARS, TEST_FILES_FOLDER
@@ -42,13 +43,26 @@ http_client = HttpClient(base_url="http://localhost:8000")
 
 
 def _generate_password_with_special_char(length: int):
-    return (
-        "".join(
-            random.choices(string.ascii_uppercase + string.ascii_lowercase, k=length)
-        )
-        + random.choice(string.digits)
-        + random.choice(SPECIAL_CHARS)
-    )
+    # return (
+    #     "".join(
+    #         random.choices(string.ascii_uppercase + string.ascii_lowercase, k=length)
+    #     )
+    #     + random.choice(string.digits)
+    #     + random.choice(SPECIAL_CHARS)
+    # )
+    chars = [
+        random.choice(string.ascii_lowercase),
+        random.choice(string.ascii_uppercase),
+        random.choice(string.digits),
+        random.choice(SPECIAL_CHARS),
+    ]
+
+    # Fill the rest with random choices from the full pool
+    all_chars = string.ascii_letters + string.digits
+    chars += random.choices(all_chars, k=length - 4)
+
+    random.shuffle(chars)
+    return "".join(chars)
 
 
 def _generate_random_string(length: int):
@@ -67,6 +81,7 @@ async def registered_user():
     register_url = "/api/register"
     username = _generate_random_string(8).capitalize()
     creds = {"username": username, "password": _generate_password_with_special_char(8)}
+    print(f"{creds=}")
     await http_client.post(path=register_url, json=creds)
     return creds
 
@@ -175,3 +190,28 @@ def genai_agent_register_response_factory():
         }
 
     return build_response_body
+
+
+@pytest_asyncio.fixture
+def mcp_server() -> Generator[FastMCP]:
+    server = FastMCP("TestServer")
+
+    @server.tool(name="test_tool")
+    def test_tool(name: str) -> str:
+        return f"Tool named {name}"
+
+    yield server
+
+
+@pytest_asyncio.fixture(autouse=True)
+def running_mcp_server_host(mcp_server: FastMCP) -> str:
+    host = mcp_server.settings.host
+    if host in ("localhost", "0.0.0.0", "host.docker.internal"):
+        return f"http://{host}:{mcp_server.settings.port}"
+    return f"http://{mcp_server.settings.host}"
+
+
+@pytest_asyncio.fixture
+async def register_mcp_server(running_mcp_server_host: str):
+    add_mcp_url = "/api/mcp/server"
+    await http_client.post(path=add_mcp_url, json={""})
