@@ -716,7 +716,7 @@ export const AgentFlowsEditPage: FC = () => {
                         }}
                       >
                         {highlightMatch(
-                          agent.agent_schema.description,
+                          agent.agent_schema.description || '',
                           search,
                           true,
                         )}

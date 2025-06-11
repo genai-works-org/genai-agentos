@@ -60,7 +60,6 @@ export const useAgent = () => {
       throw err;
     } finally {
       setIsLoading(false);
-      await getAgents();
     }
   };
 

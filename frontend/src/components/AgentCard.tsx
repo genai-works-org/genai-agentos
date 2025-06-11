@@ -9,7 +9,6 @@ import {
   Typography,
   IconButton,
   Box,
-  CircularProgress,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -30,18 +29,13 @@ const ExpandMore = styled((props: { expanded: boolean } & any) => {
 
 interface AgentCardProps {
   agent: AgentDTO;
-  onDelete?: (agentId: string) => void;
-  onDeleted: () => void;
+  onDelete: () => void;
 }
 
-export const AgentCard: FC<AgentCardProps> = ({
-  agent,
-  onDelete,
-  onDeleted,
-}) => {
+export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+
   const description = agent.agent_schema.function.description;
 
   const handleExpandClick = (e: MouseEvent) => {
@@ -53,17 +47,9 @@ export const AgentCard: FC<AgentCardProps> = ({
     navigate(`/agents/${agent.agent_id}/details`);
   };
 
-  const handleDelete = async (e: MouseEvent) => {
+  const handleDelete = (e: MouseEvent) => {
     e.stopPropagation();
-    if (onDelete) {
-      setIsDeleting(true);
-      try {
-        await onDelete(agent.agent_id);
-      } finally {
-        setIsDeleting(false);
-        onDeleted();
-      }
-    }
+    onDelete();
   };
 
   const renderParameters = () => {
@@ -136,20 +122,9 @@ export const AgentCard: FC<AgentCardProps> = ({
           <Typography variant="h6" component="div">
             {normalizeString(agent.agent_name)}
           </Typography>
-          {onDelete && (
-            <IconButton
-              onClick={handleDelete}
-              color="error"
-              disabled={isDeleting}
-              size="small"
-            >
-              {isDeleting ? (
-                <CircularProgress size={24} color="error" />
-              ) : (
-                <DeleteIcon />
-              )}
-            </IconButton>
-          )}
+          <IconButton onClick={handleDelete} color="error" size="small">
+            <DeleteIcon />
+          </IconButton>
         </Box>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {expanded

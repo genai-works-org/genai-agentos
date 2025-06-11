@@ -8,8 +8,6 @@ import { validateField } from '../utils/validation';
 interface AuthFormProps {
   title: string;
   buttonText: string;
-  error?: string;
-  passwordError?: string;
   name: string;
   setName: (name: string) => void;
   password: string;
@@ -26,8 +24,6 @@ interface AuthFormProps {
 const AuthForm: FC<AuthFormProps> = ({
   title,
   buttonText,
-  error,
-  passwordError,
   name,
   setName,
   password,
@@ -98,24 +94,6 @@ const AuthForm: FC<AuthFormProps> = ({
         </h2>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        {error && (
-          <div
-            className={`text-center text-sm ${
-              theme === 'light' ? 'text-red-600' : 'text-red-400'
-            }`}
-          >
-            {error}
-          </div>
-        )}
-        {passwordError && (
-          <div
-            className={`text-center text-sm ${
-              theme === 'light' ? 'text-red-600' : 'text-red-400'
-            }`}
-          >
-            {passwordError}
-          </div>
-        )}
         <div className="rounded-md shadow-sm space-y-4">
           <div>
             <label htmlFor="name" className="sr-only">

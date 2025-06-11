@@ -8,33 +8,28 @@ const SignupPage = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
-  const [error, setError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const { signup } = useAuth();
   const navigate = useNavigate();
 
   const validatePasswords = () => {
     if (password !== repeatPassword) {
-      setPasswordError('Passwords do not match');
       return false;
     }
-    setPasswordError('');
     return true;
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!validatePasswords()) {
       return;
     }
 
-    setError(''); // Clear any previous errors
     try {
       await signup(name, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Failed to create an account');
+      console.error(err);
     }
   };
 
@@ -43,8 +38,6 @@ const SignupPage = () => {
       <AuthForm
         title="Create your account"
         buttonText="Sign up"
-        error={error}
-        passwordError={passwordError}
         name={name}
         setName={setName}
         password={password}

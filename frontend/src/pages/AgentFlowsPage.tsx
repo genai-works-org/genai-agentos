@@ -14,11 +14,14 @@ import { MainLayout } from '../components/MainLayout';
 import { AgentFlowCard } from '../components/AgentFlowCard';
 import { useAgent } from '../hooks/useAgent';
 import { agentService } from '../services/agentService';
+import ConfirmModal from '../components/ConfirmModal';
 
 export const AgentFlowsPage: FC = () => {
   const [agents, setAgents] = useState<ActiveConnection[]>([]);
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedFlow, setSelectedFlow] = useState<AgentFlowDTO | null>(null);
   const navigate = useNavigate();
   const { getAgentFlows, deleteAgentFlow } = useAgent();
 
@@ -28,13 +31,8 @@ export const AgentFlowsPage: FC = () => {
   }, []);
 
   const loadFlows = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getAgentFlows();
-      setFlows(data);
-    } finally {
-      setIsLoading(false);
-    }
+    const data = await getAgentFlows();
+    setFlows(data);
   };
 
   const loadAgents = async () => {
@@ -49,15 +47,22 @@ export const AgentFlowsPage: FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteAgentFlow(id);
-      // Remove the flow from the state immediately for better UX
-      setFlows(prevFlows => prevFlows.filter(flow => flow.id !== id));
-      // Refresh the list to ensure consistency
-    } finally {
-      await loadFlows();
-    }
+  const handleClose = () => {
+    setIsConfirmOpen(false);
+    setSelectedFlow(null);
+  };
+
+  const handleDelete = (flow: AgentFlowDTO) => {
+    setSelectedFlow(flow);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!selectedFlow) return;
+
+    await deleteAgentFlow(selectedFlow.id);
+    await loadFlows();
+    handleClose();
   };
 
   const handleEdit = (id: string) => {
@@ -127,13 +132,21 @@ export const AgentFlowsPage: FC = () => {
                   flow={flow}
                   isActive={isActive}
                   onEdit={handleEdit}
-                  onDelete={handleDelete}
+                  onDelete={() => handleDelete(flow)}
                 />
               );
             })}
           </Box>
         )}
       </Container>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Agent Flow"
+        text={`Are you sure you want to delete "${selectedFlow?.name || ''}"?`}
+        onClose={handleClose}
+        onConfirm={handleDeleteConfirmed}
+      />
     </MainLayout>
   );
 };

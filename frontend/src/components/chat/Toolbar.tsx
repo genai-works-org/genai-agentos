@@ -1,7 +1,12 @@
 import { FC, useEffect } from 'react';
 import { SendIcon, PaperclipIcon } from 'lucide-react';
 import { useSettings } from '../../contexts/SettingsContext';
-import { MenuItem, SelectChangeEvent, FormControl, InputLabel } from '@mui/material';
+import {
+  MenuItem,
+  SelectChangeEvent,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
 import { Select } from '@mui/material';
 
 interface ToolbarProps {
@@ -29,7 +34,7 @@ const Toolbar: FC<ToolbarProps> = ({
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
     if (value) {
-      const model = availableModels.find((model) => model.id === value);
+      const model = availableModels.find(model => model.id === value);
       updateSettings({ model });
     }
   };
@@ -38,7 +43,7 @@ const Toolbar: FC<ToolbarProps> = ({
     if (!isModelSelected && isModelAvailable) {
       updateSettings({ model: availableModels[0] });
     }
-  }, [])
+  }, []);
 
   return (
     <div className="px-3 py-2 flex items-center justify-between">
@@ -52,35 +57,36 @@ const Toolbar: FC<ToolbarProps> = ({
         </button>
       </div>
       <div className="flex items-center">
-        {!isModelAvailable ?
-          (
-            <span className="text-red-500 text-sm">Add settings and models in Settings page</span>
-          ) :
-          (
-            <FormControl sx={{ m: 1, minWidth: 100 }} size="small">
-              <InputLabel id="model-select-label">Model</InputLabel>
-              <Select
-                labelId="model-select-label"
-                value={settings.model?.id || ''}
-                label="Model"
-                onChange={handleSelectChange}
-                autoWidth
-                size="small"
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 200
-                    }
-                  }
-                }}
-              >
-                {availableModels.map((model) => (
-                  <MenuItem key={model.id} value={model.id}>{model.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          )
-        }
+        {!isModelAvailable ? (
+          <span className="text-red-500 text-sm">
+            Add settings and models on the Settings page
+          </span>
+        ) : (
+          <FormControl sx={{ m: 1, minWidth: 100 }} size="small">
+            <InputLabel id="model-select-label">Model</InputLabel>
+            <Select
+              labelId="model-select-label"
+              value={settings.model?.id || ''}
+              label="Model"
+              onChange={handleSelectChange}
+              autoWidth
+              size="small"
+              MenuProps={{
+                PaperProps: {
+                  style: {
+                    maxHeight: 200,
+                  },
+                },
+              }}
+            >
+              {availableModels.map(model => (
+                <MenuItem key={model.id} value={model.id}>
+                  {model.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
         <button
           onClick={onSubmit}
           disabled={!isModelSelected || !hasContent}
@@ -88,7 +94,7 @@ const Toolbar: FC<ToolbarProps> = ({
             hasContent && isModelSelected
               ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] '
               : 'bg-gray-100 text-gray-400'
-            }`}
+          }`}
         >
           <SendIcon size={20} />
         </button>
@@ -97,4 +103,4 @@ const Toolbar: FC<ToolbarProps> = ({
   );
 };
 
-export default Toolbar; 
+export default Toolbar;

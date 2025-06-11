@@ -12,9 +12,12 @@ import {
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/MainLayout';
 import { useAgent } from '../hooks/useAgent';
+import ConfirmModal from '../components/ConfirmModal';
 
 export const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentDTO | null>(null);
   const { isLoading, getAgents, deleteAgent } = useAgent();
 
   const activeAgents = agents.filter(agent => agent.is_active);
@@ -26,6 +29,20 @@ export const AgentsPage: FC = () => {
   const loadAgents = async () => {
     const response = await getAgents();
     setAgents(response);
+  };
+
+  const openConfirm = (agent: AgentDTO) => {
+    setSelectedAgent(agent);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDeleteAgent = async () => {
+    if (selectedAgent) {
+      await deleteAgent(selectedAgent.agent_id);
+      await loadAgents();
+      setSelectedAgent(null);
+      setIsConfirmOpen(false);
+    }
   };
 
   return (
@@ -87,16 +104,20 @@ export const AgentsPage: FC = () => {
           >
             {agents.map(agent => (
               <Box key={agent.agent_id}>
-                <AgentCard
-                  agent={agent}
-                  onDelete={deleteAgent}
-                  onDeleted={loadAgents}
-                />
+                <AgentCard agent={agent} onDelete={() => openConfirm(agent)} />
               </Box>
             ))}
           </Box>
         )}
       </Container>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Agent"
+        text={`Are you sure you want to delete ${selectedAgent?.agent_name || ''}?`}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDeleteAgent}
+      />
     </MainLayout>
   );
 };
