@@ -654,6 +654,9 @@ LIMIT :limit OFFSET :offset;
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
+                if card_content := col["json_data1"]:
+                    card_content.pop("name", "")
+
                 agent_schema = A2AAgentCard(
                     **col["json_data1"],
                     name=col["name"],
