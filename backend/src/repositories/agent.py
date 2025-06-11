@@ -1,4 +1,3 @@
-import json
 from typing import Optional, Union
 from uuid import UUID
 
@@ -655,14 +654,8 @@ LIMIT :limit OFFSET :offset;
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                print(f"{json.dumps(col['json_data1'], indent=4)}")
-                name = col["json_data1"].get("name")
-                agent_schema = A2AAgentCard(
-                    **col["json_data1"],
-                    name=name if name else col["name"],
-                    description=col["description"],
-                    url=col["server_url"],
-                )
+                card_content = col["json_data1"]
+                agent_schema = A2AAgentCard(**card_content)
 
                 agent_card = a2a_repo.agent_card_to_dto(
                     agent_card=agent_schema,
