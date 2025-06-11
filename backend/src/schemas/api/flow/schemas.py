@@ -45,6 +45,12 @@ class AgentFlowBase(BaseModel):
 
     flow: list[FlowAgentId]
 
+    @field_validator("name")
+    def check_name_length(cls, v):
+        if len(v) <= 55:
+            return v
+        raise ValueError("Flow name must be less than 55 characters")
+
 
 class AgentFlowCreate(AgentFlowBase):
     @field_validator("flow")
