@@ -10,7 +10,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.shared.exceptions import McpError
 from pydantic import AnyHttpUrl
-from sqlalchemy import and_, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -92,12 +92,17 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     async def update_mcp_server_with_tools(
         self, db: AsyncSession, db_obj: MCPServer, obj_in: MCPServerData
     ):
+        await db.execute(delete(MCPTool).where(MCPTool.mcp_server_id == db_obj.id))
         tools = obj_in.mcp_tools
-        orm_tools = [
-            MCPTool(**t.model_dump(mode="json"), alias=generate_alias(t.name))
-            for t in tools
-        ]
-        db_obj.mcp_tools = orm_tools
+
+        for t in tools:
+            tool = MCPTool(
+                **t.model_dump(mode="json"),
+                alias=generate_alias(t.name),
+                mcp_server_id=db_obj.id,
+            )
+            db.add(tool)
+
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
