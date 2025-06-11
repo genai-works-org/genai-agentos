@@ -24,7 +24,7 @@ from src.schemas.api.agent.schemas import AgentCreate, AgentRegister, AgentUpdat
 from src.schemas.api.flow.schemas import AgentFlowAlias, FlowAgentId, FlowSchema
 from src.schemas.base import AgentDTOPayload
 from src.schemas.mcp.dto import ActiveMCPToolDTO, MCPToolDTO
-from src.utils.enums import ActiveAgentTypeFilter, AgentIdType, AgentType
+from src.utils.enums import ActiveAgentTypeFilter, AgentType
 from src.utils.filters import AgentFilter
 from src.utils.helpers import (
     FlowValidator,
@@ -220,32 +220,6 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 r.model_dump(mode="json", exclude_none=True) for r in result if r
             ],
         )
-
-    async def get_agents_by_ids(
-        self, db: AsyncSession, agent_ids: list[str], user_model: User
-    ) -> list[Optional[str]]:
-        """
-        Get all agent_ids queried by the provided collection of agent_ids.
-
-        Args:
-            db: The database session.
-            agents_from_flow: list of [{"agent_id": uuid}, {"agent_id": uuid}, ...]
-
-        Returns:
-            A list of Agent objects that are online and match provided agent_id.
-        """
-        # `is` comparison vs booleans is not supported in SQLAlchemy
-        q = await db.execute(
-            select(self.model).where(
-                and_(
-                    self.model.id.in_(agent_ids),
-                    self.model.creator_id == user_model.id,
-                    self.model.is_active == True,  # noqa: E712
-                )
-            )
-        )
-        agents = q.scalars().all()
-        return [str(agent.id) for agent in agents]
 
     async def set_all_agents_inactive(self, db: AsyncSession) -> None:
         """
@@ -504,8 +478,8 @@ LIMIT :limit OFFSET :offset;
             if not first_genai_agent:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'GenAI agent with id: {first_agent_id} was not found.'
-                           f' Make sure you have passed "agent_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f"GenAI agent with id: {first_agent_id} was not found."
+                    f' Make sure you have passed "agent_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_genai_agent
 
@@ -514,8 +488,8 @@ LIMIT :limit OFFSET :offset;
             if not first_mcp_tool:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'MCP tool with id: {first_agent_id} was not found.'
-                           f' Make sure you have passed "mcp_tool_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f"MCP tool with id: {first_agent_id} was not found."
+                    f' Make sure you have passed "mcp_tool_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_mcp_tool
 
@@ -524,8 +498,8 @@ LIMIT :limit OFFSET :offset;
             if not first_a2a_card:
                 raise HTTPException(
                     status_code=400,
-                    detail=f'A2A card with id: {first_agent_id} was not found.'
-                           f' Make sure you have passed "a2a_card_id": "your id" in the flow correctly',  # noqa: E501
+                    detail=f"A2A card with id: {first_agent_id} was not found."
+                    f' Make sure you have passed "a2a_card_id": "your id" in the flow correctly',  # noqa: E501
                 )
             first_existing_agent = first_a2a_card
 
@@ -560,7 +534,6 @@ LIMIT :limit OFFSET :offset;
                 input_params = A2AFirstAgentInFlow(
                     name=flow.alias, description=flow.description
                 ).model_dump(mode="json")
-
 
             flow_schema = AgentDTOPayload(
                 id=flow.id,

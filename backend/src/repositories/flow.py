@@ -147,7 +147,7 @@ class AgentWorkflowRepository(
         flow_ids_to_delete: list[Optional[str]] = []
         for flow in flows:
             flow_list = flow.flow
-            agent_ids = [agent["agent_id"] for agent in flow_list]
+            agent_ids = [agent["id"] for agent in flow_list]
             if agent_id in agent_ids:
                 flow_ids_to_delete.append(str(flow.id))
 
