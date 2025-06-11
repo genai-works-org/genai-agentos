@@ -654,8 +654,17 @@ LIMIT :limit OFFSET :offset;
                 created_at = col.pop("created_at")
                 updated_at = col.pop("updated_at")
 
-                card_content = col["json_data1"]
-                agent_schema = A2AAgentCard(**card_content)
+                card_content: dict = col["json_data1"]
+                name = card_content.pop("name", None)
+                description = card_content.pop("description", None)
+                url = card_content.pop("url", None)
+
+                agent_schema = A2AAgentCard(
+                    **card_content,
+                    name=name if name else col["name"],
+                    description=description if description else col["description"],
+                    url=url if url else col["server_url"],
+                )
 
                 agent_card = a2a_repo.agent_card_to_dto(
                     agent_card=agent_schema,
