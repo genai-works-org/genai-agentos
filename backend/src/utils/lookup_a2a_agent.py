@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 async def lookup_and_update_agent_card(server_url: str, headers: dict = {}):
     async with async_session() as db:
-        card_info = await lookup_agent_well_known(base_url=server_url, headers=headers)
+        card_info = await lookup_agent_well_known(url=server_url, headers=headers)
         card = await a2a_repo.update_card(
             db=db, server_url=server_url, card_in=card_info
         )

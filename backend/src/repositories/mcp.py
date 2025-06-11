@@ -22,6 +22,7 @@ from src.schemas.mcp.schemas import MCPCreateServer, MCPServerData, MCPToolSchem
 from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
 from src.utils.helpers import (
+    generate_alias,
     mcp_tool_to_json_schema,
     prettify_integrity_error_details,
     strip_endpoints_from_url,
@@ -88,6 +89,19 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         )
         return q.first()
 
+    async def update_mcp_server_with_tools(
+        self, db: AsyncSession, db_obj: MCPServer, obj_in: MCPServerData
+    ):
+        tools = obj_in.mcp_tools
+        orm_tools = [
+            MCPTool(**t.model_dump(mode="json"), alias=generate_alias(t.name))
+            for t in tools
+        ]
+        db_obj.mcp_tools = orm_tools
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
+
     async def update_mcp_server_resources(
         self,
         db: AsyncSession,
@@ -100,7 +114,9 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         if not mcp_server:
             return None
 
-        return await self.update(db=db, db_obj=mcp_server, obj_in=obj_in)
+        return await self.update_mcp_server_with_tools(
+            db=db, db_obj=mcp_server, obj_in=obj_in
+        )
 
     async def list_active_mcp_servers(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
@@ -121,7 +137,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
 
     async def list_remote_urls_of_all_servers(self, db: AsyncSession):
         q = await db.scalars(select(self.model.server_url))
-        return [link[0] for link in q.all()]
+        return q.all()
 
     async def add_url(
         self, db: AsyncSession, data_in: MCPCreateServer, user_model: User

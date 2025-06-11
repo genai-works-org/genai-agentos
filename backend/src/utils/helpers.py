@@ -58,7 +58,7 @@ def validate_tool_name(tool_name: str) -> Optional[str]:
 
 
 def get_agent_description_from_skills(
-        description: str, skills: list[dict[str, Any]]
+    description: str, skills: list[dict[str, Any]]
 ) -> str:
     combined_skill_descriptions = "\n".join([skill["description"] for skill in skills])
     full_agent_description = f"{description}\nSKILLS:\n{combined_skill_descriptions}"
@@ -121,16 +121,14 @@ def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails
 
 
 def strip_endpoints_from_url(url: AnyHttpUrl | str) -> str:
-    port = (
-        f":{url.port}"
-        if url.port and url.host in ("localhost", "0.0.0.0", "host.docker.internal")
-        else ""
-    )
-    return (
-        f"{url.scheme}://{str(url.host)}{port}"
-        if isinstance(url, AnyHttpUrl)
-        else url[:-1]
-    )
+    if isinstance(url, AnyHttpUrl):
+        port = (
+            f":{url.port}"
+            if url.port and url.host in ("localhost", "0.0.0.0", "host.docker.internal")
+            else ""
+        )
+        return f"{url.scheme}://{str(url.host)}{port}"
+    return url.rstrip("/")
 
 
 class FlowValidator:
@@ -148,7 +146,7 @@ class FlowValidator:
             return q.all()
 
     async def _validate_mcp_tools(
-            self, mcp_tools_ids: list[Optional[str]], user_id: UUID
+        self, mcp_tools_ids: list[Optional[str]], user_id: UUID
     ):
         async with async_session() as db:
             q = await db.scalars(
@@ -165,7 +163,7 @@ class FlowValidator:
         return q.all()
 
     async def _validate_a2a_cards(
-            self, a2a_cards_ids: list[Optional[str]], user_id: UUID
+        self, a2a_cards_ids: list[Optional[str]], user_id: UUID
     ):
         async with async_session() as db:
             q = await db.scalars(
@@ -180,11 +178,11 @@ class FlowValidator:
         return q.all()
 
     async def validate_all_agents_types(
-            self,
-            genai_ids: list[Optional[str]],
-            mcp_ids: list[Optional[str]],
-            a2a_ids: list[Optional[str]],
-            user_id: UUID,
+        self,
+        genai_ids: list[Optional[str]],
+        mcp_ids: list[Optional[str]],
+        a2a_ids: list[Optional[str]],
+        user_id: UUID,
     ) -> list[str]:
         tasks = (
             asyncio.create_task(
@@ -192,16 +190,18 @@ class FlowValidator:
             ),
             asyncio.create_task(
                 self._validate_mcp_tools(mcp_tools_ids=mcp_ids, user_id=user_id)
-            ), asyncio.create_task(
+            ),
+            asyncio.create_task(
                 self._validate_a2a_cards(a2a_cards_ids=a2a_ids, user_id=user_id)
-            )
+            ),
         )
 
         result: list[list[Optional[UUID]]] = await asyncio.gather(*tasks)
-
         return [str(v) for r in result for v in r]
 
-    async def validate_is_active_of_all_agent_types(self, flow_agents: list[FlowAgentId], user_id: UUID):
+    async def validate_is_active_of_all_agent_types(
+        self, flow_agents: list[FlowAgentId], user_id: UUID
+    ):
         genai_ids = []
         mcp_ids = []
         a2a_ids = []
@@ -219,8 +219,5 @@ class FlowValidator:
                 a2a_ids.append(agent_id)
 
         return await self.validate_all_agents_types(
-            genai_ids=genai_ids,
-            mcp_ids=mcp_ids,
-            a2a_ids=a2a_ids,
-            user_id=user_id
+            genai_ids=genai_ids, mcp_ids=mcp_ids, a2a_ids=a2a_ids, user_id=user_id
         )

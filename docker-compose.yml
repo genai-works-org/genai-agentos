@@ -4,6 +4,7 @@ networks:
 
 services:
   frontend:
+    container_name: genai-frontend
     build:
       context: ./frontend
     ports:
@@ -18,6 +19,7 @@ services:
     restart: unless-stopped
 
   router:
+    container_name: genai-router
     build:
       context: ./router
     ports:
@@ -28,6 +30,7 @@ services:
     restart: unless-stopped
 
   master-agent:
+    container_name: genai-master-agent
     build:
       context: ./master-agent
     env_file: .env
@@ -38,6 +41,7 @@ services:
       - router
 
   backend:
+    container_name: genai-backend
     build:
       context: ./backend
     ports:
@@ -54,6 +58,7 @@ services:
       - shared-files-volume:${DEFAULT_FILES_FOLDER_NAME:-/files}
 
   postgres:
+    container_name: genai-postgres
     build:
       context: ./backend/scripts
       dockerfile: ./Dockerfile.postgres
@@ -72,12 +77,17 @@ services:
         - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
         - postgres-volume:/var/lib/postgresql/data
   redis:
+    container_name: genai-redis
     image: redis:7
     ports:
       - 6379:6379
+    networks:
+      - local-genai-network
     volumes:
       - redis-data:/data
+
   migration_svc:
+    container_name: genai-migration-svc
     build:
       context: ./backend
     depends_on:
@@ -88,6 +98,26 @@ services:
       - local-genai-network
     restart: on-failure
     command: ["alembic", "upgrade", "head"]
+
+  celery:
+    container_name: genai-celery-worker
+    build: 
+      context: ./backend
+    command: celery -A src.celery.celery_app worker --loglevel=debug
+    networks:
+      - local-genai-network
+    depends_on:
+      - redis
+
+  celery-beat:
+    container_name: genai-celery-beat
+    build: 
+      context: ./backend
+    command: celery -A src.celery.celery_app beat --loglevel=debug
+    networks:
+      - local-genai-network
+    depends_on:
+      - redis
 
 volumes:
   postgres-volume:

@@ -175,8 +175,8 @@ class AgentWorkflowRepository(
         ):
             raise HTTPException(
                 status_code=400,
-                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}."
-                f" Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
+                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}."  # noqa: E501
+                f" Make sure agent was registered by you and is active before including it into the agent flow",
             )
         return valid_agents
 

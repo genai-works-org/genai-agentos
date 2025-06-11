@@ -167,6 +167,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             .where(self.model.creator_id == str(user_model.id))
             .offset(offset)
             .limit(limit)
+            .order_by(self.model.created_at.desc())
         )
         return q.scalars().all()
 
