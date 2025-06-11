@@ -59,9 +59,13 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
 
   useEffect(() => {
     if (!FLOW_NAME_REGEX.test(flowName)) {
-      setFlowNameError('Invalid flow name');
+      setFlowNameError(
+        'Only letters, numbers, underscores and hyphens are allowed',
+      );
+      setError(true);
     } else {
       setFlowNameError(null);
+      setError(false);
     }
   }, [flowName]);
 
