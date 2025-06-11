@@ -436,10 +436,10 @@ export const AgentFlowsEditPage: FC = () => {
   };
 
   const handleBlur = () => {
-    setIsEditingName(false);
     if (flowName && !FLOW_NAME_REGEX.test(flowName)) {
       setError(true);
     }
+    setIsEditingName(false);
   };
 
   if (isLoading) {
@@ -494,32 +494,45 @@ export const AgentFlowsEditPage: FC = () => {
                   error={error}
                   helperText={
                     error
-                      ? 'Invalid flow name'
+                      ? 'Only letters, numbers, underscores and hyphens are allowed'
                       : `${flowName.length}/100 characters`
                   }
                 />
               ) : (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      maxWidth: '300px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {flowName}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => setIsEditingName(true)}
-                    sx={{ p: 0.5 }}
-                  >
-                    <Pencil size={16} />
-                  </IconButton>
+                <Box>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        maxWidth: '300px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {flowName}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setIsEditingName(true)}
+                      sx={{ p: 0.5 }}
+                    >
+                      <Pencil size={16} />
+                    </IconButton>
+                  </Box>
+                  {error && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        color: '#d32f2f',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Only letters, numbers, underscores and hyphens are allowed
+                    </Typography>
+                  )}
                 </Box>
               )}
             </Box>
@@ -755,6 +768,7 @@ export const AgentFlowsEditPage: FC = () => {
         saveError={saveError}
         saving={saving}
         onSave={handleSave}
+        setError={setError}
       />
     </MainLayout>
   );

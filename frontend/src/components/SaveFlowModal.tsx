@@ -22,6 +22,7 @@ interface SaveFlowModalProps {
   saveError: string | null;
   saving: boolean;
   onSave: () => void;
+  setError: (error: boolean) => void;
 }
 
 export const SaveFlowModal: FC<SaveFlowModalProps> = ({
@@ -35,6 +36,7 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
   saveError,
   saving,
   onSave,
+  setError,
 }) => {
   const [flowNameError, setFlowNameError] = useState<string | null>(null);
 
@@ -42,13 +44,18 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
     saving ||
     links.length === 0 ||
     flowDescription.trim().length === 0 ||
-    flowName.trim().length === 0;
+    flowName.trim().length === 0 ||
+    !!flowNameError;
 
   useEffect(() => {
     if (!FLOW_NAME_REGEX.test(flowName)) {
-      setFlowNameError('Invalid flow name');
+      setFlowNameError(
+        'Only letters, numbers, underscores and hyphens are allowed',
+      );
+      setError(true);
     } else {
       setFlowNameError(null);
+      setError(false);
     }
   }, [flowName]);
 
