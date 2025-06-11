@@ -11,6 +11,7 @@ import {
   CircularProgress,
   InputAdornment,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import { Save, Search, Pencil, Trash } from 'lucide-react';
 import ReactFlow, {
@@ -157,6 +158,8 @@ export const AgentFlowsEditPage: FC = () => {
   >({});
   const [links, setLinks] = useState<any[]>([]);
   const { getAgentFlow, createAgentFlow, updateAgentFlow } = useAgent();
+  const allNodesConnected = nodes.length === links.length;
+  const isSaveEnabled = allNodesConnected && nodes.length > 0;
 
   // Generate a random color for an agent
   const getAgentColor = useCallback(
@@ -436,10 +439,10 @@ export const AgentFlowsEditPage: FC = () => {
   };
 
   const handleBlur = () => {
-    setIsEditingName(false);
     if (flowName && !FLOW_NAME_REGEX.test(flowName)) {
       setError(true);
     }
+    setIsEditingName(false);
   };
 
   if (isLoading) {
@@ -494,32 +497,45 @@ export const AgentFlowsEditPage: FC = () => {
                   error={error}
                   helperText={
                     error
-                      ? 'Invalid flow name'
+                      ? 'Only letters, numbers, underscores and hyphens are allowed'
                       : `${flowName.length}/100 characters`
                   }
                 />
               ) : (
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      maxWidth: '300px',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {flowName}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => setIsEditingName(true)}
-                    sx={{ p: 0.5 }}
-                  >
-                    <Pencil size={16} />
-                  </IconButton>
+                <Box>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        maxWidth: '300px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {flowName}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setIsEditingName(true)}
+                      sx={{ p: 0.5 }}
+                    >
+                      <Pencil size={16} />
+                    </IconButton>
+                  </Box>
+                  {error && (
+                    <Typography
+                      component="span"
+                      sx={{
+                        color: '#d32f2f',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      Only letters, numbers, underscores and hyphens are allowed
+                    </Typography>
+                  )}
                 </Box>
               )}
             </Box>
@@ -538,19 +554,30 @@ export const AgentFlowsEditPage: FC = () => {
               >
                 <Trash />
               </IconButton>
-              <IconButton
-                color="primary"
-                onClick={() => setShowSaveModal(true)}
-                sx={{
-                  background: '#FF5722',
-                  color: 'white',
-                  '&:hover': { background: '#F4511E' },
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                }}
-                size="large"
+              <Tooltip
+                title={
+                  !isSaveEnabled
+                    ? 'Please make sure all nodes are connected.'
+                    : ''
+                }
               >
-                <Save />
-              </IconButton>
+                <span>
+                  <IconButton
+                    color="primary"
+                    onClick={() => setShowSaveModal(true)}
+                    sx={{
+                      background: '#FF5722',
+                      color: 'white',
+                      '&:hover': { background: '#F4511E' },
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    }}
+                    size="large"
+                    disabled={!isSaveEnabled}
+                  >
+                    <Save />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Box>
           </Box>
 
@@ -755,6 +782,7 @@ export const AgentFlowsEditPage: FC = () => {
         saveError={saveError}
         saving={saving}
         onSave={handleSave}
+        setError={setError}
       />
     </MainLayout>
   );
