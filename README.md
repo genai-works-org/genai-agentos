@@ -108,9 +108,9 @@ Ngrok can be used to expose the local WebSocket endpoint.
 | Variable                    | Description                                                          | Example / Default                                                                       |
 |-----------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
 | `FRONTEND_PORT`             | Port to start a frontend                                             | `3000` - default. Can be changed by run in terminal ` source FRONTEND_PORT=<your_port>` |
-| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://router:8080/ws` - host is either `localhost` or `router` container name           |
+| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://genai-router:8080/ws` - host is either `localhost` or `router` container name           |
 | `SECRET_KEY`                | Secret key for cryptographic operations - JWT/ LLM config encryption | `$(openssl rand -hex 32)`                                                               |
-| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `postgres`                                                                              |
+| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `genai-postgres`                                                                              |
 | `POSTGRES_USER`             | PostgreSQL Username                                                  | `postgres`                                                                              |
 | `POSTGRES_PASSWORD`         | PostgreSQL Password                                                  | `postgres`                                                                              |
 | `POSTGRES_DB`               | PostgreSQL Database Name                                             | `postgres`                                                                              |
