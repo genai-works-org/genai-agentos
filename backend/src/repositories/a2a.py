@@ -36,7 +36,7 @@ async def lookup_agent_well_known(
     url = strip_endpoints_from_url(url=url)
     async with ClientSession(base_url=url, headers=headers) as session:
         try:
-            async with session.get("/.well-known/agent.json") as resp:
+            async with session.get("/.well-known/agent.json", ssl=False) as resp:
                 if resp.status == 200:
                     json_resp = await resp.json()
                     card = A2AAgentCard(**json_resp)
