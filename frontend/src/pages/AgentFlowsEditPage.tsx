@@ -11,6 +11,7 @@ import {
   CircularProgress,
   InputAdornment,
   Chip,
+  Tooltip,
 } from '@mui/material';
 import { Save, Search, Pencil, Trash } from 'lucide-react';
 import ReactFlow, {
@@ -157,6 +158,8 @@ export const AgentFlowsEditPage: FC = () => {
   >({});
   const [links, setLinks] = useState<any[]>([]);
   const { getAgentFlow, createAgentFlow, updateAgentFlow } = useAgent();
+  const allNodesConnected = nodes.length === links.length;
+  const isSaveEnabled = allNodesConnected && nodes.length > 0;
 
   // Generate a random color for an agent
   const getAgentColor = useCallback(
@@ -551,19 +554,30 @@ export const AgentFlowsEditPage: FC = () => {
               >
                 <Trash />
               </IconButton>
-              <IconButton
-                color="primary"
-                onClick={() => setShowSaveModal(true)}
-                sx={{
-                  background: '#FF5722',
-                  color: 'white',
-                  '&:hover': { background: '#F4511E' },
-                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-                }}
-                size="large"
+              <Tooltip
+                title={
+                  !isSaveEnabled
+                    ? 'Please make sure all nodes are connected.'
+                    : ''
+                }
               >
-                <Save />
-              </IconButton>
+                <span>
+                  <IconButton
+                    color="primary"
+                    onClick={() => setShowSaveModal(true)}
+                    sx={{
+                      background: '#FF5722',
+                      color: 'white',
+                      '&:hover': { background: '#F4511E' },
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    }}
+                    size="large"
+                    disabled={!isSaveEnabled}
+                  >
+                    <Save />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Box>
           </Box>
 
