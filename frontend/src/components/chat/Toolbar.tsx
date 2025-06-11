@@ -95,11 +95,10 @@ const Toolbar: FC<ToolbarProps> = ({
         <button
           onClick={onSubmit}
           disabled={!isModelSelected || !hasContent}
-          className={`ml-6 p-2 rounded-md transition-colors shadow-md ${
-            hasContent && isModelSelected
+          className={`ml-6 p-2 rounded-md transition-colors shadow-md ${hasContent && isModelSelected
               ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] '
               : 'bg-gray-100 text-gray-400'
-          }`}
+            }`}
         >
           <SendIcon size={20} />
         </button>
