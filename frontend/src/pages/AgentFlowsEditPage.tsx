@@ -281,6 +281,11 @@ export const AgentFlowsEditPage: FC = () => {
   // React Flow handlers
   const onConnect = useCallback(
     (params: Connection) => {
+      const sourceExists = edges.some(edge => edge.source === params.source);
+      const targetExists = edges.some(edge => edge.target === params.target);
+
+      if (sourceExists || targetExists) return;
+
       const edgeWithStyle = {
         ...params,
         markerEnd: {
@@ -295,7 +300,7 @@ export const AgentFlowsEditPage: FC = () => {
       };
       setEdges(eds => addEdge(edgeWithStyle, eds));
     },
-    [setEdges],
+    [setEdges, edges],
   );
 
   // Custom edge change handler
