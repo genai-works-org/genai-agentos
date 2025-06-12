@@ -1,19 +1,34 @@
 import os
 import random
 import string
-from typing import Awaitable, Callable, Generator, Optional
+from datetime import datetime
+from multiprocessing import Process
+from typing import Awaitable, Callable, Optional
 
 import aiohttp
 import jwt
 import pytest_asyncio
+from a2a.server.apps import A2AStarletteApplication
+from a2a.server.request_handlers import DefaultRequestHandler
+from a2a.server.tasks import InMemoryTaskStore
+from a2a.types import AgentCapabilities, AgentCard, AgentSkill
+from a2a_resources import ReimbursementAgent, ReimbursementAgentExecutor
 from mcp.server import FastMCP
 from pydantic import BaseModel, Field
+from sqlalchemy import NullPool, inspect, text
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from tests.constants import SPECIAL_CHARS, TEST_FILES_FOLDER
-from tests.schemas import AgentDTOWithJWT
+from tests.schemas import AgentDTOPayload, AgentDTOWithJWT, AgentType
 
 os.environ["ROUTER_WS_URL"] = "ws://0.0.0.0:8080/ws"
 os.environ["DEFAULT_FILES_FOLDER_NAME"] = TEST_FILES_FOLDER
+
+
+# TODO:
+# - add db connection, cleanup on session stop
+# - clean up mcp/a2a instances
+# -
 
 
 class HttpClient:
@@ -42,14 +57,36 @@ class HttpClient:
 http_client = HttpClient(base_url="http://localhost:8000")
 
 
+def _construct_db_uri():
+    return "postgresql+asyncpg://postgres:postgres@0.0.0.0:5432/postgres"
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def db_cleanup():
+    db_uri = _construct_db_uri()
+    assert db_uri is not None
+    engine = create_async_engine(
+        db_uri,
+        poolclass=NullPool,
+        future=True,
+        pool_pre_ping=True,
+    )
+
+    # simplified db cleanup before pytest session starts
+    # looking up all of the table names and running DELETE FROM vs test db
+    # not running 'DROP SCHEMA public CASCADE' in order to not run migrations on test DB
+    # DB cleanup is required to register MCP/A2A agents as their URLs should be unique
+    async with engine.begin() as conn:
+        tables: list[str] = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
+        for t in tables:
+            await conn.execute(text(f"DELETE FROM {t};"))
+
+    return
+
+
 def _generate_password_with_special_char(length: int):
-    # return (
-    #     "".join(
-    #         random.choices(string.ascii_uppercase + string.ascii_lowercase, k=length)
-    #     )
-    #     + random.choice(string.digits)
-    #     + random.choice(SPECIAL_CHARS)
-    # )
     chars = [
         random.choice(string.ascii_lowercase),
         random.choice(string.ascii_uppercase),
@@ -76,18 +113,17 @@ class DummyAgent(BaseModel):
     alias: Optional[str] = None
 
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="session")
 async def registered_user():
     register_url = "/api/register"
     username = _generate_random_string(8).capitalize()
     creds = {"username": username, "password": _generate_password_with_special_char(8)}
-    print(f"{creds=}")
     await http_client.post(path=register_url, json=creds)
     return creds
 
 
-@pytest_asyncio.fixture(scope="function")
-async def user_jwt_token(registered_user):
+@pytest_asyncio.fixture(scope="session")
+async def user_jwt_token(registered_user, db_cleanup):
     """
     Logs in the session-scoped user once and provides the JWT token.
     This token is reused across all tests in the session.
@@ -192,26 +228,118 @@ def genai_agent_register_response_factory():
     return build_response_body
 
 
-@pytest_asyncio.fixture
-def mcp_server() -> Generator[FastMCP]:
+def mcp_server():
     server = FastMCP("TestServer")
 
     @server.tool(name="test_tool")
     def test_tool(name: str) -> str:
         return f"Tool named {name}"
 
-    yield server
+    server.settings.host = "0.0.0.0"
+    server.settings.port = 8888
+    server.settings.log_level = "DEBUG"
+    server.run(transport="streamable-http")
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
+async def run_mcp():
+    proc = Process(target=mcp_server, daemon=True)
+    proc.start()
+
+    import time
+
+    time.sleep(5)  # letting uvicorn start correctly
+    yield
+    proc.terminate()
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
+async def registered_mcp_server(
+    user_jwt_token, run_mcp
+) -> Callable[[], Awaitable[dict]]:
+    add_mcp_url = "/api/mcp/servers"
+    server_data = await http_client.post(
+        path=add_mcp_url,
+        # TODO: replace before using tests in compose
+        json={"server_url": "http://host.docker.internal:8888/mcp"},
+        headers={"Authorization": f"Bearer {user_jwt_token}"},
+    )
+    return server_data
+
+
+def run_a2a_server():
+    skill = AgentSkill(
+        id="process_reimbursement",
+        name="Process Reimbursement Tool",
+        description="Helps with the reimbursement process for users given the amount and purpose of the reimbursement.",  # noqa: E501
+        tags=["reimbursement"],
+        examples=["Can you reimburse me $20 for my lunch with the clients?"],
+    )
+    capabilities = AgentCapabilities(streaming=True)
+    card = AgentCard(
+        name="Reimbursement Agent",
+        description="This agent handles the reimbursement process for the employees given the amount and purpose of the reimbursement.",  # noqa: E501
+        url="http://localhost:10002/",
+        version="1.0.0",
+        defaultInputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
+        defaultOutputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
+        capabilities=capabilities,
+        skills=[skill],
+    )
+    request_handler = DefaultRequestHandler(
+        agent_executor=ReimbursementAgentExecutor(),
+        task_store=InMemoryTaskStore(),
+    )
+    server = A2AStarletteApplication(agent_card=card, http_handler=request_handler)
+    import uvicorn
+
+    uvicorn.run(server.build(), host="localhost", port=10002, loop="asyncio")
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session")
+async def run_a2a():
+    proc = Process(target=run_a2a_server, daemon=True)
+    proc.start()
+
+    import time
+
+    time.sleep(5)
+    yield
+    proc.terminate()
 
 
 @pytest_asyncio.fixture(autouse=True)
-def running_mcp_server_host(mcp_server: FastMCP) -> str:
-    host = mcp_server.settings.host
-    if host in ("localhost", "0.0.0.0", "host.docker.internal"):
-        return f"http://{host}:{mcp_server.settings.port}"
-    return f"http://{mcp_server.settings.host}"
+async def registered_a2a_card(user_jwt_token, run_a2a):
+    add_mcp_url = "/api/a2a/agents"
+    server_data = await http_client.post(
+        path=add_mcp_url,
+        json={"server_url": "http://host.docker.internal:10002"},
+        headers={"Authorization": f"Bearer {user_jwt_token}"},
+    )
+    return server_data
 
 
 @pytest_asyncio.fixture
-async def register_mcp_server(running_mcp_server_host: str):
-    add_mcp_url = "/api/mcp/server"
-    await http_client.post(path=add_mcp_url, json={""})
+async def active_agent_factory():
+    async def build_agent_dto(
+        id: str,
+        name: str,
+        type: AgentType,
+        url: str,
+        agent_schema: dict,
+        is_active: bool,
+        created_at: datetime,
+        updated_at: datetime,
+    ):
+        return AgentDTOPayload(
+            id=id,
+            name=name,
+            type=type,
+            url=url,
+            agent_schema=agent_schema,
+            is_active=is_active,
+            created_at=created_at,
+            updated_at=updated_at,
+        )
+
+    return build_agent_dto
