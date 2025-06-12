@@ -68,7 +68,7 @@ class ModelConfigRepository(
                     self.model.creator_id == user_model.id,
                 )
             )
-            .order_by(self.model.created_at.desc())
+            .order_by(self.model.created_at.asc())
         )
         model_config = q.scalars().first()
         if not model_config:
