@@ -1,10 +1,20 @@
 import type { FC } from 'react';
 import { useRef, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import { NodeProps, Handle, Position } from 'reactflow';
-import { ShieldX } from 'lucide-react';
+import { ShieldX, Trash2 } from 'lucide-react';
 
-export const FlowNode: FC<NodeProps> = ({ data, id }) => {
+interface FlowNodeData {
+  label: string;
+  description: string;
+  color: string;
+  type: string;
+  isActive: boolean;
+  flow?: any[];
+  onDelete: (nodeId: string) => void;
+}
+
+export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const isActive = data.isActive === true || data.isActive === undefined;
 
@@ -32,6 +42,24 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
         position: 'relative',
       }}
     >
+      <IconButton
+        size="small"
+        onClick={e => {
+          e.stopPropagation();
+          if (data.onDelete) {
+            data.onDelete(id);
+          }
+        }}
+        sx={{
+          position: 'absolute',
+          top: -10,
+          right: -10,
+          color: '#c1121f',
+          p: 0.5,
+        }}
+      >
+        <Trash2 size={12} />
+      </IconButton>
       <Handle
         type="target"
         position={Position.Top}
@@ -72,7 +100,7 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
           sx={{
             position: 'absolute',
             top: -8,
-            right: -8,
+            left: -8,
             padding: '0 4px',
             fontSize: 8,
             border: '1px solid #E65100',

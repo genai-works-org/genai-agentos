@@ -175,6 +175,13 @@ export const AgentFlowsEditPage: FC = () => {
     [usedAgentColors],
   );
 
+  const handleDeleteNode = useCallback(
+    (nodeIdToDelete: string) => {
+      setNodes(nds => nds.filter(node => node.id !== nodeIdToDelete));
+    },
+    [setNodes],
+  );
+
   // Fetch agents and flow data
   useEffect(() => {
     const fetchData = async () => {
@@ -216,6 +223,7 @@ export const AgentFlowsEditPage: FC = () => {
                 agent_id: id,
                 type: agent?.type,
                 isActive: agent?.is_active || false,
+                onDelete: handleDeleteNode,
               },
               style: {
                 borderColor: agent?.is_active ? getAgentColor(id) : '#c1121f',
@@ -336,6 +344,7 @@ export const AgentFlowsEditPage: FC = () => {
           description: agent.agent_schema.description,
           color,
           type: agent.type,
+          onDelete: handleDeleteNode,
         },
         style: {
           borderColor: color,
