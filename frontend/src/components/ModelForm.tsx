@@ -36,9 +36,12 @@ export const ModelForm: FC<ModelFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const initialModel =
+    initialData?.model || settings.ai_provider === 'openai' ? 'gpt-4o' : '';
+
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
-    model: initialData?.model || '',
+    model: initialModel,
     provider: initialData?.provider || settings.ai_provider,
     system_prompt: initialData?.system_prompt || settings?.system_prompt || '',
     temperature: initialData?.temperature ?? 0.7,
@@ -253,7 +256,7 @@ export const ModelForm: FC<ModelFormProps> = ({
                 disabled={isLoading || !formData.name || !formData.model}
                 fullWidth
               >
-                {isLoading ? 'Saving...' : 'Save'}
+                Add model
               </Button>
             </Box>
           </Stack>

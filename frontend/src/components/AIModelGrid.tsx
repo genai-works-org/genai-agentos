@@ -63,7 +63,7 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
         {displayedModels.length > 0 &&
           displayedModels.map(model => (
             <AIModelCard
-              key={model.id}
+              key={model.id || model.name}
               modelData={model}
               isSelected={model.id === selectedModel?.id}
               onSelect={onModelSelect}

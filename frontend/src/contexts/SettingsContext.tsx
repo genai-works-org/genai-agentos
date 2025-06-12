@@ -99,11 +99,11 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   useEffect(() => {
     const settingsForStorage = {
       openAi: {
-        api_key: settings.openAi.api_key ? '********' : '',
+        api_key: settings.openAi.api_key,
       },
       azureOpenAi: {
         endpoint: settings.azureOpenAi.endpoint,
-        api_key: settings.azureOpenAi.api_key ? '********' : '',
+        api_key: settings.azureOpenAi.api_key,
         api_version: settings.azureOpenAi.api_version,
         deployment_name: settings.azureOpenAi.deployment_name,
       },
@@ -146,7 +146,7 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
         const newSettings = { ...prev };
         newSettings.azureOpenAi = {
           endpoint: azureOpenAiModels[0].credentials.endpoint,
-          api_key: azureOpenAiModels[0].credentials.api_key && '********',
+          api_key: azureOpenAiModels[0].credentials.api_key,
           api_version: azureOpenAiModels[0].credentials.api_version,
           deployment_name: azureOpenAiModels[0].credentials.deployment_name,
         };
@@ -159,7 +159,7 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
       setSettings(prev => {
         const newSettings = { ...prev };
         newSettings.openAi = {
-          api_key: openAiModels[0].credentials.api_key && '********',
+          api_key: openAiModels[0].credentials.api_key,
         };
 
         return newSettings;

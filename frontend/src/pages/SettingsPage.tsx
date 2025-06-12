@@ -21,6 +21,7 @@ import { ModelForm } from '../components/ModelForm';
 import ConfirmModal from '../components/ConfirmModal';
 import { validateField } from '../utils/validation';
 import { authService } from '../services/authService';
+import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
 
 export const AI_PROVIDERS = {
   OPENAI: 'openai',
@@ -29,9 +30,10 @@ export const AI_PROVIDERS = {
 } as const;
 
 const TOOLTIP_MESSAGES = {
-  OPENAI: 'Provide OpenAI API key and model',
-  AZURE_OPENAI: 'Provide Azure OpenAI API key, endpoint, and deployment name',
-  OLLAMA: 'Provide Ollama base URL and model',
+  OPENAI: 'Provide OpenAI API key and model or save settings',
+  AZURE_OPENAI:
+    'Provide Azure OpenAI API key, endpoint, and deployment name or save settings',
+  OLLAMA: 'Provide Ollama base URL and model or save settings',
   COMMON: 'Provide required provider data first',
 } as const;
 
@@ -70,16 +72,32 @@ export const SettingsPage = () => {
   } = useSettings();
   const [showForm, setShowForm] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
-  const [currentModelId, setCurrentModelId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [modelToDelete, setModelToDelete] = useState<ModelConfig | null>(null);
   const [config, setConfig] = useState<Settings>(settings);
+  const defaultModels = {
+    [AI_PROVIDERS.OPENAI]: openAiModels,
+    [AI_PROVIDERS.AZURE_OPENAI]: azureOpenAiModels,
+    [AI_PROVIDERS.OLLAMA]: ollamaModels,
+  };
+  const [models, setModels] = useState(defaultModels);
+  const { isModalOpen, confirmLeave, cancelLeave } = useUnsavedChanges(
+    Boolean(selectedModel),
+    () => {
+      setModels(defaultModels);
+      setSelectedModel(null);
+    },
+  );
   const isMaxLastMessagesChanged =
     config.max_last_messages !== settings.max_last_messages;
 
   useEffect(() => {
     setConfig(settings);
   }, [settings]);
+
+  useEffect(() => {
+    setModels(defaultModels);
+  }, [openAiModels, azureOpenAiModels, ollamaModels]);
 
   const handleProviderChange = (e: SelectChangeEvent<string>) => {
     const { value } = e.target;
@@ -95,9 +113,6 @@ export const SettingsPage = () => {
   };
 
   const handleSave = async () => {
-    if (validateField('maxLastMessages', String(config.max_last_messages)))
-      return;
-
     const user = authService.getCurrentUser();
     let userId;
 
@@ -110,10 +125,25 @@ export const SettingsPage = () => {
       }
     }
 
-    await authService.updateUserProfile(userId, {
-      max_last_messages: config.max_last_messages,
-    });
+    if (isMaxLastMessagesChanged) {
+      if (validateField('maxLastMessages', String(config.max_last_messages)))
+        return;
 
+      await authService.updateUserProfile(userId, {
+        max_last_messages: config.max_last_messages,
+      });
+    }
+
+    if (selectedModel) {
+      const { id, ...restData } = selectedModel;
+      if (id) {
+        await updateModel(id, restData);
+      } else {
+        await createModel(selectedModel);
+      }
+    }
+
+    setSelectedModel(null);
     updateSettings(config);
     toast.success('Settings saved successfully');
   };
@@ -130,17 +160,29 @@ export const SettingsPage = () => {
 
   const handleConfirmDelete = async () => {
     if (!modelToDelete) return;
+
     try {
-      await deleteModel(modelToDelete.id);
-      updateSettings({ ...config, model: null });
-      if (modelToDelete.id === currentModelId) {
-        setCurrentModelId(null);
+      if (modelToDelete.id) {
+        await deleteModel(modelToDelete.id);
+        updateSettings({ ...config, model: null });
       }
+
+      setModels(prevModels => {
+        const providerModels =
+          prevModels[modelToDelete.provider as keyof typeof prevModels] || [];
+        return {
+          ...prevModels,
+          [modelToDelete.provider]: providerModels.filter(
+            model => model.id !== modelToDelete.id,
+          ),
+        };
+      });
     } catch (err) {
-      // Error is handled by the hook
+      console.error(err);
     } finally {
       setDeleteDialogOpen(false);
       setModelToDelete(null);
+      setSelectedModel(null);
     }
   };
 
@@ -150,17 +192,29 @@ export const SettingsPage = () => {
   };
 
   const handleSaveModel = async (formData: ModelConfig) => {
-    try {
-      const { id, ...restData } = formData;
-      if (id) {
-        await updateModel(id, restData);
+    setSelectedModel(formData);
+    setShowForm(false);
+    setModels(prevModels => {
+      const providerModels =
+        prevModels[formData.provider as keyof typeof prevModels] || [];
+      const modelExists = providerModels.some(
+        model => model.id === formData.id,
+      );
+
+      if (modelExists) {
+        return {
+          ...prevModels,
+          [formData.provider]: providerModels.map(model =>
+            model.id === formData.id ? formData : model,
+          ),
+        };
       } else {
-        await createModel(formData);
+        return {
+          ...prevModels,
+          [formData.provider]: [...providerModels, formData],
+        };
       }
-      setShowForm(false);
-    } catch (err) {
-      // Error is handled by the hook
-    }
+    });
   };
 
   const handleCreateModel = () => {
@@ -170,6 +224,13 @@ export const SettingsPage = () => {
 
   const handleDeepnessChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleConfigChange({ max_last_messages: Number(e.target.value) });
+  };
+
+  const isSaveDisabled = () => {
+    if (!isProviderSettingsSet(config, config.ai_provider)) return true;
+    if (selectedModel) return false;
+
+    return isMaxLastMessagesChanged ? false : true;
   };
 
   return (
@@ -201,13 +262,14 @@ export const SettingsPage = () => {
               <OpenAISettings
                 settings={config}
                 onSettingsChange={handleConfigChange}
-                availableModels={openAiModels}
+                availableModels={models[AI_PROVIDERS.OPENAI]}
                 onModelSelect={handleModelSelect}
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
                 disabledModelCreate={
-                  !isProviderSettingsSet(config, AI_PROVIDERS.OPENAI)
+                  !isProviderSettingsSet(config, AI_PROVIDERS.OPENAI) ||
+                  (Boolean(selectedModel) && !Boolean(selectedModel?.id))
                 }
                 tooltipMessage={TOOLTIP_MESSAGES.OPENAI}
               />
@@ -217,13 +279,14 @@ export const SettingsPage = () => {
               <AzureOpenAISettings
                 settings={config}
                 onSettingsChange={handleConfigChange}
-                availableModels={azureOpenAiModels}
+                availableModels={models[AI_PROVIDERS.AZURE_OPENAI]}
                 onModelSelect={handleModelSelect}
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
                 disabledModelCreate={
-                  !isProviderSettingsSet(config, AI_PROVIDERS.AZURE_OPENAI)
+                  !isProviderSettingsSet(config, AI_PROVIDERS.AZURE_OPENAI) ||
+                  (Boolean(selectedModel) && !Boolean(selectedModel?.id))
                 }
                 tooltipMessage={TOOLTIP_MESSAGES.AZURE_OPENAI}
               />
@@ -233,13 +296,14 @@ export const SettingsPage = () => {
               <OllamaSettings
                 settings={config}
                 onSettingsChange={handleConfigChange}
-                availableModels={ollamaModels}
+                availableModels={models[AI_PROVIDERS.OLLAMA]}
                 onModelSelect={handleModelSelect}
                 onModelCreate={handleCreateModel}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
                 disabledModelCreate={
-                  !isProviderSettingsSet(config, AI_PROVIDERS.OLLAMA)
+                  !isProviderSettingsSet(config, AI_PROVIDERS.OLLAMA) ||
+                  (Boolean(selectedModel) && !Boolean(selectedModel?.id))
                 }
                 tooltipMessage={TOOLTIP_MESSAGES.OLLAMA}
               />
@@ -249,7 +313,7 @@ export const SettingsPage = () => {
               fullWidth
               type="number"
               name="messageDeepness"
-              label="Message deepness"
+              label="Message context window"
               value={config.max_last_messages || 5}
               onChange={handleDeepnessChange}
               placeholder="Enter message deepness"
@@ -272,10 +336,7 @@ export const SettingsPage = () => {
                 variant="contained"
                 color="primary"
                 onClick={handleSave}
-                disabled={
-                  !isProviderSettingsSet(config, config.ai_provider) ||
-                  !isMaxLastMessagesChanged
-                }
+                disabled={isSaveDisabled()}
               >
                 Save Settings
               </Button>
@@ -290,6 +351,15 @@ export const SettingsPage = () => {
         onConfirm={handleConfirmDelete}
         title="Delete Model"
         text={`Are you sure you want to delete the model "${modelToDelete?.name}"?`}
+      />
+
+      <ConfirmModal
+        isOpen={isModalOpen}
+        onClose={cancelLeave}
+        onConfirm={confirmLeave}
+        title="Unsaved Changes"
+        text="All unsaved changes will be lost. Are you sure you want to leave?"
+        confirmText="Leave"
       />
 
       {showForm && (

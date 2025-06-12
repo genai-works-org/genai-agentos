@@ -14,6 +14,7 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   title: string;
   text: string;
+  confirmText?: string;
 }
 
 const ConfirmModal: FC<ConfirmModalProps> = ({
@@ -22,6 +23,7 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
   onConfirm,
   title,
   text,
+  confirmText = 'Delete',
 }) => {
   return (
     <Dialog
@@ -41,7 +43,7 @@ const ConfirmModal: FC<ConfirmModalProps> = ({
           Cancel
         </Button>
         <Button onClick={onConfirm} color="error" autoFocus>
-          Delete
+          {confirmText}
         </Button>
       </DialogActions>
     </Dialog>
