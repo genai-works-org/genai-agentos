@@ -218,12 +218,7 @@ export const AgentFlowsEditPage: FC = () => {
                 isActive: agent?.is_active || false,
               },
               style: {
-                border: '2px solid',
                 borderColor: agent?.is_active ? getAgentColor(id) : '#c1121f',
-                borderRadius: '8px',
-                padding: '10px',
-                width: '180px',
-                backgroundColor: '#fff',
               },
             };
           });
@@ -243,10 +238,6 @@ export const AgentFlowsEditPage: FC = () => {
                   type: MarkerType.ArrowClosed,
                   color: '#000',
                   fill: '#000',
-                },
-                style: {
-                  strokeWidth: 2,
-                  stroke: '#000',
                 },
               };
             });
@@ -293,32 +284,10 @@ export const AgentFlowsEditPage: FC = () => {
           color: '#000',
           fill: '#000',
         },
-        style: {
-          strokeWidth: 2,
-          stroke: '#000',
-        },
       };
       setEdges(eds => addEdge(edgeWithStyle, eds));
     },
     [setEdges, edges],
-  );
-
-  // Custom edge change handler
-  const handleEdgesChange = useCallback(
-    (changes: any[]) => {
-      // Filter out any changes that are not removals
-      const removals = changes.filter(change => change.type === 'remove');
-      if (removals.length > 0) {
-        // Get the IDs of edges to remove
-        const edgeIdsToRemove = removals.map(change => change.id);
-        // Update edges by filtering out the removed ones
-        setEdges(eds => eds.filter(edge => !edgeIdsToRemove.includes(edge.id)));
-      } else {
-        // For other changes, use the default handler
-        onEdgesChange(changes);
-      }
-    },
-    [onEdgesChange, setEdges],
   );
 
   const onDrop = useCallback(
@@ -369,11 +338,7 @@ export const AgentFlowsEditPage: FC = () => {
           type: agent.type,
         },
         style: {
-          border: `2px solid ${color}`,
-          borderRadius: '8px',
-          padding: '10px',
-          width: '180px',
-          backgroundColor: '#fff',
+          borderColor: color,
         },
       };
       setNodes(nds => nds.concat(newNode));
@@ -598,12 +563,13 @@ export const AgentFlowsEditPage: FC = () => {
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
-              onEdgesChange={handleEdgesChange}
+              onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               onDrop={onDrop}
               onDragOver={onDragOver}
               nodeTypes={nodeTypes}
               fitView
+              deleteKeyCode={['Backspace', 'Delete']}
             >
               <Background />
               <Controls />

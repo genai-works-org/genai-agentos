@@ -56,11 +56,10 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
           type: trace?.type,
         },
         style: {
-          border: `2px solid ${trace.is_success || trace.flow?.at(-1)?.is_success ? '#4CAF50' : '#F44336'}`,
-          borderRadius: '8px',
-          padding: '10px',
-          width: '180px',
-          backgroundColor: trace.flow ? 'rgba(0, 0, 0, 0.05)' : 'white',
+          borderColor:
+            trace.is_success || trace.flow?.at(-1)?.is_success
+              ? '#4CAF50'
+              : '#F44336',
         },
       }));
 
@@ -73,10 +72,6 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
           type: MarkerType.ArrowClosed,
           color: '#000',
           fill: '#000',
-        },
-        style: {
-          strokeWidth: 2,
-          stroke: '#000',
         },
       }));
 
@@ -94,11 +89,6 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
                   type: MarkerType.ArrowClosed,
                   color: '#666',
                   fill: '#666',
-                },
-                style: {
-                  strokeWidth: 1,
-                  stroke: '#666',
-                  strokeDasharray: '5,5',
                 },
               }));
             return [...edges, ...flowNodeEdges];
