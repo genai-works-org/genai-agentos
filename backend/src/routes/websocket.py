@@ -237,7 +237,6 @@ async def handle_frontend_ws(
                 configs=enriched_llm_props.to_json(),
                 files=files,
             )
-            print(f"{ml_request.model_dump_json(indent=4)}")
             req_body = ml_request.model_dump(exclude_none=True)
 
             try:
