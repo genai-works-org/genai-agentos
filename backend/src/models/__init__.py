@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -240,7 +240,7 @@ class File(Base):
 
 class ModelProvider(Base):
     id: Mapped[uuid_pk]
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str]
     api_key: Mapped[str]  # encrypted in pydantic models
 
     configs: Mapped[List["ModelConfig"]] = relationship(  # noqa: F821
@@ -253,6 +253,8 @@ class ModelProvider(Base):
     creator: Mapped["User"] = relationship(back_populates="model_providers")
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+
+    __table_args__ = (UniqueConstraint("creator_id", "name", name="uq_user_item_name"),)
 
 
 class ModelConfig(Base):
