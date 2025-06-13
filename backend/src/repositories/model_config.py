@@ -12,6 +12,7 @@ from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
 from src.schemas.api.model_config.schemas import (
     ModelConfigCreate,
     ModelConfigUpdate,
+    ProviderCRUDCreate,
     ProviderCRUDUpdate,
 )
 
@@ -299,6 +300,17 @@ class ModelConfigRepository(
         upd_in: ProviderCRUDUpdate,
     ):
         return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in)
+
+    async def create_provider(
+        self, db: AsyncSession, provider_in: ProviderCRUDCreate, user_model: User
+    ):
+        p = ModelProvider(
+            name=provider_in.name, api_key=provider_in.api_key, creator_id=user_model.id
+        )
+        db.add(p)
+        await db.commit()
+        await db.refresh(p)
+        return p
 
 
 model_config_repo = ModelConfigRepository(ModelConfig)

@@ -45,7 +45,7 @@ class ModelConfigExtras(ModelConfigBase):
         raise ValueError("'max_last_messages' value must be 0 ≤ max_last_messages ≤ 20")
 
 
-class ModelConfigCreate(ModelConfigExtras, ModelProviderBase):
+class ModelConfigCreate(ModelConfigExtras):
     provider: str
 
 
@@ -67,3 +67,7 @@ class ProviderCRUDUpdate(BaseModel):
         if isinstance(v, str):
             return encrypt_secret(v)
         return v
+
+
+class ProviderCRUDCreate(ProviderCRUDUpdate):
+    name: str

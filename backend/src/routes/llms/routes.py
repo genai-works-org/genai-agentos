@@ -14,6 +14,7 @@ from src.schemas.api.model_config.dto import ModelConfigDTO, ModelPromptDTO
 from src.schemas.api.model_config.schemas import (
     ModelConfigCreate,
     ModelConfigUpdate,
+    ProviderCRUDCreate,
     ProviderCRUDUpdate,
 )
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
@@ -41,6 +42,28 @@ async def get_model_config(
     return await model_config_repo.get_config_by_user(
         db=db, config_id=model_config_id, user_model=user_model
     )
+
+
+@llm_router.post("/model/provider")
+async def add_model_provider(
+    db: AsyncDBSession,
+    user_model: CurrentUserDependency,
+    provider_in: ProviderCRUDCreate,
+):
+    try:
+        return await model_config_repo.create_provider(
+            db=db, provider_in=provider_in, user_model=user_model
+        )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Provider named '{provider_in.name}' already exists",
+        )
+    except Exception:
+        logger.error(f"Unexpected error occured: {traceback.format_exc(limit=600)}")
+        raise HTTPException(
+            status_code=500, detail="Unexpected error occured, try again later."
+        )
 
 
 @llm_router.post("/model/config")
