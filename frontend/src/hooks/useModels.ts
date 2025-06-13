@@ -1,31 +1,56 @@
-import { useState, useEffect } from 'react';
-import { modelService, ModelConfig } from '../services/modelService';
+import { useState, useCallback } from 'react';
+import { modelService } from '../services/modelService';
 import { useToast } from './useToast';
-import { useAuth } from '../contexts/AuthContext';
+import {
+  CreateModelBody,
+  CreateProviderBody,
+  ModelConfig,
+} from '../types/model';
 
 export const useModels = () => {
-  const [systemPrompt, setSystemPrompt] = useState<string | null>(null);
-  const [models, setModels] = useState<ModelConfig[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const toast = useToast();
-  const { user } = useAuth();
 
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      setError(null);
       const data = await modelService.getModels();
-      setModels(data);
+      return data;
     } catch (err) {
-      setError('Failed to fetch models');
       toast.showError('Failed to fetch models');
+      throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createModel = async (model: Omit<ModelConfig, 'id'>) => {
+  const fetchSystemPrompt = useCallback(async () => {
+    setLoading(true);
+    try {
+      const prompt = await modelService.getPrompt();
+      return prompt;
+    } catch (err) {
+      toast.showError('Failed to fetch system prompt');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createProvider = useCallback(async (provider: CreateProviderBody) => {
+    setLoading(true);
+    try {
+      const newProvider = await modelService.createProvider(provider);
+      return newProvider;
+    } catch (err) {
+      toast.showError('Failed to create provider');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createModel = useCallback(async (model: CreateModelBody) => {
     setLoading(true);
     try {
       const newModel = await modelService.createModel(model);
@@ -35,58 +60,44 @@ export const useModels = () => {
       throw err;
     } finally {
       setLoading(false);
-      await fetchModels();
     }
-  };
+  }, []);
 
-  const updateModel = async (id: string, model: Partial<ModelConfig>) => {
-    setLoading(true);
-    try {
-      const updatedModel = await modelService.updateModel(id, model);
-      return updatedModel;
-    } catch (err) {
-      toast.showError('Failed to update model');
-      throw err;
-    } finally {
-      setLoading(false);
-      await fetchModels();
-    }
-  };
+  const updateModel = useCallback(
+    async (id: string, model: Partial<ModelConfig>) => {
+      setLoading(true);
+      try {
+        const updatedModel = await modelService.updateModel(id, model);
+        return updatedModel;
+      } catch (err) {
+        toast.showError('Failed to update model');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const deleteModel = async (id: string) => {
+  const deleteModel = useCallback(async (id: string) => {
     setLoading(true);
     try {
       await modelService.deleteModel(id);
-      await fetchModels();
     } catch (err) {
-      console.error(err);
       toast.showError('Failed to delete model');
       throw err;
     } finally {
       setLoading(false);
     }
-  };
-
-  const fetchSystemPrompt = async () => {
-    const prompt = await modelService.getPrompt();
-    setSystemPrompt(prompt);
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchSystemPrompt();
-      fetchModels();
-    }
-  }, [user]);
+  }, []);
 
   return {
-    system_prompt: systemPrompt,
-    models,
     loading,
-    error,
+    fetchModels,
+    fetchSystemPrompt,
+    createProvider,
     createModel,
     updateModel,
     deleteModel,
-    refetch: fetchModels,
   };
 };

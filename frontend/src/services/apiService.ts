@@ -14,15 +14,6 @@ export interface ApiError {
   statusText: string;
 }
 
-export interface AIModel {
-  id: string;
-  name: string;
-  model: string;
-  provider: string;
-  system_prompt: string;
-  temperature: number;
-}
-
 interface PostOptions extends RequestInit {
   noStingify?: boolean;
   isFormData?: boolean;
@@ -106,36 +97,36 @@ export class ApiService {
   }
 
   // Helper function to refresh token
-  private async refreshToken(): Promise<void> {
-    const refreshToken = tokenService.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
+  // private async refreshToken(): Promise<void> {
+  //   const refreshToken = tokenService.getRefreshToken();
+  //   if (!refreshToken) {
+  //     throw new Error('No refresh token available');
+  //   }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/login/refresh-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
+  //   try {
+  //     const response = await fetch(`${API_BASE_URL}/api/login/refresh-token`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ refresh_token: refreshToken }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error('Failed to refresh token');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to refresh token');
+  //     }
 
-      const data = await response.json();
-      tokenService.setToken(data.access_token);
-      if (data.refresh_token) {
-        tokenService.setRefreshToken(data.refresh_token);
-      }
-    } catch (error) {
-      tokenService.removeToken();
-      tokenService.removeRefreshToken();
-      throw error;
-    }
-  }
+  //     const data = await response.json();
+  //     tokenService.setToken(data.access_token);
+  //     if (data.refresh_token) {
+  //       tokenService.setRefreshToken(data.refresh_token);
+  //     }
+  //   } catch (error) {
+  //     tokenService.removeToken();
+  //     tokenService.removeRefreshToken();
+  //     throw error;
+  //   }
+  // }
 
   // Helper function to make request with retry
   private async makeRequest<T>(
@@ -299,10 +290,6 @@ export class ApiService {
     } catch (error) {
       throw error;
     }
-  }
-
-  async getAIModels(): Promise<ApiResponse<AIModel[]>> {
-    return this.get<AIModel[]>('/api/utils/ai-models');
   }
 }
 

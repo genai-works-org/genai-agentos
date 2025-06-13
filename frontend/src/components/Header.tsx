@@ -3,11 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { LogOutIcon } from 'lucide-react';
 import { getThemeColors } from '../utils/themeUtils';
-import { useLogout } from '../hooks/useLogout';
 
 const Header = () => {
-  const { user } = useAuth();
-  const { logout } = useLogout();
+  const { user, logout } = useAuth();
   const { theme } = useTheme();
   const colors = getThemeColors(theme);
 

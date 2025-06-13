@@ -6,7 +6,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getThemeColors } from '../utils/themeUtils';
 import UserAvatar from './UserAvatar';
 import { useAuth } from '../contexts/AuthContext';
-import { useLogout } from '../hooks/useLogout';
 import PageCard from './PageCard';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import ChatList from './ChatList';
@@ -43,8 +42,7 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
   const colors = getThemeColors(theme);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  const { logout } = useLogout();
+  const { user, logout } = useAuth();
   const { clearMessages } = useChatHistory();
 
   // Close user menu when clicking outside

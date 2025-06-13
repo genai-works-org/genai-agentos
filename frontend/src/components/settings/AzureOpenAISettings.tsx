@@ -1,73 +1,49 @@
-import { ChangeEvent, FC, useEffect, useState } from 'react';
+import { ChangeEvent, FC, useState } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Settings } from '../../contexts/SettingsContext';
 import { AIModelGrid } from '../AIModelGrid';
-import { AIModel } from '../../services/apiService';
-import { ModelConfig } from '../../services/modelService';
+import { ModelConfig, AI_PROVIDERS, Config } from '../../types/model';
 
 interface AzureOpenAISettingsProps {
-  settings: Settings;
-  onSettingsChange: (data: Partial<Settings>) => void;
-  availableModels: AIModel[];
+  settings: Config;
+  onSettingsChange: (data: Config) => void;
+  availableModels: ModelConfig[];
   disabledModelCreate: boolean;
   tooltipMessage: string;
-  onModelSelect: (model: AIModel) => void;
   onModelCreate: () => void;
   onModelEdit: (model: ModelConfig) => void;
   onModelDelete: (model: ModelConfig) => void;
 }
 
-export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({ 
+export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
   settings,
   availableModels,
   disabledModelCreate,
   tooltipMessage,
   onSettingsChange,
-  onModelSelect,
   onModelCreate,
   onModelEdit,
-  onModelDelete
+  onModelDelete,
 }) => {
   const [showApiKey, setShowApiKey] = useState(false);
-  const [url, setUrl] = useState<string>(settings.azureOpenAi.endpoint);
-  const [apiKey, setApiKey] = useState<string>(settings.azureOpenAi.api_key);
-  const [version, setVersion] = useState<string>(settings.azureOpenAi.api_version);
-  const [deploymentName, setDeploymentName] = useState<string>(settings.azureOpenAi.deployment_name);
 
-  const handleUrlChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    setUrl(value.trim());
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    onSettingsChange({
+      ...settings,
+      data: { ...settings.data, [name]: value },
+    });
   };
-
-  const handleApiKeyChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {  
-    const { value } = e.target;
-    setApiKey(value.trim());
-  };
-
-  const handleVersionChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { value } = e.target; 
-    setVersion(value.trim());
-  };
-
-  const handleDeploymentNameChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    setDeploymentName(value.trim());
-  };  
-
-  useEffect(() => {
-    onSettingsChange({ azureOpenAi: { endpoint: url, api_key: apiKey, api_version: version, deployment_name: deploymentName } });
-  }, [url, apiKey, version, deploymentName]);
 
   return (
     <>
       <Box>
         <TextField
           fullWidth
-          name="azureEndpoint"
+          name="endpoint"
           label="Endpoint"
-          value={url}
-          onChange={handleUrlChange}
+          value={settings.data.endpoint || ''}
+          onChange={handleChange}
           placeholder="Enter Azure OpenAI endpoint"
         />
       </Box>
@@ -75,11 +51,11 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
       <Box>
         <TextField
           fullWidth
-          type={showApiKey ? "text" : "password"}
-          name="azureApiKey"
+          type={showApiKey ? 'text' : 'password'}
+          name="api_key"
           label="API Key"
-          value={apiKey}
-          onChange={handleApiKeyChange}
+          value={settings.data.api_key || ''}
+          onChange={handleChange}
           placeholder="Enter Azure OpenAI API key"
           InputProps={{
             endAdornment: (
@@ -100,10 +76,10 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
       <Box>
         <TextField
           fullWidth
-          name="azureApiVersion"
+          name="api_version"
           label="API Version"
-          value={version}
-          onChange={handleVersionChange}
+          value={settings.data.api_version || ''}
+          onChange={handleChange}
           placeholder="Enter Azure OpenAI API version"
         />
       </Box>
@@ -111,10 +87,10 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
       <Box>
         <TextField
           fullWidth
-          name="azureDeploymentName"
+          name="deployment_name"
           label="Deployment Name"
-          value={deploymentName}
-          onChange={handleDeploymentNameChange}
+          value={settings.data.deployment_name || ''}
+          onChange={handleChange}
           placeholder="Enter Azure OpenAI deployment name"
         />
       </Box>
@@ -125,15 +101,14 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
         </label>
         <AIModelGrid
           models={availableModels}
-          selectedModel={settings.model}
-          onModelSelect={onModelSelect}
           onModelCreate={onModelCreate}
           onModelEdit={onModelEdit}
           onModelDelete={onModelDelete}
           disabledModelCreate={disabledModelCreate}
           tooltipMessage={tooltipMessage}
+          provider={AI_PROVIDERS.AZURE_OPENAI}
         />
       </Box>
     </>
   );
-}; 
+};

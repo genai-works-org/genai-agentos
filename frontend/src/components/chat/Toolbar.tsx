@@ -27,21 +27,21 @@ const Toolbar: FC<ToolbarProps> = ({
   hasContent,
   onSubmit,
 }) => {
-  const { settings, availableModels, updateSettings } = useSettings();
+  const { activeModel, availableModels, setActiveModel } = useSettings();
   const isModelAvailable = availableModels.length > 0;
-  const isModelSelected = Boolean(settings.model?.id);
+  const isModelSelected = Boolean(activeModel);
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
     if (value) {
       const model = availableModels.find(model => model.id === value);
-      updateSettings({ model });
+      setActiveModel(model || null);
     }
   };
 
   useEffect(() => {
     if (!isModelSelected && isModelAvailable) {
-      updateSettings({ model: availableModels[0] });
+      setActiveModel(availableModels[0]);
     }
   }, []);
 
@@ -66,7 +66,7 @@ const Toolbar: FC<ToolbarProps> = ({
             <InputLabel id="model-select-label">Model</InputLabel>
             <Select
               labelId="model-select-label"
-              value={settings.model?.id || ''}
+              value={activeModel?.id || ''}
               label="Model"
               onChange={handleSelectChange}
               autoWidth

@@ -35,7 +35,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id }) => {
   const [sessionId, setSessionId] = useState<string>('');
   const [requestId, setRequestId] = useState<string>('');
   const { messages, addMessage, setMessages } = useChatHistory();
-  const { settings } = useSettings();
+  const { activeModel, activeProvider } = useSettings();
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; type: string; size: number }>
   >({});
@@ -103,7 +103,8 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id }) => {
 
     const messageToSend = {
       message: content,
-      llm_name: settings.model?.name,
+      llm_name: activeModel?.name,
+      provider: activeProvider,
       ...(files && { files: files }),
     };
 

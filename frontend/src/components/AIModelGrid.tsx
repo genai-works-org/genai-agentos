@@ -1,48 +1,38 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { AIModel } from '../services/apiService';
 import { AIModelCard } from './AIModelCard';
 import { AIModelCreateCard } from './AIModelCreateCard';
-import { ModelConfig } from '../services/modelService';
+import { ModelConfig } from '../types/model';
+import { useSettings } from '../contexts/SettingsContext';
 
 interface AIModelGridProps {
-  models: AIModel[];
+  models: ModelConfig[];
   disabledModelCreate: boolean;
   tooltipMessage: string;
-  selectedModel: AIModel | null;
-  onModelSelect: (model: AIModel) => void;
+  provider: string;
   onModelCreate: () => void;
   onModelEdit: (model: ModelConfig) => void;
   onModelDelete: (model: ModelConfig) => void;
 }
 
 export const AIModelGrid: FC<AIModelGridProps> = ({
-  models = [
-    {
-      id: 'create',
-      name: 'Create New Model',
-      provider: 'Create New Model',
-      model: 'GRP',
-      system_prompt: 'Do this and that',
-      temperature: 0.5,
-    },
-  ],
+  models,
   disabledModelCreate,
   tooltipMessage,
-  selectedModel,
-  onModelSelect,
-  onModelCreate = () => {},
+  provider,
+  onModelCreate,
   onModelEdit,
   onModelDelete,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { activeModel } = useSettings();
 
   const modelsPerRow = 4; // Number of models to show in the first row
 
   // Sort models: selected model first, then alphabetically
   const sortedModels = [...models].sort((a, b) => {
-    if (a.name === selectedModel?.name) return -1;
-    if (b.name === selectedModel?.name) return 1;
+    if (a.name === activeModel?.name) return -1;
+    if (b.name === activeModel?.name) return 1;
     return a.name.localeCompare(b.name);
   });
 
@@ -53,22 +43,20 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {onModelCreate && (
-          <AIModelCreateCard
-            onClick={onModelCreate}
-            disabled={disabledModelCreate}
-            tooltipMessage={tooltipMessage}
-          />
-        )}
+        <AIModelCreateCard
+          onClick={onModelCreate}
+          disabled={disabledModelCreate}
+          tooltipMessage={tooltipMessage}
+        />
         {displayedModels.length > 0 &&
           displayedModels.map(model => (
             <AIModelCard
-              key={model.id || model.name}
+              key={model.id}
               modelData={model}
-              isSelected={model.id === selectedModel?.id}
-              onSelect={onModelSelect}
+              isSelected={model.id === activeModel?.id}
               onEdit={() => onModelEdit(model as ModelConfig)}
               onDelete={() => onModelDelete(model as ModelConfig)}
+              provider={provider}
             />
           ))}
       </div>

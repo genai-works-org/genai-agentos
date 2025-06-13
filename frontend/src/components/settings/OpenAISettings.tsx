@@ -2,18 +2,15 @@ import { useState } from 'react';
 import type { ChangeEvent, FC } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { Settings } from '../../contexts/SettingsContext';
 import { AIModelGrid } from '../AIModelGrid';
-import { AIModel } from '../../services/apiService';
-import { ModelConfig } from '../../services/modelService';
+import { AI_PROVIDERS, ModelConfig, Config } from '../../types/model';
 
 interface OpenAISettingsProps {
-  settings: Settings;
-  onSettingsChange: (data: Partial<Settings>) => void;
-  availableModels: AIModel[];
+  settings: Config;
+  onSettingsChange: (data: Config) => void;
+  availableModels: ModelConfig[];
   disabledModelCreate: boolean;
   tooltipMessage: string;
-  onModelSelect: (model: AIModel) => void;
   onModelCreate: () => void;
   onModelEdit: (model: ModelConfig) => void;
   onModelDelete: (model: ModelConfig) => void;
@@ -25,17 +22,17 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
   disabledModelCreate,
   tooltipMessage,
   onSettingsChange,
-  onModelSelect,
   onModelCreate,
   onModelEdit,
   onModelDelete,
 }) => {
   const [showApiKey, setShowApiKey] = useState(false);
-  const handleApiKeyChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { value } = e.target;
-    onSettingsChange({ openAi: { api_key: value.trim() } });
+
+  const handleApiKeyChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onSettingsChange({
+      ...settings,
+      data: { ...settings.data, api_key: e.target.value },
+    });
   };
 
   return (
@@ -44,9 +41,9 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
         <TextField
           fullWidth
           type={showApiKey ? 'text' : 'password'}
-          name="openaiApiKey"
+          name="api_key"
           label="API Key"
-          value={settings.openAi.api_key || ''}
+          value={settings.data.api_key || ''}
           onChange={handleApiKeyChange}
           placeholder="Enter OpenAI API key"
           InputProps={{
@@ -70,14 +67,13 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
           Available Models
         </label>
         <AIModelGrid
-          selectedModel={settings.model}
           models={availableModels}
-          onModelSelect={onModelSelect}
           onModelCreate={onModelCreate}
           onModelEdit={onModelEdit}
           onModelDelete={onModelDelete}
           disabledModelCreate={disabledModelCreate}
           tooltipMessage={tooltipMessage}
+          provider={AI_PROVIDERS.OPENAI}
         />
       </Box>
     </>

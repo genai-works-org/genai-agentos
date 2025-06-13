@@ -11,21 +11,23 @@ import {
   Button,
   Alert,
   Stack,
-  SelectChangeEvent,
   Slider,
   Input,
   DialogContent,
 } from '@mui/material';
-import { AI_PROVIDERS } from '../pages/SettingsPage';
-import { ModelConfig } from '../services/modelService';
-import { Settings } from '../contexts/SettingsContext';
+import {
+  AI_PROVIDERS,
+  ModelConfig,
+  Config,
+  CreateModelBody,
+} from '../types/model';
 
 interface ModelFormProps {
-  settings: Settings;
+  settings: Config;
   initialData: ModelConfig | null;
-  availableModels: Array<{ name: string; provider: string }>;
-  onSave: (data: any) => void;
+  onSave: (data: CreateModelBody) => void;
   onCancel: () => void;
+  systemPrompt: string;
   isLoading?: boolean;
 }
 
@@ -34,80 +36,37 @@ export const ModelForm: FC<ModelFormProps> = ({
   initialData,
   onSave,
   onCancel,
-  isLoading = false,
+  isLoading,
+  systemPrompt,
 }) => {
   const initialModel =
-    initialData?.model || settings.ai_provider === 'openai' ? 'gpt-4o' : '';
+    initialData?.model || settings.provider === AI_PROVIDERS.OPENAI
+      ? 'gpt-4o'
+      : '';
 
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     model: initialModel,
-    provider: initialData?.provider || settings.ai_provider,
-    system_prompt: initialData?.system_prompt || settings?.system_prompt || '',
+    provider: settings.provider,
+    system_prompt: initialData?.system_prompt || systemPrompt,
     temperature: initialData?.temperature ?? 0.7,
+    max_last_messages: initialData?.max_last_messages ?? 5,
   });
 
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent,
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const getCredentialsForProvider = () => {
-    switch (formData.provider) {
-      case AI_PROVIDERS.OPENAI:
-        return {
-          api_key: settings.openAi.api_key,
-        };
-      case AI_PROVIDERS.AZURE_OPENAI:
-        return {
-          endpoint: settings.azureOpenAi.endpoint,
-          api_key: settings.azureOpenAi.api_key,
-          api_version: settings.azureOpenAi.api_version,
-          deployment_name: settings.azureOpenAi.deployment_name,
-        };
-      case AI_PROVIDERS.OLLAMA:
-        return {
-          base_url: settings.ollama.base_url,
-        };
-      default:
-        return {};
-    }
-  };
-
   const validateRequiredFields = () => {
     if (!formData.name || !formData.model || !formData.provider) {
       return 'Please fill in all required fields';
-    }
-
-    // Check provider-specific required fields
-    switch (formData.provider) {
-      case AI_PROVIDERS.OPENAI:
-        if (!settings.openAi.api_key) {
-          return 'OpenAI API Key is required';
-        }
-        break;
-      case AI_PROVIDERS.AZURE_OPENAI:
-        if (
-          !settings.azureOpenAi.endpoint ||
-          !settings.azureOpenAi.api_key ||
-          !settings.azureOpenAi.api_version ||
-          !settings.azureOpenAi.deployment_name
-        ) {
-          return 'All Azure OpenAI credentials are required';
-        }
-        break;
-      case AI_PROVIDERS.OLLAMA:
-        if (!settings.ollama.base_url) {
-          return 'Ollama Base URL is required';
-        }
-        break;
     }
 
     return null;
@@ -118,6 +77,7 @@ export const ModelForm: FC<ModelFormProps> = ({
     setError(null);
 
     const validationError = validateRequiredFields();
+
     if (validationError) {
       setError(validationError);
       return;
@@ -129,7 +89,9 @@ export const ModelForm: FC<ModelFormProps> = ({
       provider: formData.provider.trim(),
       system_prompt: formData.system_prompt.trim(),
       temperature: formData.temperature,
-      credentials: getCredentialsForProvider(),
+      max_last_messages: Number(formData.max_last_messages),
+      user_prompt: '',
+      credentials: {},
       id: initialData?.id,
     });
   };
@@ -246,6 +208,17 @@ export const ModelForm: FC<ModelFormProps> = ({
               />
             </Box>
 
+            <TextField
+              fullWidth
+              type="number"
+              name="max_last_messages"
+              label="Message context window"
+              value={formData.max_last_messages}
+              onChange={handleChange}
+              placeholder="Enter message deepness"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+            />
+
             <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
               <Button variant="outlined" onClick={onCancel} fullWidth>
                 Cancel
@@ -256,7 +229,7 @@ export const ModelForm: FC<ModelFormProps> = ({
                 disabled={isLoading || !formData.name || !formData.model}
                 fullWidth
               >
-                Add model
+                {isLoading ? 'Saving...' : 'Save'}
               </Button>
             </Box>
           </Stack>

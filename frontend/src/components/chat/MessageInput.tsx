@@ -22,13 +22,12 @@ const MessageInput: FC<MessageInputProps> = ({
   onSubmit,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { settings } = useSettings();
-  const isModelSelected = Boolean(settings.model);
+  const { activeModel } = useSettings();
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      isModelSelected && onSubmit(e);
+      Boolean(activeModel) && onSubmit(e);
     }
   };
 
@@ -44,9 +43,7 @@ const MessageInput: FC<MessageInputProps> = ({
     <div className="p-3">
       {showPreview ? (
         <div className="prose prose-sm max-w-none dark:prose-invert p-2 min-h-[100px] border rounded">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message}
-          </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message}</ReactMarkdown>
         </div>
       ) : (
         <textarea
@@ -64,4 +61,4 @@ const MessageInput: FC<MessageInputProps> = ({
   );
 };
 
-export default MessageInput; 
+export default MessageInput;
