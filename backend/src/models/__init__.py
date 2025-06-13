@@ -102,6 +102,9 @@ class User(Base):
         back_populates="creator",
     )
 
+    model_providers: Mapped[List["ModelProvider"]] = relationship(
+        back_populates="creator",
+    )
     model_configs: Mapped[List["ModelConfig"]] = relationship(
         back_populates="creator",
     )
@@ -235,18 +238,39 @@ class File(Base):
     from_agent: Mapped[bool]
 
 
+class ModelProvider(Base):
+    id: Mapped[uuid_pk]
+    name: Mapped[str] = mapped_column(unique=True)
+    api_key: Mapped[str]  # encrypted in pydantic models
+
+    configs: Mapped[List["ModelConfig"]] = relationship(  # noqa: F821
+        back_populates="provider",
+    )
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    creator: Mapped["User"] = relationship(back_populates="model_providers")
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+
 class ModelConfig(Base):
     id: Mapped[uuid_pk]
     name: Mapped[str] = mapped_column(unique=True)
     model: Mapped[str] = mapped_column(nullable=False, index=True)
-    provider: Mapped[str] = mapped_column(nullable=False, index=True)
+
+    provider_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("modelproviders.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    provider: Mapped["ModelProvider"] = relationship(back_populates="configs")  # noqa: F821
 
     system_prompt: Mapped[str]
-    user_prompt: Mapped[str]
+    user_prompt: Mapped[str] = mapped_column(nullable=True)
     max_last_messages: Mapped[int] = mapped_column(default=5, nullable=False)
     temperature: Mapped[float] = mapped_column(default=0.7)
 
-    credentials: Mapped[not_null_json_column]  # api_key must be hashed
+    credentials: Mapped[not_null_json_column]
 
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
@@ -296,6 +320,9 @@ class MCPTool(Base):
     mcp_server_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("mcpservers.id", ondelete="CASCADE"), nullable=True, index=True
     )
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
 
 class A2ACard(Base):

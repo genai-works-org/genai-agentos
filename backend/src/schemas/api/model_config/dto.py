@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
-from src.schemas.api.model_config.schemas import ModelConfigBase
+from src.schemas.api.model_config.schemas import ModelConfigBase, ModelProviderBase
 from src.schemas.base import BaseUUIDToStrModel
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
@@ -27,3 +27,8 @@ class ModelPromptDTO(BaseModel):
         if not v:
             return DEFAULT_SYSTEM_PROMPT
         return v
+
+
+class ModelProviderDTO(ModelProviderBase):
+    name: str
+    configs: list[ModelConfigDTO]

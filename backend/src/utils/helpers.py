@@ -31,14 +31,23 @@ def get_user_id_from_jwt(token: str) -> Optional[str]:
     return token_data.sub
 
 
-def mcp_tool_to_json_schema(tool: Tool | MCPToolDTO) -> dict:
+def mcp_tool_to_json_schema(
+    tool: Tool | MCPToolDTO, aliased_title: Optional[str] = None
+) -> dict:
     tool_dict = tool.model_dump(exclude_none=True)
 
     if tool_dict.get("annotations"):
         tool_dict.pop("annotations")
 
     tool_dict.update(tool_dict.pop("inputSchema"))
-    tool_dict["title"] = generate_alias(tool_dict.pop("name").replace(" ", "_"))
+    if aliased_title:
+        tool_dict.pop("name")
+
+    tool_dict["title"] = (
+        aliased_title
+        if aliased_title
+        else generate_alias(tool_dict.pop("name").replace(" ", "_"))
+    )
 
     if not tool_dict.get("properties", {}):
         tool_dict["required"] = []

@@ -15,10 +15,10 @@ from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigU
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
-utils_router = APIRouter(prefix="/llm", tags=["LLM"])
+llm_router = APIRouter(prefix="/llm", tags=["LLM"])
 
 
-@utils_router.get("/model/configs", response_model=list[ModelConfigDTO])
+@llm_router.get("/model/configs", response_model=list[ModelConfigDTO])
 async def list_model_configs(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -30,7 +30,7 @@ async def list_model_configs(
     )
 
 
-@utils_router.get("/model/config/{model_config_id}", response_model=ModelConfigDTO)
+@llm_router.get("/model/config/{model_config_id}", response_model=ModelConfigDTO)
 async def get_model_config(
     db: AsyncDBSession, user_model: CurrentUserDependency, model_config_id: UUID
 ):
@@ -39,7 +39,9 @@ async def get_model_config(
     )
 
 
-@utils_router.post("/model/config", response_model=ModelConfigDTO)
+@llm_router.post(
+    "/model/config",
+)
 async def add_model_config(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -62,7 +64,7 @@ async def add_model_config(
         )
 
 
-@utils_router.patch("/model/config/{model_config_id}", response_model=ModelConfigDTO)
+@llm_router.patch("/model/config/{model_config_id}", response_model=ModelConfigDTO)
 async def update_model_config(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -74,7 +76,7 @@ async def update_model_config(
     )
 
 
-@utils_router.delete("/model/config/{model_config_id}")
+@llm_router.delete("/model/config/{model_config_id}")
 async def delete_model_config(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -87,7 +89,7 @@ async def delete_model_config(
         return Response(status_code=204)
 
 
-@utils_router.get("/model/prompt", response_model=ModelPromptDTO)
+@llm_router.get("/model/prompt", response_model=ModelPromptDTO)
 async def get_model_prompt(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,

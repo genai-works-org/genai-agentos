@@ -86,6 +86,7 @@ class LLMPropertiesDTO(BaseModel):
 
 class IncomingFrontendMessage(BaseModel):
     message: str
+    provider: str
     llm_name: str
     files: Optional[List[str]] = []
 

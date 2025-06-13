@@ -5,19 +5,21 @@ from src.schemas.base import BaseUUIDToStrModel
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
 
+class ModelProviderBase(BaseModel):
+    api_key: str
+
+
 class ModelConfigBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
     name: str
     model: str
-    provider: str
-
     system_prompt: Optional[str] = None
     temperature: Optional[float] = Field(default=0.7)
 
     credentials: Optional[dict] = {}
 
 
-class ModelConfigCreate(ModelConfigBase):
+class ModelConfigExtras(ModelConfigBase):
     system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT)
     user_prompt: Optional[str] = ""
     max_last_messages: Optional[int] = Field(default=5)
@@ -36,14 +38,19 @@ class ModelConfigCreate(ModelConfigBase):
 
     @field_validator("max_last_messages")
     def validate_int_range(cls, v: int):
-        if v >= 0 and v <= 20:
+        if 0 <= v <= 20:
             return v
 
         raise ValueError("'max_last_messages' value must be 0 ≤ max_last_messages ≤ 20")
 
 
-class ModelConfigUpdate(ModelConfigCreate):
-    pass
+class ModelConfigCreate(ModelConfigExtras, ModelProviderBase):
+    provider: str
+
+
+class ModelConfigUpdate(ModelConfigExtras):
+    name: Optional[str] = None
+    model: Optional[str] = None
 
 
 class ModelConfigDelete(BaseUUIDToStrModel):
