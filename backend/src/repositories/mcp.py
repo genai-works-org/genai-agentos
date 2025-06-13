@@ -92,13 +92,36 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     async def update_mcp_server_with_tools(
         self, db: AsyncSession, db_obj: MCPServer, obj_in: MCPServerData
     ):
-        await db.execute(delete(MCPTool).where(MCPTool.mcp_server_id == db_obj.id))
-        tools = obj_in.mcp_tools
+        tools_in = obj_in.mcp_tools
+        tool_names = [t.name for t in tools_in]
 
-        for t in tools:
+        q = await db.scalars(
+            select(MCPTool)
+            .where(
+                and_(MCPTool.name.in_(tool_names), MCPTool.mcp_server_id == db_obj.id)
+            )
+            .order_by(MCPTool.created_at.desc())
+        )
+
+        orm_tools = q.all()
+        tool_alias_container = {}
+
+        for t in orm_tools:
+            for tool in tools_in:
+                if t.name == tool.name:
+                    # mcp tools have unique names - no possible hash collisions
+                    tool_alias_container[t.name] = t.alias
+
+        await db.execute(
+            delete(MCPTool).where(
+                and_(MCPTool.name.in_(tool_names), MCPTool.mcp_server_id == db_obj.id)
+            )
+        )
+
+        for t in tools_in:
             tool = MCPTool(
                 **t.model_dump(mode="json"),
-                alias=generate_alias(t.name),
+                alias=tool_alias_container[t.name],
                 mcp_server_id=db_obj.id,
             )
             db.add(tool)
@@ -185,6 +208,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             for tool in mcp_server.mcp_tools:
                 tool_in = MCPTool(
                     name=tool.name,
+                    alias=generate_alias(tool.name),
                     description=tool.description,
                     inputSchema=tool.inputSchema,
                     annotations=tool.annotations.model_dump(mode="json")
@@ -200,7 +224,9 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             for tool in tools:
                 await db.refresh(tool)
             tools_to_dto = [MCPToolDTO(**t.__dict__) for t in tools]
-            tools_json_schema_dto = [mcp_tool_to_json_schema(t) for t in tools_to_dto]
+            tools_json_schema_dto = [
+                mcp_tool_to_json_schema(t, aliased_title=t.alias) for t in tools_to_dto
+            ]
             return MCPServerDTO(
                 server_url=mcp_in.server_url,
                 mcp_tools=tools_json_schema_dto,
