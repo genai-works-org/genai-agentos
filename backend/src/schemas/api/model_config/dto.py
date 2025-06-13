@@ -30,5 +30,5 @@ class ModelPromptDTO(BaseModel):
 
 
 class ModelProviderDTO(ModelProviderBase):
-    name: str
+    provider: str
     configs: list[ModelConfigDTO]

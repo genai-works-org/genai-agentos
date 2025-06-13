@@ -9,7 +9,11 @@ from src.auth.encrypt import encrypt_secret
 from src.models import ModelConfig, ModelProvider, User
 from src.repositories.base import CRUDBase
 from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
-from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
+from src.schemas.api.model_config.schemas import (
+    ModelConfigCreate,
+    ModelConfigUpdate,
+    ProviderCRUDUpdate,
+)
 
 
 class ModelConfigRepository(
@@ -91,7 +95,7 @@ class ModelConfigRepository(
         if not existing_provider:
             encrypted_api_key = encrypt_secret(obj_in.api_key)
             provider = ModelProvider(
-                name=obj_in.name, api_key=encrypted_api_key, creator_id=user_id
+                name=obj_in.provider, api_key=encrypted_api_key, creator_id=user_id
             )
             db.add(provider)
             await db.commit()
@@ -138,7 +142,7 @@ class ModelConfigRepository(
         )
         return [
             ModelProviderDTO(
-                name=p.name,
+                provider=p.name,
                 api_key=p.api_key,
                 configs=[
                     ModelConfigDTO(
@@ -233,6 +237,50 @@ class ModelConfigRepository(
             )
         )
         return p
+
+    async def get_all_configs_of_all_providers(
+        self, db: AsyncSession, user_model: User, limit: int, offset: int
+    ):
+        q = await db.scalars(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .where(
+                and_(
+                    ModelProvider.creator_id == user_model.id,
+                )
+            )
+            .order_by(ModelProvider.created_at.desc())
+            .limit(limit=limit)
+            .offset(offset=offset)
+        )
+        return [
+            ModelProviderDTO(
+                provider=p.name,
+                api_key=p.api_key,
+                configs=[
+                    ModelConfigDTO(
+                        id=c.id,
+                        name=c.name,
+                        model=c.model,
+                        system_prompt=c.system_prompt,
+                        temperature=c.temperature,
+                        credentials=c.credentials,
+                        user_prompt=c.user_prompt,
+                        max_last_messages=c.max_last_messages,
+                    )
+                    for c in p.configs
+                ],
+            )
+            for p in q.all()
+        ]
+
+    async def update_provider(
+        self,
+        db: AsyncSession,
+        provider_obj: ModelProvider,
+        upd_in: ProviderCRUDUpdate,
+    ):
+        return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in)
 
 
 model_config_repo = ModelConfigRepository(ModelConfig)

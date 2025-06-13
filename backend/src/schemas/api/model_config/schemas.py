@@ -1,6 +1,7 @@
 from typing import Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from src.auth.encrypt import encrypt_secret
 from src.schemas.base import BaseUUIDToStrModel
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
@@ -55,3 +56,14 @@ class ModelConfigUpdate(ModelConfigExtras):
 
 class ModelConfigDelete(BaseUUIDToStrModel):
     pass
+
+
+class ProviderCRUDUpdate(BaseModel):
+    # provider: Optional[str] = None
+    api_key: Optional[str] = None
+
+    @field_validator("api_key")
+    def encrypt_key(cls, v: str):
+        if isinstance(v, str):
+            return encrypt_secret(v)
+        return v

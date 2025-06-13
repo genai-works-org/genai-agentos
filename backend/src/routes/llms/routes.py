@@ -11,21 +11,25 @@ from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.model_config import model_config_repo
 from src.schemas.api.model_config.dto import ModelConfigDTO, ModelPromptDTO
-from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
+from src.schemas.api.model_config.schemas import (
+    ModelConfigCreate,
+    ModelConfigUpdate,
+    ProviderCRUDUpdate,
+)
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 llm_router = APIRouter(prefix="/llm", tags=["LLM"])
 
 
-@llm_router.get("/model/configs", response_model=list[ModelConfigDTO])
+@llm_router.get("/model/configs")
 async def list_model_configs(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
     limit: int = 100,
     offset: int = 0,
 ):
-    return await model_config_repo.get_multiple_by_user(
+    return await model_config_repo.get_all_configs_of_all_providers(
         db=db, user_model=user_model, limit=limit, offset=offset
     )
 
@@ -39,9 +43,7 @@ async def get_model_config(
     )
 
 
-@llm_router.post(
-    "/model/config",
-)
+@llm_router.post("/model/config")
 async def add_model_config(
     db: AsyncDBSession,
     user_model: CurrentUserDependency,
@@ -73,6 +75,26 @@ async def update_model_config(
 ):
     return await model_config_repo.update_model_config_with_encryption(
         db=db, id_=model_config_id, user_model=user_model, obj_in=model_config_in
+    )
+
+
+@llm_router.patch("/model/providers/{provider_name}")
+async def update_provider(
+    db: AsyncDBSession,
+    user_model: CurrentUserDependency,
+    provider_name: str,
+    provider_upd_in: ProviderCRUDUpdate,
+):
+    provider = await model_config_repo.get_provider_by_name(
+        db=db, provider_name=provider_name, user_model=user_model
+    )
+    if not provider:
+        raise HTTPException(
+            detail=f"Provider named '{provider_name}' does not exist", status_code=400
+        )
+
+    return await model_config_repo.update_provider(
+        db=db, provider_obj=provider, upd_in=provider_upd_in
     )
 
 
