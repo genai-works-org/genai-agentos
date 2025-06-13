@@ -109,7 +109,7 @@ async def update_provider(
     provider_upd_in: ProviderCRUDUpdate,
 ):
     provider = await model_config_repo.get_provider_by_name(
-        db=db, provider_name=provider_name, user_model=user_model
+        db=db, provider_name=provider_name, user_id=user_model.id
     )
     if not provider:
         raise HTTPException(

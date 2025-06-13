@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
-from src.auth.encrypt import encrypt_secret
 from src.models import ModelConfig, ModelProvider, User
 from src.repositories.base import CRUDBase
 from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
@@ -100,29 +99,6 @@ class ModelConfigRepository(
 
         return model_config.credentials.get("api_key")
 
-    async def add_provider(
-        self, db: AsyncSession, obj_in: ModelConfigCreate, user_id: UUID
-    ) -> ModelProvider:
-        existing_provider = await db.scalar(
-            select(ModelProvider).where(
-                and_(
-                    ModelProvider.name == obj_in.provider,
-                    ModelProvider.creator_id == user_id,
-                )
-            )
-        )
-        if not existing_provider:
-            encrypted_api_key = encrypt_secret(obj_in.api_key)
-            provider = ModelProvider(
-                name=obj_in.provider, api_key=encrypted_api_key, creator_id=user_id
-            )
-            db.add(provider)
-            await db.commit()
-            await db.refresh(provider)
-            return provider
-
-        return existing_provider
-
     async def create_model_config(
         self,
         db: AsyncSession,
@@ -175,7 +151,7 @@ class ModelConfigRepository(
                         max_last_messages=c.max_last_messages,
                     )
                     for c in p.configs
-                ],
+                ][::-1],  # desc sort, TODO: rework
             )
             for p in q.all()
         ]
@@ -204,11 +180,17 @@ class ModelConfigRepository(
         user_model: User,
     ) -> ModelConfig:
         user_id = user_model.id
-        provider = await self.add_provider(db=db, obj_in=obj_in, user_id=user_id)
+        provider = await self.get_provider_by_name(
+            db=db, provider_name=obj_in.provider, user_id=user_id
+        )
+        if not provider:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Provider named {obj_in.provider} does not exist",
+            )
         await self.create_model_config(
             db=db, obj_in=obj_in, user_id=user_id, provider_id=provider.id
         )
-
         await db.refresh(provider)
         dto = await self.get_all_provider_configs(
             db=db, provider_name=provider.name, user_id=user_id
@@ -230,13 +212,13 @@ class ModelConfigRepository(
         )
 
     async def get_provider_by_name(
-        self, db: AsyncSession, provider_name: str, user_model: User
+        self, db: AsyncSession, provider_name: str, user_id: UUID
     ) -> ModelProvider:
         p = await db.scalar(
             select(ModelProvider).where(
                 and_(
                     ModelProvider.name == provider_name,
-                    ModelProvider.creator_id == user_model.id,
+                    ModelProvider.creator_id == user_id,
                 )
             )
         )
