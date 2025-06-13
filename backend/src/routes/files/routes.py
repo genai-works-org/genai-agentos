@@ -1,27 +1,30 @@
-import shutil
-from typing import Optional
-import uuid
 import logging
-
+import shutil
+import uuid
 from pathlib import Path
+from typing import Annotated, Optional
+
 from fastapi import (
-    UploadFile,
+    APIRouter,
     File,
     Form,
+    Header,
     HTTPException,
-    APIRouter,
+    Query,
+    UploadFile,
     status,
 )
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
-from src.utils.validation_error_handler import validation_exception_handler
 from src.auth.dependencies import CurrentUserByAgentOrUserTokenDependency
-from src.schemas.api.files.dto import FileIdDTO, FileDTO
 from src.core.settings import get_settings
-from src.repositories.files import files_repo
-from src.schemas.api.files.schemas import FileCreate
 from src.db.session import AsyncDBSession
+from src.repositories.files import files_repo
+from src.schemas.api.files.dto import FileDTO, FileIdDTO
+from src.schemas.api.files.schemas import FileCreate
 from src.utils.constants import FILES_DIR
+from src.utils.helpers import get_user_id_from_jwt
+from src.utils.validation_error_handler import validation_exception_handler
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -119,6 +122,48 @@ async def upload_file(
         )
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=validation_exception_handler(e))
+
+
+@files_router.get("/files")
+async def list_all_files_by_session_request_id(
+    db: AsyncDBSession,
+    user_id: Optional[uuid.UUID] = Query(None),
+    authorization: Annotated[Optional[str], Header()] = None,
+    x_api_key: Annotated[Optional[str], Header(convert_underscores=True)] = None,
+    session_id: uuid.UUID = Query(),
+    request_id: uuid.UUID = Query(),
+):
+    if not any((user_id, authorization)):
+        raise HTTPException(
+            status_code=400,
+            detail="You must provide either 'user_id' or your jwt token to continue.",
+        )
+
+    if all((authorization, x_api_key, user_id)):
+        raise HTTPException(
+            status_code=400,
+            detail="You must provide either 'user_id' or your jwt token, but not both at the same time.",
+        )
+
+    if all((authorization, user_id)):
+        raise HTTPException(
+            status_code=400,
+            detail="Lookup by user_id is not allowed for plain authenticated users.",
+        )
+
+    if not user_id and not authorization:
+        if not x_api_key == settings.MASTER_BE_API_KEY:
+            raise HTTPException(
+                detail="You must provide x-api-key header if user_id query parameter is provided.",
+                status_code=401,
+            )
+        user_id = get_user_id_from_jwt(token=authorization.split(" ")[-1])
+
+    if authorization:
+        user_id = get_user_id_from_jwt(token=authorization.split(" ")[-1])
+    return await files_repo.get_files_by_session_request_id(
+        db=db, session_id=session_id, request_id=request_id
+    )
 
 
 @files_router.get("/user/files/metadata")

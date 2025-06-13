@@ -1,14 +1,16 @@
-from typing import List, Optional
-from sqlalchemy import select, and_
-from src.utils.enums import FileValidationOutputChoice
-from src.models import File, User
-from src.schemas.api.files.schemas import FileCreate, FileUpdate
-from src.schemas.api.files.dto import FileDTO, FilePathDTO
-from src.repositories.base import CRUDBase
-from src.utils.constants import FILES_DIR
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException, status
 import pathlib
+from typing import List, Optional
+from uuid import UUID
+
+from fastapi import HTTPException, status
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.models import File, User
+from src.repositories.base import CRUDBase
+from src.schemas.api.files.dto import FileDTO, FilePathDTO, ShortFileDTO
+from src.schemas.api.files.schemas import FileCreate, FileUpdate
+from src.utils.constants import FILES_DIR
+from src.utils.enums import FileValidationOutputChoice
 
 
 class FilesRepository(CRUDBase[File, FileCreate, FileUpdate]):
@@ -171,6 +173,22 @@ class FilesRepository(CRUDBase[File, FileCreate, FileUpdate]):
         )
 
         return [FileDTO(**file.__dict__) for file in results]
+
+    async def get_files_by_session_request_id(
+        self, db: AsyncSession, session_id: UUID, request_id: UUID
+    ):
+        files = await db.scalars(
+            select(self.model).where(
+                and_(
+                    self.model.session_id == session_id,
+                    self.model.request_id == request_id,
+                )
+            )
+        )
+        return [
+            ShortFileDTO(file_id=f.id, session_id=f.session_id, request_id=f.request_id)
+            for f in files
+        ]
 
 
 files_repo = FilesRepository(File)
