@@ -1,5 +1,5 @@
 import copy
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import and_, select
@@ -107,7 +107,11 @@ class ChatRepository(
         return q.scalars().first()
 
     async def create_chat_by_session_id(
-        self, db: AsyncSession, user_model: User, session_id: UUID
+        self,
+        db: AsyncSession,
+        user_model: User,
+        session_id: UUID,
+        initial_user_message: str,
     ) -> ChatConversation:
         """
         Method to create chat by session_id
@@ -116,7 +120,7 @@ class ChatRepository(
         LLM sumarization of the initial message would be inserted into the title of the conversation
         """
         chat = ChatConversation(
-            title=f"chat_{str(uuid4())}",
+            title=initial_user_message,
             creator_id=user_model.id,
             session_id=session_id,
         )
