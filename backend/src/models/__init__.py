@@ -159,6 +159,7 @@ class AgentWorkflow(Base):
     )
     creator: Mapped["User"] = relationship(back_populates="workflows")  # noqa: F821
 
+    is_active: Mapped[bool]
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 

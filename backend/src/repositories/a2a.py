@@ -6,7 +6,7 @@ from uuid import UUID
 from aiohttp import ClientSession
 from fastapi import HTTPException
 from pydantic import AnyHttpUrl
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import A2ACard, User
@@ -215,6 +215,15 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             updated_at=updated_at,
             is_active=True,
         )
+
+    async def set_as_inactive(self, db: AsyncSession, server_url: str):
+        await db.execute(
+            update(self.model)
+            .where(self.model.server_url == server_url)
+            .values({"is_active": False})
+        )
+        await db.commit()
+        logger.info(f"Set {server_url} as inactive")
 
 
 a2a_repo = A2ARepository(A2ACard)

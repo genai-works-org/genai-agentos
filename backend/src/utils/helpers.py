@@ -7,10 +7,10 @@ from uuid import UUID
 
 from mcp.types import Tool
 from pydantic import AnyHttpUrl
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from src.auth.jwt import TokenLifespanType, validate_token
-from src.db.session import async_session
-from src.models import A2ACard, Agent, MCPServer, MCPTool
+from src.db.session import AsyncDBSession, async_session
+from src.models import A2ACard, Agent, AgentWorkflow, MCPServer, MCPTool
 from src.schemas.api.agent.dto import MLAgentJWTDTO
 from src.schemas.api.exceptions import IntegrityErrorDetails
 from src.schemas.api.flow.schemas import FlowAgentId
@@ -230,3 +230,85 @@ class FlowValidator:
         return await self.validate_all_agents_types(
             genai_ids=genai_ids, mcp_ids=mcp_ids, a2a_ids=a2a_ids, user_id=user_id
         )
+
+    async def trigger_flow_validation_on_agent_state_change(
+        self, db: AsyncDBSession, agent_type: AgentType
+    ):
+        """
+        Unified helper method to run during mcp/a2a lookups to set flows with inactive tools/cards as inactive
+        """
+        active_flows = await db.scalars(
+            select(AgentWorkflow)
+            .where(AgentWorkflow.is_active.is_(True))
+            .order_by(AgentWorkflow.created_at)
+        )
+        flows: list[AgentWorkflow] = active_flows.all()
+
+        for flow in flows:
+            flow_agent_ids = []  # either mcp/a2a ids
+            for tool in flow.flow:
+                if tool["type"] == agent_type.value:
+                    flow_agent_ids.append(tool)
+
+            if AgentType.mcp == agent_type:
+                active_tools = await db.scalars(
+                    select(MCPTool)
+                    .join(MCPServer, MCPServer.id == MCPTool.mcp_server_id)
+                    .where(
+                        and_(
+                            MCPTool.id.in_([a["id"] for a in flow_agent_ids]),
+                            MCPServer.is_active.is_(True),
+                        )
+                    )
+                )
+
+                if len(active_tools.all()) != len(
+                    [
+                        f["id"]
+                        for f in flow_agent_ids
+                        if f["type"] == AgentType.mcp.value
+                    ]
+                ):
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": False})
+                    )
+                    await db.commit()
+                else:
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": True})
+                    )
+                    await db.commit()
+
+            if AgentType.a2a == agent_type:
+                active_cards = await db.scalars(
+                    select(A2ACard).where(
+                        and_(
+                            A2ACard.id.in_([a["id"] for a in flow_agent_ids]),
+                            A2ACard.is_active.is_(True),
+                        )
+                    )
+                )
+                if len(active_cards.all()) != len(
+                    [
+                        f["id"]
+                        for f in flow_agent_ids
+                        if f["type"] == AgentType.a2a.value
+                    ]
+                ):
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": False})
+                    )
+                    await db.commit()
+                else:
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": True})
+                    )
+                    await db.commit()

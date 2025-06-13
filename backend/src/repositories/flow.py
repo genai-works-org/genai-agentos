@@ -1,7 +1,8 @@
 from typing import List, Optional, Union
+from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import and_, delete, select
+from sqlalchemy import and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models import Agent, AgentWorkflow, User
 from src.repositories.base import CRUDBase
@@ -104,6 +105,7 @@ class AgentWorkflowRepository(
             ],
             creator_id=user_model.id,
             alias=generate_alias(obj_in.name),
+            is_active=True,
         )
 
         db.add(db_obj)
@@ -122,7 +124,7 @@ class AgentWorkflowRepository(
         await db.commit()
         return result
 
-    async def delete_all_flows_where_deleted_agent_exists(
+    async def set_inactive_for_all_flows_where_deleted_agent_exists(
         self, db: AsyncSession, agent_id: str, user_model: User
     ):
         """
@@ -140,25 +142,40 @@ class AgentWorkflowRepository(
                 This function identifies and deletes flows containing the provided agent ID.
         """
         q = await db.execute(
-            select(self.model).where(self.model.creator_id == str(user_model.id))
+            select(self.model).where(
+                and_(
+                    self.model.creator_id == str(user_model.id),
+                    self.model.is_active.is_(True),
+                )
+            )
         )
         flows = q.scalars().all()
 
-        flow_ids_to_delete: list[Optional[str]] = []
+        flow_ids_to_update: list[Optional[str]] = []
         for flow in flows:
             flow_list = flow.flow
             agent_ids = [agent["id"] for agent in flow_list]
             if agent_id in agent_ids:
-                flow_ids_to_delete.append(str(flow.id))
+                flow_ids_to_update.append({"id": str(flow.id), "is_active": False})
 
-        if flow_ids_to_delete:
-            result = await self.delete_multiple(
-                db=db, flow_ids=flow_ids_to_delete, user_id=str(user_model.id)
+        if flow_ids_to_update:
+            await db.run_sync(
+                lambda sync_db: sync_db.bulk_update_mappings(
+                    self.model, flow_ids_to_update
+                )
             )
-            if result:
-                return flow_ids_to_delete
-
+            await db.commit()
         return None
+
+    async def set_multiple_flow_as_inactive(
+        self, db: AsyncSession, flow_ids: list[Optional[str]], user_id: UUID | str
+    ):
+        q = await db.execute(
+            update(self.model)
+            .where(and_(self.model.id.in_(flow_ids), self.model.creator_id == user_id))
+            .values(is_active=False)
+        )
+        return q.all()
 
     async def validate_all_agents_in_flow_are_active(
         self,
@@ -193,11 +210,11 @@ class AgentWorkflowRepository(
             obj_in=upd_model, user_model=user_model
         )
         if valid_agents:
-            return await self.update_flow_by_id(
+            return await self.update_valid_flow(
                 db=db, flow_id=flow_id, upd_data=upd_data, user_model=user_model
             )
 
-    async def update_flow_by_id(
+    async def update_valid_flow(
         self,
         db: AsyncSession,
         flow_id: str,
@@ -206,6 +223,7 @@ class AgentWorkflowRepository(
     ):
         flow_upd_data = upd_data.model_dump(mode="json")
         flow_upd_data["alias"] = generate_alias(upd_data.name)
+        flow_upd_data["is_active"] = True
         return await self.update_by_user(
             db=db, id_=flow_id, obj_in=flow_upd_data, user=user_model
         )

@@ -101,7 +101,7 @@ async def message_handler_validator(
                             f"No agent of user with id: '{agent.creator_id}' found"
                         )
                         return
-                    deleted_flows = await agentflow_repo.delete_all_flows_where_deleted_agent_exists(
+                    deleted_flows = await agentflow_repo.set_inactive_for_all_flows_where_deleted_agent_exists(
                         db=db, agent_id=str(agent.id), user_model=user
                     )
                     if deleted_flows:

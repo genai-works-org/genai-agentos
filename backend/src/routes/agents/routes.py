@@ -178,7 +178,7 @@ async def delete_agent(
     user: CurrentUserDependency,
     agent_id: UUID,
 ):
-    await agentflow_repo.delete_all_flows_where_deleted_agent_exists(
+    await agentflow_repo.set_inactive_for_all_flows_where_deleted_agent_exists(
         db=db, agent_id=str(agent_id), user_model=user
     )
     is_ok = await agent_repo.delete(db=db, id_=str(agent_id))

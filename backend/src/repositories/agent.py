@@ -193,22 +193,10 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         )
         return q.all()
 
-    # TODO: rename - also queries flows
-    async def query_all_genai_agents(
-        self, db: AsyncSession, user_model: User, limit: int, offset: int
-    ):
-        flows = await self._get_all_flows_by_user(db=db, user_id=user_model.id)
-        agents = await self.get_multiple_by_user_id(
-            db=db, user_id=user_model.id, offset=offset, limit=limit
-        )
-        agent_dtos = [map_genai_agent_to_unified_dto(agent=agent) for agent in agents]
-        result: list[AgentDTOPayload | None] = [*flows, *agent_dtos]
-        return [r.model_dump(mode="json", exclude_none=True) for r in result]
-
     async def list_all_active_genai_agents(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
     ) -> ActiveAgentsDTO:
-        flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
+        flows = await self._get_all_active_flows_by_user(db=db, user_id=user_id)
         agents = await self.query_active_agents(
             db=db, user_id=user_id, offset=offset, limit=limit
         )
@@ -543,14 +531,20 @@ LIMIT :limit OFFSET :offset;
                 created_at=flow.created_at,
                 updated_at=flow.updated_at,
                 flow=[agent.get("id") for agent in flow.flow],
+                is_active=flow.is_active,
             )
             return flow_schema
 
-    async def _get_all_flows_by_user(
+    async def _get_all_active_flows_by_user(
         self, db: AsyncSession, user_id: UUID
     ) -> list[Optional[FlowSchema]]:
         q = await db.scalars(
-            select(AgentWorkflow).where(AgentWorkflow.creator_id == user_id)
+            select(AgentWorkflow).where(
+                and_(
+                    AgentWorkflow.creator_id == user_id,
+                    AgentWorkflow.is_active.is_(True),
+                )
+            )
         )
         flows = q.all()
         if not flows:
@@ -599,7 +593,7 @@ LIMIT :limit OFFSET :offset;
             db=db, user_id=user_id, limit=limit, offset=offset
         )
         columns = [row._asdict() for row in result]
-        flows = await self._get_all_flows_by_user(db=db, user_id=user_id)
+        flows = await self._get_all_active_flows_by_user(db=db, user_id=user_id)
 
         response: list[
             Optional[ActiveA2ACardDTO | ActiveGenAIAgentDTO | ActiveMCPToolDTO]

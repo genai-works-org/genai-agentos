@@ -1,6 +1,6 @@
 import logging
 import traceback
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
 
@@ -10,7 +10,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from mcp.shared.exceptions import McpError
 from pydantic import AnyHttpUrl
-from sqlalchemy import and_, delete, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -36,7 +36,7 @@ async def lookup_mcp_server(
     headers: Optional[dict] = None,
     timeout: int = 60,
     cursor=None,
-) -> Optional[MCPServerData]:
+) -> MCPServerData:
     """
     Function to lookup remote mcp server for tools, prompts, resources
     base_url must have an '/sse' endpoint.
@@ -110,22 +110,26 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             for tool in tools_in:
                 if t.name == tool.name:
                     # mcp tools have unique names - no possible hash collisions
-                    tool_alias_container[t.name] = t.alias
+                    tool_alias_container[t.name] = {"id": t.id, "alias": t.alias}
 
-        await db.execute(
-            delete(MCPTool).where(
-                and_(MCPTool.name.in_(tool_names), MCPTool.mcp_server_id == db_obj.id)
-            )
-        )
-
+        tools_batch = []
         for t in tools_in:
-            tool = MCPTool(
+            batch = {
                 **t.model_dump(mode="json"),
-                alias=tool_alias_container[t.name],
-                mcp_server_id=db_obj.id,
-            )
-            db.add(tool)
+                "alias": tool_alias_container[t.name]["alias"],
+                "mcp_server_id": db_obj.id,
+                "id": tool_alias_container[t.name]["id"],
+                "updated_at": datetime.now(),
+            }
+            tools_batch.append(batch)
 
+        await db.run_sync(
+            lambda sync_db: sync_db.bulk_update_mappings(MCPTool, tools_batch)
+        )
+        await db.commit()
+        await db.refresh(db_obj)
+
+        db_obj.is_active = True
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
@@ -145,6 +149,15 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         return await self.update_mcp_server_with_tools(
             db=db, db_obj=mcp_server, obj_in=obj_in
         )
+
+    async def set_as_inactive(self, db: AsyncSession, server_url: str):
+        await db.execute(
+            update(self.model)
+            .where(self.model.server_url == server_url)
+            .values({"is_active": False})
+        )
+        await db.commit()
+        logger.info(f"Set {server_url} as inactive")
 
     async def list_active_mcp_servers(
         self, db: AsyncSession, user_id: UUID, limit: int, offset: int
@@ -172,7 +185,6 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     ):
         try:
             mcp_server = await lookup_mcp_server(url=data_in.server_url)
-            # mcp_server.mcp_tools = [mcp_tool_to_json_schema(t) for t in tools]
 
             if not mcp_server.is_active:
                 raise HTTPException(
