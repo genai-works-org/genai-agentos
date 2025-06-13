@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MainLayout } from '../components/MainLayout';
-import { Settings, useSettings } from '../contexts/SettingsContext';
-import { AIModel } from '../services/apiService';
+import { toast } from 'react-toastify';
 import {
   Select,
   MenuItem,
@@ -10,88 +8,56 @@ import {
   Box,
   SelectChangeEvent,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions
 } from '@mui/material';
+import { useSettings } from '../contexts/SettingsContext';
+import { useModels } from '../hooks/useModels';
+import { MainLayout } from '../components/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
 import { OllamaSettings } from '../components/settings/OllamaSettings';
-import { ModelConfig } from '../services/modelService';
 import { ModelForm } from '../components/ModelForm';
-import { toast } from 'react-toastify';
+import ConfirmModal from '../components/ConfirmModal';
+import {
+  AI_PROVIDERS,
+  Config,
+  CreateModelBody,
+  ModelConfig,
+  ModelsConfigs,
+  TOOLTIP_MESSAGES,
+} from '../types/model';
 
-export const AI_PROVIDERS = {
-  OPENAI: 'openai',
-  AZURE_OPENAI: 'azure openai',
-  OLLAMA: 'ollama'
-} as const;
+const isProviderSettingsSet = (configs: ModelsConfigs[], name: string) => {
+  const provider = configs.find(c => c.provider === name);
+  return Boolean(provider?.api_key);
+};
 
-const TOOLTIP_MESSAGES = {
-  OPENAI: 'Provide OpenAI API key and model',
-  AZURE_OPENAI: 'Provide Azure OpenAI API key, endpoint, and deployment name',
-  OLLAMA: 'Provide Ollama base URL and model',
-  COMMON: 'Provide required provider data first'
-} as const;
-
-const isProviderSettingsSet = (settings: Settings, ai_provider?: string | undefined) => {
-  switch (ai_provider) {
-    case AI_PROVIDERS.OPENAI:
-      return Boolean(settings.openAi.api_key);
-    case AI_PROVIDERS.AZURE_OPENAI:
-      return Boolean(settings.azureOpenAi.endpoint &&
-             settings.azureOpenAi.api_key &&
-             settings.azureOpenAi.deployment_name &&
-             settings.azureOpenAi.api_version);
-    case AI_PROVIDERS.OLLAMA:
-      return Boolean(settings.ollama.base_url);
-    default:
-      return false;
-  }
+const getProviderModels = (models: ModelsConfigs[], provider: string) => {
+  const providerModels = models.find(m => m.provider === provider);
+  return providerModels ? providerModels.configs : [];
 };
 
 export const SettingsPage = () => {
-  const {
-    settings,
-    updateSettings,
-    loading,
-    createModel,
-    updateModel,
-    deleteModel,
-    openAiModels,
-    azureOpenAiModels,
-    ollamaModels
-  } = useSettings();
   const [showForm, setShowForm] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
-  const [currentModelId, setCurrentModelId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [modelToDelete, setModelToDelete] = useState<ModelConfig | null>(null);
-  const [config, setConfig] = useState<Settings>(settings);
-
-  useEffect(() => {
-    setConfig(settings);
-  }, [settings]);
+  const [config, setConfig] = useState<Config>({
+    provider: AI_PROVIDERS.OPENAI,
+    data: {},
+  });
+  const { providers, systemPrompt, refetchModels } = useSettings();
+  const { createProvider, createModel, updateModel, deleteModel, loading } =
+    useModels();
 
   const handleProviderChange = (e: SelectChangeEvent<string>) => {
-    const { value } = e.target;
-    setConfig({ ...config, ai_provider: value });
-  };
+    const currentProvider = providers.find(p => p.provider === e.target.value);
 
-  const handleModelSelect = (model: AIModel) => {
-    console.log("==> model select", model);
-    setConfig({ ...config, model });
-  };
+    if (currentProvider) {
+      const { provider, configs, ...credentials } = currentProvider;
+      setConfig({ provider, data: credentials });
+      return;
+    }
 
-  const handleConfigChange = (data: Partial<Settings>) => {
-    setConfig({ ...config, ...data });
-  };
-
-  const handleSave = () => {
-    updateSettings(config);
-    toast.success('Settings saved successfully');
+    setConfig({ provider: e.target.value, data: {} });
   };
 
   const handleEditModel = (model: ModelConfig) => {
@@ -100,48 +66,66 @@ export const SettingsPage = () => {
   };
 
   const handleDeleteModel = async (model: ModelConfig) => {
-    setModelToDelete(model);
+    setSelectedModel(model);
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!modelToDelete) return;
-    try {
-      await deleteModel(modelToDelete.id);
-      if (modelToDelete.id === currentModelId) {
-        setCurrentModelId(null);
-      }
-    } catch (err) {
-      // Error is handled by the hook
-    } finally {
-      setDeleteDialogOpen(false);
-      setModelToDelete(null);
-    }
-  };
+    if (!selectedModel) return;
 
-  const handleCancelDelete = () => {
+    await deleteModel(selectedModel.id);
+    await refetchModels();
     setDeleteDialogOpen(false);
-    setModelToDelete(null);
+    setSelectedModel(null);
   };
 
-  const handleSaveModel = async (formData: ModelConfig) => {
+  const handleSaveProvider = async () => {
     try {
-      const { id, ...restData } = formData;
-      if (id) {
-        await updateModel(id, restData);
-      } else {
-        await createModel(formData);
-      }
-      setShowForm(false);
-    } catch (err) {
-      // Error is handled by the hook
+      const { api_key, ...credentials } = config.data;
+      const body = {
+        name: config.provider,
+        api_key: api_key || '',
+        credentials: credentials || {},
+      };
+
+      await createProvider(body);
+    } catch (error) {
+      console.error('Failed to create provider');
+    } finally {
+      refetchModels();
+      toast.success('Settings saved successfully');
     }
   };
 
-  const handleCreateModel = () => {
-    setSelectedModel(null);
-    setShowForm(true);
+  const handleSaveModel = async (formData: CreateModelBody) => {
+    try {
+      const { id, provider, ...restData } = formData;
+      if (id) {
+        await updateModel(id, {
+          ...restData,
+        });
+      } else {
+        await createModel({
+          ...restData,
+          provider,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      refetchModels();
+      setShowForm(false);
+      setSelectedModel(null);
+    }
   };
+
+  useEffect(() => {
+    const provider = providers.find(p => p.provider === config.provider);
+    if (provider) {
+      const { provider: providerName, configs, ...credentials } = provider;
+      setConfig({ provider: providerName, data: credentials });
+    }
+  }, [providers]);
 
   return (
     <MainLayout currentPage="Settings">
@@ -155,55 +139,69 @@ export const SettingsPage = () => {
                   labelId="ai-provider-label"
                   id="ai-provider"
                   name="aiProvider"
-                  value={config.ai_provider}
+                  value={config.provider}
                   label="AI Provider"
                   onChange={handleProviderChange}
                 >
                   <MenuItem value={AI_PROVIDERS.OPENAI}>OpenAI</MenuItem>
-                  <MenuItem value={AI_PROVIDERS.AZURE_OPENAI}>Azure OpenAI</MenuItem>
+                  <MenuItem value={AI_PROVIDERS.AZURE_OPENAI}>
+                    Azure OpenAI
+                  </MenuItem>
                   <MenuItem value={AI_PROVIDERS.OLLAMA}>Ollama</MenuItem>
                 </Select>
               </FormControl>
             </Box>
 
-            {config.ai_provider === AI_PROVIDERS.OPENAI && (
+            {config.provider === AI_PROVIDERS.OPENAI && (
               <OpenAISettings
                 settings={config}
-                onSettingsChange={handleConfigChange}
-                availableModels={openAiModels}
-                onModelSelect={handleModelSelect}
-                onModelCreate={handleCreateModel}
+                onSettingsChange={setConfig}
+                availableModels={getProviderModels(
+                  providers,
+                  AI_PROVIDERS.OPENAI,
+                )}
+                onModelCreate={() => setShowForm(true)}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.OPENAI)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.OPENAI)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.OPENAI}
               />
             )}
 
-            {config.ai_provider === AI_PROVIDERS.AZURE_OPENAI && (
+            {config.provider === AI_PROVIDERS.AZURE_OPENAI && (
               <AzureOpenAISettings
                 settings={config}
-                onSettingsChange={handleConfigChange}
-                availableModels={azureOpenAiModels}
-                onModelSelect={handleModelSelect}
-                onModelCreate={handleCreateModel}
+                onSettingsChange={setConfig}
+                availableModels={getProviderModels(
+                  providers,
+                  AI_PROVIDERS.AZURE_OPENAI,
+                )}
+                onModelCreate={() => setShowForm(true)}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.AZURE_OPENAI)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.AZURE_OPENAI)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.AZURE_OPENAI}
               />
             )}
 
-            {config.ai_provider === AI_PROVIDERS.OLLAMA && (
+            {config.provider === AI_PROVIDERS.OLLAMA && (
               <OllamaSettings
                 settings={config}
-                onSettingsChange={handleConfigChange}
-                availableModels={ollamaModels}
-                onModelSelect={handleModelSelect}
-                onModelCreate={handleCreateModel}
+                onSettingsChange={setConfig}
+                availableModels={getProviderModels(
+                  providers,
+                  AI_PROVIDERS.OLLAMA,
+                )}
+                onModelCreate={() => setShowForm(true)}
                 onModelEdit={handleEditModel}
                 onModelDelete={handleDeleteModel}
-                disabledModelCreate={!isProviderSettingsSet(config, AI_PROVIDERS.OLLAMA)}
+                disabledModelCreate={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
+                }
                 tooltipMessage={TOOLTIP_MESSAGES.OLLAMA}
               />
             )}
@@ -213,8 +211,12 @@ export const SettingsPage = () => {
                 fullWidth
                 variant="contained"
                 color="primary"
-                onClick={handleSave}
-                disabled={!isProviderSettingsSet(config, config.ai_provider)}
+                onClick={handleSaveProvider}
+                disabled={
+                  config.provider === AI_PROVIDERS.OLLAMA
+                    ? !config.data.base_url
+                    : !config.data.api_key
+                }
               >
                 Save Settings
               </Button>
@@ -222,37 +224,22 @@ export const SettingsPage = () => {
           </div>
         </div>
       </div>
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleCancelDelete}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">
-          Delete Model
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete the model "{modelToDelete?.name}"?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+
+      <ConfirmModal
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Model"
+        text={`Are you sure you want to delete the model "${selectedModel?.name}"?`}
+      />
 
       {showForm && (
         <ModelForm
           settings={config}
           initialData={selectedModel}
-          availableModels={[...openAiModels, ...azureOpenAiModels, ...ollamaModels].map(m => ({ name: m.model, provider: m.provider }))}
           onSave={handleSaveModel}
           onCancel={() => setShowForm(false)}
+          systemPrompt={systemPrompt}
           isLoading={loading}
         />
       )}

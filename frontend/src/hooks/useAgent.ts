@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { agentService } from '../services/agentService';
-import { AgentDTO, AgentCreate, AgentFlowDTO, AgentFlowCreate, AgentFlowUpdate } from '../types/agent';
+import { AgentDTO, AgentCreate, AgentFlowBody } from '../types/agent';
 import { useToast } from './useToast';
 
 export const useAgent = () => {
@@ -60,11 +60,10 @@ export const useAgent = () => {
       throw err;
     } finally {
       setIsLoading(false);
-      await getAgents();
     }
   };
 
-  const getAgentFlows = async (): Promise<AgentFlowDTO[]> => {
+  const getAgentFlows = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -78,7 +77,7 @@ export const useAgent = () => {
     }
   };
 
-  const getAgentFlow = async (id: string): Promise<AgentFlowDTO> => {
+  const getAgentFlow = async (id: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -92,7 +91,7 @@ export const useAgent = () => {
     }
   };
 
-  const createAgentFlow = async (flow: AgentFlowCreate): Promise<AgentFlowDTO> => {
+  const createAgentFlow = async (flow: AgentFlowBody) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -103,11 +102,10 @@ export const useAgent = () => {
       throw err;
     } finally {
       setIsLoading(false);
-      await getAgentFlows();
     }
   };
 
-  const updateAgentFlow = async (id: string, flow: AgentFlowUpdate): Promise<void> => {
+  const updateAgentFlow = async (id: string, flow: AgentFlowBody) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -117,11 +115,10 @@ export const useAgent = () => {
       throw err;
     } finally {
       setIsLoading(false);
-      await getAgentFlows();
     }
   };
 
-  const deleteAgentFlow = async (id: string): Promise<void> => {
+  const deleteAgentFlow = async (id: string) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -131,7 +128,6 @@ export const useAgent = () => {
       throw err;
     } finally {
       setIsLoading(false);
-      await getAgentFlows();
     }
   };
 
@@ -155,4 +151,4 @@ export const useAgent = () => {
     updateAgentFlow,
     deleteAgentFlow,
   };
-}; 
+};

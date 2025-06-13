@@ -11,21 +11,23 @@ import {
   Button,
   Alert,
   Stack,
-  SelectChangeEvent,
   Slider,
   Input,
-  DialogContent
+  DialogContent,
 } from '@mui/material';
-import { AI_PROVIDERS } from '../pages/SettingsPage';
-import { ModelConfig } from '../services/modelService';
-import { Settings } from '../contexts/SettingsContext';
+import {
+  AI_PROVIDERS,
+  ModelConfig,
+  Config,
+  CreateModelBody,
+} from '../types/model';
 
 interface ModelFormProps {
-  settings: Settings;
+  settings: Config;
   initialData: ModelConfig | null;
-  availableModels: Array<{ name: string; provider: string }>;
-  onSave: (data: any) => void;
+  onSave: (data: CreateModelBody) => void;
   onCancel: () => void;
+  systemPrompt: string;
   isLoading?: boolean;
 }
 
@@ -34,74 +36,37 @@ export const ModelForm: FC<ModelFormProps> = ({
   initialData,
   onSave,
   onCancel,
-  isLoading = false
+  isLoading,
+  systemPrompt,
 }) => {
-  console.log('==> settings',settings);
+  const initialModel =
+    initialData?.model || settings.provider === AI_PROVIDERS.OPENAI
+      ? 'gpt-4o'
+      : '';
+
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
-    model: initialData?.model || '',
-    provider: initialData?.provider || settings.ai_provider,
-    system_prompt: initialData?.system_prompt || settings?.system_prompt || '',
+    model: initialModel,
+    provider: settings.provider,
+    system_prompt: initialData?.system_prompt || systemPrompt,
     temperature: initialData?.temperature ?? 0.7,
+    max_last_messages: initialData?.max_last_messages ?? 5,
   });
 
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const getCredentialsForProvider = () => {
-    switch (formData.provider) {
-      case AI_PROVIDERS.OPENAI:
-        return {
-          api_key: settings.openAi.api_key
-        };
-      case AI_PROVIDERS.AZURE_OPENAI:
-        return {
-          endpoint: settings.azureOpenAi.endpoint,
-          api_key: settings.azureOpenAi.api_key,
-          api_version: settings.azureOpenAi.api_version,
-          deployment_name: settings.azureOpenAi.deployment_name
-        };
-      case AI_PROVIDERS.OLLAMA:
-        return {
-          base_url: settings.ollama.base_url
-        };
-      default:
-        return {};
-    }
-  };
-
   const validateRequiredFields = () => {
     if (!formData.name || !formData.model || !formData.provider) {
       return 'Please fill in all required fields';
-    }
-
-    // Check provider-specific required fields
-    switch (formData.provider) {
-      case AI_PROVIDERS.OPENAI:
-        if (!settings.openAi.api_key) {
-          return 'OpenAI API Key is required';
-        }
-        break;
-      case AI_PROVIDERS.AZURE_OPENAI:
-        if (!settings.azureOpenAi.endpoint || !settings.azureOpenAi.api_key || 
-            !settings.azureOpenAi.api_version || !settings.azureOpenAi.deployment_name) {
-          return 'All Azure OpenAI credentials are required';
-        }
-        break;
-      case AI_PROVIDERS.OLLAMA:
-        if (!settings.ollama.base_url) {
-          return 'Ollama Base URL is required';
-        }
-        break;
     }
 
     return null;
@@ -112,6 +77,7 @@ export const ModelForm: FC<ModelFormProps> = ({
     setError(null);
 
     const validationError = validateRequiredFields();
+
     if (validationError) {
       setError(validationError);
       return;
@@ -123,20 +89,23 @@ export const ModelForm: FC<ModelFormProps> = ({
       provider: formData.provider.trim(),
       system_prompt: formData.system_prompt.trim(),
       temperature: formData.temperature,
-      credentials: getCredentialsForProvider(),
-      id: initialData?.id
+      max_last_messages: Number(formData.max_last_messages),
+      user_prompt: '',
+      credentials: {},
+      id: initialData?.id,
     });
   };
 
   return (
-    <Dialog
-      open={true}
-      onClose={onCancel}
-      maxWidth="sm"
-      fullWidth
-    >
+    <Dialog open={true} onClose={onCancel} maxWidth="sm" fullWidth>
       <DialogTitle>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <Typography variant="h6">
             {initialData ? 'Edit Model' : 'Add New Model'}
           </Typography>
@@ -191,15 +160,24 @@ export const ModelForm: FC<ModelFormProps> = ({
             />
 
             <Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 1,
+                }}
+              >
                 <Typography>Temperature</Typography>
                 <Input
                   value={formData.temperature}
                   size="small"
-                  onChange={(e) => {
+                  onChange={e => {
                     const value = parseFloat(e.target.value);
                     if (!isNaN(value) && value >= 0 && value <= 2) {
-                      handleChange({ target: { name: 'temperature', value } } as any);
+                      handleChange({
+                        target: { name: 'temperature', value },
+                      } as any);
                     }
                   }}
                   inputProps={{
@@ -215,23 +193,34 @@ export const ModelForm: FC<ModelFormProps> = ({
               <Slider
                 name="temperature"
                 value={formData.temperature}
-                onChange={(_, value) => handleChange({ target: { name: 'temperature', value } } as any)}
+                onChange={(_, value) =>
+                  handleChange({
+                    target: { name: 'temperature', value },
+                  } as any)
+                }
                 min={0}
                 max={2}
                 step={0.1}
                 marks={[
                   { value: 0, label: '0' },
-                  { value: 2, label: '2' }
+                  { value: 2, label: '2' },
                 ]}
               />
             </Box>
 
+            <TextField
+              fullWidth
+              type="number"
+              name="max_last_messages"
+              label="Message context window"
+              value={formData.max_last_messages}
+              onChange={handleChange}
+              placeholder="Enter message deepness"
+              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+            />
+
             <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
-              <Button
-                variant="outlined"
-                onClick={onCancel}
-                fullWidth
-              >
+              <Button variant="outlined" onClick={onCancel} fullWidth>
                 Cancel
               </Button>
               <Button
@@ -248,4 +237,4 @@ export const ModelForm: FC<ModelFormProps> = ({
       </DialogContent>
     </Dialog>
   );
-}; 
+};

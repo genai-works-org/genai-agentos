@@ -1,4 +1,4 @@
-import type { ReactNode, FC } from "react"
+import type { ReactNode, FC } from 'react';
 import { Box } from '@mui/material';
 import { useResizablePanel } from '../hooks/useResizablePanel';
 
@@ -18,13 +18,13 @@ export const ResizablePanel: FC<ResizablePanelProps> = ({
   const { width, isResizing, handleMouseDown } = useResizablePanel({
     initialWidth,
     minWidth,
-    maxWidth
+    maxWidth,
   });
 
   return (
-    <Box 
-      width={width} 
-      p={2} 
+    <Box
+      width={width}
+      p={2}
       overflow="auto"
       position="relative"
       sx={{
@@ -37,7 +37,7 @@ export const ResizablePanel: FC<ResizablePanelProps> = ({
         top={0}
         bottom={0}
         width="4px"
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleMouseDown as any} // TODO: fix type
         sx={{
           cursor: 'col-resize',
           '&:hover': {
@@ -49,4 +49,4 @@ export const ResizablePanel: FC<ResizablePanelProps> = ({
       {children}
     </Box>
   );
-}; 
+};

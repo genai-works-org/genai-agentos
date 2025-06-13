@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from src.core.settings import get_settings
 
 settings = get_settings()
@@ -65,3 +66,23 @@ If no composite tool can solve the current substep:
 - DO NOT partially use a composite tool — you must use it fully if chosen.
 """
 
+SPECIAL_CHARS: set[str] = {
+    "$",
+    "@",
+    "#",
+    "%",
+    "!",
+    "^",
+    "&",
+    "*",
+    "(",
+    ")",
+    "-",
+    "_",
+    "+",
+    "=",
+    "{",
+    "}",
+    "[",
+    "]",
+}

@@ -1,5 +1,6 @@
 import { environment } from '../common/environment';
 import { tokenService } from './apiService';
+import { authService } from './authService';
 // Message types
 export interface UserMessage {
   message: string;
@@ -136,71 +137,135 @@ class WebSocketService {
   private socket: WebSocket | null = null;
   private messageHandlers: Set<MessageHandler> = new Set();
   private connectionStateHandlers: Set<ConnectionStateHandler> = new Set();
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectTimeout = 1000; // 1 second
+  // private reconnectAttempts = 0;
+  // private maxReconnectAttempts = 5;
+  // private reconnectTimeout = 1000;
 
   constructor() {
     // Remove automatic connection
   }
 
-  public connect(): void {
-    // Check if user is authenticated
-    const token = tokenService.getToken();
-    if (!token) {
-      console.error('Cannot connect: User is not authenticated');
-      return;
-    }
+  // public connect(sessionId?: string): void {
+  //   // Check if user is authenticated
+  //   const token = tokenService.getToken();
+  //   if (!token) {
+  //     console.error('Cannot connect: User is not authenticated');
+  //     return;
+  //   }
 
-    // If socket exists and is in OPEN state, reuse it
-    if (this.socket?.readyState === WebSocket.OPEN) {
-      console.log('Reusing existing WebSocket connection');
-      return;
-    }
-    
-    // If socket exists but is not in OPEN state, close it first
-    if (this.socket) {
-      console.log('Closing existing WebSocket connection before creating new one');
-      this.socket.close();
-      this.socket = null;
-    }
+  //   // If socket exists and is in OPEN state, reuse it
+  //   if (this.socket?.readyState === WebSocket.OPEN) {
+  //     console.log('Reusing existing WebSocket connection');
+  //     return;
+  //   }
 
-    console.log('Creating new WebSocket connection');
-    this.attemptConnection();
-  }
+  //   // If socket exists but is not in OPEN state, close it first
+  //   if (this.socket) {
+  //     console.log(
+  //       'Closing existing WebSocket connection before creating new one',
+  //     );
+  //     this.socket.close();
+  //     this.socket = null;
+  //   }
 
-  private attemptConnection(): void {
-    try {
-      const token = tokenService.getToken()
-      this.socket = new WebSocket(`${this.getWebSocketUrl()}?token=${token}`);
+  //   console.log('Creating new WebSocket connection');
+
+  //   this.attemptConnection(sessionId);
+  // }
+
+  public connect(sessionId?: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const token = tokenService.getToken();
+      if (!token) {
+        reject('Cannot connect: User is not authenticated');
+        return;
+      }
+
+      if (this.socket?.readyState === WebSocket.OPEN) {
+        console.log('Reusing existing WebSocket connection');
+        resolve();
+        return;
+      }
+
+      if (this.socket) {
+        this.socket.close();
+        this.socket = null;
+      }
+
+      const url = sessionId
+        ? `${this.getWebSocketUrl()}?token=${token}&session_id=${sessionId}`
+        : `${this.getWebSocketUrl()}?token=${token}`;
+
+      this.socket = new WebSocket(url);
 
       this.socket.onopen = () => {
-        this.reconnectAttempts = 0;
+        // this.reconnectAttempts = 0;
         this.notifyConnectionState(true);
+        resolve();
       };
 
-      this.socket.onmessage = (event) => {
+      this.socket.onmessage = event => {
         try {
           const message = JSON.parse(event.data);
           this.notifyMessageHandlers(message);
-        } catch (error) {
-          // console.error('Error parsing WebSocket message:', error);
+        } catch {
+          console.error('Failed to parse WebSocket message:', event.data);
         }
       };
 
       this.socket.onclose = () => {
         this.notifyConnectionState(false);
-        this.handleReconnect();
       };
 
-      this.socket.onerror = (error) => {
-        // console.error('WebSocket error:', error);
+      this.socket.onerror = error => {
+        console.error('WebSocket error:', error);
+
+        if (this.socket?.readyState !== WebSocket.OPEN) {
+          this.socket?.close();
+          authService.logout();
+        }
+
+        reject(error);
       };
-    } catch (error) {
-      // console.error('Error creating WebSocket connection:', error);
-      this.handleReconnect();
-    }
+    });
   }
+
+  // private attemptConnection(sessionId?: string): void {
+  //   try {
+  //     const token = tokenService.getToken();
+  //     const url = sessionId
+  //       ? `${this.getWebSocketUrl()}?token=${token}&session_id=${sessionId}`
+  //       : `${this.getWebSocketUrl()}?token=${token}`;
+
+  //     this.socket = new WebSocket(url);
+
+  //     this.socket.onopen = () => {
+  //       this.reconnectAttempts = 0;
+  //       this.notifyConnectionState(true);
+  //     };
+
+  //     this.socket.onmessage = event => {
+  //       try {
+  //         const message = JSON.parse(event.data);
+  //         this.notifyMessageHandlers(message);
+  //       } catch (error) {
+  //         // console.error('Error parsing WebSocket message:', error);
+  //       }
+  //     };
+
+  //     this.socket.onclose = () => {
+  //       this.notifyConnectionState(false);
+  //       this.handleReconnect();
+  //     };
+
+  //     this.socket.onerror = error => {
+  //       // console.error('WebSocket error:', error);
+  //     };
+  //   } catch (error) {
+  //     // console.error('Error creating WebSocket connection:', error);
+  //     this.handleReconnect();
+  //   }
+  // }
 
   private getWebSocketUrl(): string {
     // const token = tokenService.getToken();
@@ -209,14 +274,14 @@ class WebSocketService {
     return `${baseUrl}/frontend/ws`;
   }
 
-  private handleReconnect(): void {
-    if (this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.reconnectAttempts++;
-      setTimeout(() => {
-        this.connect();
-      }, this.reconnectTimeout * this.reconnectAttempts);
-    }
-  }
+  // private handleReconnect(): void {
+  //   if (this.reconnectAttempts < this.maxReconnectAttempts) {
+  //     this.reconnectAttempts++;
+  //     setTimeout(() => {
+  //       this.connect();
+  //     }, this.reconnectTimeout * this.reconnectAttempts);
+  //   }
+  // }
 
   public sendMessage(message: UserMessage): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
@@ -256,4 +321,4 @@ class WebSocketService {
   }
 }
 
-export const websocketService = new WebSocketService(); 
+export const websocketService = new WebSocketService();

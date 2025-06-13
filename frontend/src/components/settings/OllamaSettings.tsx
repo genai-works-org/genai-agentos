@@ -1,51 +1,44 @@
-import { useEffect, useState } from 'react';
 import type { ChangeEvent, FC } from 'react';
 import { Box, TextField } from '@mui/material';
-import { Settings } from '../../contexts/SettingsContext';
 import { AIModelGrid } from '../AIModelGrid';
-import { AIModel } from '../../services/apiService';
-import { ModelConfig } from '../../services/modelService';
+import { AI_PROVIDERS, ModelConfig, Config } from '../../types/model';
 
 interface OllamaSettingsProps {
-  settings: Settings;
-  onSettingsChange: (data: Partial<Settings>) => void;
-  availableModels: AIModel[];
+  settings: Config;
+  onSettingsChange: (data: Config) => void;
+  availableModels: ModelConfig[];
   disabledModelCreate: boolean;
   tooltipMessage: string;
-  onModelSelect: (model: AIModel) => void;
   onModelCreate: () => void;
   onModelEdit: (model: ModelConfig) => void;
   onModelDelete: (model: ModelConfig) => void;
 }
 
-export const OllamaSettings: FC<OllamaSettingsProps> = ({ 
+export const OllamaSettings: FC<OllamaSettingsProps> = ({
   settings,
   availableModels,
   disabledModelCreate,
   tooltipMessage,
-  onModelSelect,
   onModelCreate,
   onModelEdit,
   onModelDelete,
-  onSettingsChange 
+  onSettingsChange,
 }) => {
-  const [url, setUrl] = useState<string>(settings.ollama.base_url);
-  const handleUrlChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    setUrl(value);
+  const handleUrlChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onSettingsChange({
+      ...settings,
+      data: { ...settings.data, base_url: e.target.value },
+    });
   };
-  useEffect(() => {
-    onSettingsChange({ ollama: { base_url: url } });
-  }, [url]);
 
   return (
     <>
       <Box>
         <TextField
           fullWidth
-          name="ollamaBaseUrl"
+          name="base_url"
           label="Base URL"
-          value={url || ''}
+          value={settings.data.base_url || ''}
           onChange={handleUrlChange}
           placeholder="Enter Ollama base URL"
         />
@@ -56,16 +49,15 @@ export const OllamaSettings: FC<OllamaSettingsProps> = ({
           Available Models
         </label>
         <AIModelGrid
-          selectedModel={settings.model || null}
           models={availableModels}
-          onModelSelect={onModelSelect}
           onModelCreate={onModelCreate}
           onModelEdit={onModelEdit}
           onModelDelete={onModelDelete}
           disabledModelCreate={disabledModelCreate}
           tooltipMessage={tooltipMessage}
+          provider={AI_PROVIDERS.OLLAMA}
         />
       </Box>
     </>
   );
-}; 
+};

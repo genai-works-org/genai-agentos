@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { FC, MouseEvent, SyntheticEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Collapse,
-} from '@mui/material';
+import { Box, Typography, Tabs, Tab, Collapse } from '@mui/material';
 import ReactFlow, {
   Background,
   Controls,
@@ -34,7 +28,8 @@ const AgentsTracePage: FC = () => {
   const navigate = useNavigate();
   const [traceData, setTraceData] = useState<AgentTrace[] | null>(null);
   const { logs, isLoading, error, fetchLogs } = useLogs();
-  const { nodes, edges, onNodesChange, onEdgesChange } = useFlowNodes(traceData);
+  const { nodes, edges, onNodesChange, onEdgesChange } =
+    useFlowNodes(traceData);
   const [selectedNode, setSelectedNode] = useState<ReactFlowNode | null>(null);
   const [selectedStep, setSelectedStep] = useState<any>(null);
   const [logAreaWidth, setLogAreaWidth] = useState(400);
@@ -56,14 +51,17 @@ const AgentsTracePage: FC = () => {
     e.preventDefault();
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-    
-    const newWidth = window.innerWidth - e.clientX;
-    if (newWidth >= 200 && newWidth <= 800) {
-      setLogAreaWidth(newWidth);
-    }
-  }, [isResizing]);
+  const handleMouseMove = useCallback(
+    (e: WindowEventMap['mousemove']) => {
+      if (!isResizing) return;
+
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth >= 200 && newWidth <= 800) {
+        setLogAreaWidth(newWidth);
+      }
+    },
+    [isResizing],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
@@ -91,14 +89,20 @@ const AgentsTracePage: FC = () => {
   useEffect(() => {
     const handleFlowStepClick = (event: CustomEvent) => {
       event.stopPropagation();
-      const { step, nodeId } = event.detail;
+      const { step } = event.detail;
       setSelectedStep(step);
       setShowTracePanel(true);
     };
 
-    window.addEventListener('flowStepClick', handleFlowStepClick as EventListener);
+    window.addEventListener(
+      'flowStepClick',
+      handleFlowStepClick as EventListener,
+    );
     return () => {
-      window.removeEventListener('flowStepClick', handleFlowStepClick as EventListener);
+      window.removeEventListener(
+        'flowStepClick',
+        handleFlowStepClick as EventListener,
+      );
     };
   }, []);
 
@@ -111,15 +115,21 @@ const AgentsTracePage: FC = () => {
     }
   }, []);
 
-  const handleTabChange = (event: SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
   };
 
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (tracePanelRef.current && !tracePanelRef.current.contains(event.target as HTMLElement)) {
-      setShowTracePanel(false);
-    }
-  }, []);
+  const handleClickOutside = useCallback(
+    (event: WindowEventMap['mousemove']) => {
+      if (
+        tracePanelRef.current &&
+        !tracePanelRef.current.contains(event.target as HTMLElement)
+      ) {
+        setShowTracePanel(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
@@ -129,10 +139,21 @@ const AgentsTracePage: FC = () => {
   }, [handleClickOutside]);
 
   return (
-    <MainLayout currentPage="Agent Trace" handleReturn={() => { navigate('/chat'); }}>
+    <MainLayout
+      currentPage="Agent Trace"
+      handleReturn={() => {
+        navigate('/chat');
+      }}
+    >
       <Box display="flex" height="calc(100vh - 64px)">
         {/* React Flow Area */}
-        <Box flex={1} position="relative" borderRight={1} borderColor="grey.300" onClick={() => showTracePanel && setShowTracePanel(false)}>
+        <Box
+          flex={1}
+          position="relative"
+          borderRight={1}
+          borderColor="grey.300"
+          onClick={() => showTracePanel && setShowTracePanel(false)}
+        >
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -149,9 +170,9 @@ const AgentsTracePage: FC = () => {
         </Box>
 
         {/* Log Area */}
-        <Box 
-          width={logAreaWidth} 
-          p={2} 
+        <Box
+          width={logAreaWidth}
+          p={2}
           overflow="auto"
           position="relative"
           sx={{
@@ -177,9 +198,9 @@ const AgentsTracePage: FC = () => {
             <Tab label="Logs" />
             <Tab label="Trace Details" />
           </Tabs>
-          
+
           {selectedTab === 0 ? (
-            <ResponseLog 
+            <ResponseLog
               logs={logs}
               traceData={traceData}
               isLoading={isLoading}
@@ -194,7 +215,7 @@ const AgentsTracePage: FC = () => {
         <Collapse in={showTracePanel}>
           <Box
             ref={tracePanelRef}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             sx={{
               position: 'fixed',
               bottom: 0,
@@ -215,7 +236,11 @@ const AgentsTracePage: FC = () => {
                     {selectedNode.data.name}
                   </Typography>
                   {selectedNode.data.id && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       ID: {selectedNode.data.id}
                     </Typography>
                   )}
@@ -223,12 +248,14 @@ const AgentsTracePage: FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Input
                     </Typography>
-                    <Box sx={{ 
-                      p: 1, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1,
-                      overflowX: 'auto'
-                    }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        overflowX: 'auto',
+                      }}
+                    >
                       <JSONTree
                         data={selectedNode.data.input}
                         theme={jsonTreeTheme}
@@ -240,12 +267,14 @@ const AgentsTracePage: FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Output
                     </Typography>
-                    <Box sx={{ 
-                      p: 1, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1,
-                      overflowX: 'auto'
-                    }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        overflowX: 'auto',
+                      }}
+                    >
                       <JSONTree
                         data={selectedNode.data.output}
                         theme={jsonTreeTheme}
@@ -261,7 +290,11 @@ const AgentsTracePage: FC = () => {
                     {selectedStep.name}
                   </Typography>
                   {selectedStep.id && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
                       ID: {selectedStep.id}
                     </Typography>
                   )}
@@ -269,12 +302,14 @@ const AgentsTracePage: FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Input
                     </Typography>
-                    <Box sx={{ 
-                      p: 1, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1,
-                      overflowX: 'auto'
-                    }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        overflowX: 'auto',
+                      }}
+                    >
                       <JSONTree
                         data={selectedStep.input}
                         theme={jsonTreeTheme}
@@ -286,12 +321,14 @@ const AgentsTracePage: FC = () => {
                     <Typography variant="subtitle2" gutterBottom>
                       Output
                     </Typography>
-                    <Box sx={{ 
-                      p: 1, 
-                      bgcolor: 'grey.100', 
-                      borderRadius: 1,
-                      overflowX: 'auto'
-                    }}>
+                    <Box
+                      sx={{
+                        p: 1,
+                        bgcolor: 'grey.100',
+                        borderRadius: 1,
+                        overflowX: 'auto',
+                      }}
+                    >
                       <JSONTree
                         data={selectedStep.output}
                         theme={jsonTreeTheme}
@@ -309,4 +346,4 @@ const AgentsTracePage: FC = () => {
   );
 };
 
-export default AgentsTracePage; 
+export default AgentsTracePage;

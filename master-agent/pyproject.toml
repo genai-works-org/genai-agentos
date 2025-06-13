@@ -4,13 +4,16 @@ version = "1.0.0"
 description = "Python Master Agent for GenAI Agentos infrastructure"
 requires-python = ">=3.12"
 dependencies = [
+    "a2a-sdk>=0.2.5",
     "genai-protocol",
+    "httpx>=0.28.1",
     "jmespath>=1.0.1",
     "langchain>=0.3.21",
     "langchain-ollama>=0.3.1",
     "langchain-openai>=0.3.10",
     "langgraph>=0.3.20",
     "loguru>=0.7.3",
+    "mcp[cli]>=1.9.2",
     "pydantic>=2.10.6",
     "pydantic-settings>=2.8.1",
     "websockets>=15.0.1",

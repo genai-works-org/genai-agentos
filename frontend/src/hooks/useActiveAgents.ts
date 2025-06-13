@@ -1,44 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AgentDTO } from '../types/agent';
+import { AgentType, ActiveConnection } from '../types/agent';
 import { agentService } from '../services/agentService';
 
-interface ActiveAgentsResponse {
-  count_active_connections: number;
-  active_connections: AgentDTO[];
-}
-
 interface UseActiveAgentsOptions {
+  type: AgentType;
   initialLimit?: number;
   onError?: (error: Error) => void;
 }
 
-export const useActiveAgents = ({ initialLimit = 100, onError }: UseActiveAgentsOptions = {}) => {
-  const [agents, setAgents] = useState<AgentDTO[]>([]);
+export const useActiveAgents = ({
+  type,
+  initialLimit = 100,
+  onError,
+}: UseActiveAgentsOptions) => {
+  const [agents, setAgents] = useState<ActiveConnection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
 
-  const fetchAgents = useCallback(async (currentOffset: number, limit: number) => {
-    try {
-      setLoading(true);
-      const response = await agentService.getActiveAgents({
-        offset: currentOffset.toString(),
-        limit: limit.toString()
-      });
-      
-      const newAgents = response.active_connections;
-      setAgents(prev => currentOffset === 0 ? newAgents : [...prev, ...newAgents]);
-      setHasMore(newAgents.length === limit);
-      setError(null);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to fetch agents');
-      setError(error);
-      onError?.(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [onError]);
+  const fetchAgents = useCallback(
+    async (currentOffset: number, limit: number) => {
+      try {
+        setLoading(true);
+        const response = await agentService.getActiveAgents({
+          offset: currentOffset.toString(),
+          limit: limit.toString(),
+          agent_type: type,
+        });
+
+        const activeConnections = response.active_connections;
+        setAgents(prev =>
+          currentOffset === 0
+            ? activeConnections
+            : [...prev, ...activeConnections],
+        );
+        setHasMore(activeConnections.length === limit);
+        setError(null);
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error('Failed to fetch agents');
+        setError(error);
+        onError?.(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [onError],
+  );
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
@@ -63,6 +72,6 @@ export const useActiveAgents = ({ initialLimit = 100, onError }: UseActiveAgents
     error,
     hasMore,
     loadMore,
-    refresh
+    refresh,
   };
-}; 
+};

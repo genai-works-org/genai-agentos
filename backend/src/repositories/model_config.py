@@ -4,11 +4,16 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.auth.encrypt import encrypt_secret
-from src.models import ModelConfig, User
+from sqlalchemy.orm import selectinload
+from src.models import ModelConfig, ModelProvider, User
 from src.repositories.base import CRUDBase
-from src.schemas.api.model_config.dto import ModelConfigDTO
-from src.schemas.api.model_config.schemas import ModelConfigCreate, ModelConfigUpdate
+from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
+from src.schemas.api.model_config.schemas import (
+    ModelConfigCreate,
+    ModelConfigUpdate,
+    ProviderCRUDCreate,
+    ProviderCRUDUpdate,
+)
 
 
 class ModelConfigRepository(
@@ -16,22 +21,40 @@ class ModelConfigRepository(
 ):
     async def get_config_by_user(
         self, db: AsyncSession, user_model: User, config_id: str
-    ) -> Optional[ModelConfigDTO]:
-        config = await self.get_by_user(db=db, id_=config_id, user_model=user_model)
-        if not config:
+    ):
+        c = await self.get_by_user(db=db, id_=config_id, user_model=user_model)
+        if not c:
             raise HTTPException(
-                status_code=400,
-                detail=f"Model config with id {config_id} does not exist",
+                status_code=400, detail=f"Config with id '{config_id}' was not found"
             )
 
-        return ModelConfigDTO(
-            id=config_id,
-            name=config.name,
-            model=config.model,
-            provider=config.provider,
-            system_prompt=config.system_prompt,
-            temperature=config.temperature,
-            credentials=config.credentials,
+        p = await db.scalar(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .join(self.model, self.model.provider_id == ModelProvider.id)
+            .where(
+                and_(
+                    self.model.id == config_id,
+                    ModelProvider.creator_id == user_model.id,
+                )
+            )
+        )
+
+        return ModelProviderDTO(
+            provider=p.name,
+            api_key=p.api_key,
+            configs=[
+                ModelConfigDTO(
+                    id=c.id,
+                    name=c.name,
+                    model=c.model,
+                    system_prompt=c.system_prompt,
+                    temperature=c.temperature,
+                    credentials=c.credentials,
+                    user_prompt=c.user_prompt,
+                    max_last_messages=c.max_last_messages,
+                )
+            ],
         )
 
     async def find_model_by_config_name(
@@ -68,7 +91,7 @@ class ModelConfigRepository(
                     self.model.creator_id == user_model.id,
                 )
             )
-            .order_by(self.model.created_at.desc())
+            .order_by(self.model.created_at.asc())
         )
         model_config = q.scalars().first()
         if not model_config:
@@ -76,16 +99,103 @@ class ModelConfigRepository(
 
         return model_config.credentials.get("api_key")
 
+    async def create_model_config(
+        self,
+        db: AsyncSession,
+        obj_in: ModelConfigCreate,
+        user_id: UUID,
+        provider_id: UUID,
+    ):
+        config = ModelConfig(
+            name=obj_in.name,
+            model=obj_in.model,
+            provider_id=provider_id,
+            system_prompt=obj_in.system_prompt,
+            max_last_messages=obj_in.max_last_messages,
+            temperature=obj_in.temperature,
+            credentials=obj_in.credentials,
+            creator_id=user_id,
+            user_prompt=obj_in.user_prompt,
+        )
+        db.add(config)
+        await db.commit()
+        await db.refresh(config)
+        return config
+
+    async def get_all_provider_configs(
+        self, db: AsyncSession, provider_name: str, user_id: UUID
+    ) -> list[Optional[ModelProviderDTO]]:
+        q = await db.scalars(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .where(
+                and_(
+                    ModelProvider.name == provider_name,
+                    ModelProvider.creator_id == user_id,
+                )
+            )
+        )
+        return [
+            ModelProviderDTO(
+                provider=p.name,
+                api_key=p.api_key,
+                configs=[
+                    ModelConfigDTO(
+                        id=c.id,
+                        name=c.name,
+                        model=c.model,
+                        system_prompt=c.system_prompt,
+                        temperature=c.temperature,
+                        credentials=c.credentials,
+                        user_prompt=c.user_prompt,
+                        max_last_messages=c.max_last_messages,
+                    )
+                    for c in p.configs
+                ][::-1],  # desc sort, TODO: rework
+            )
+            for p in q.all()
+        ]
+
+    async def get_model_config(self, db: AsyncSession, id_: UUID, user_model: User):
+        c = await db.scalar(
+            select(self.model).where(
+                and_(self.model.id == id_, self.model.creator_id == user_model.id)
+            )
+        )
+        return ModelConfigDTO(
+            id=c.id,
+            name=c.name,
+            model=c.model,
+            system_prompt=c.system_prompt,
+            temperature=c.temperature,
+            credentials=c.credentials,
+            user_prompt=c.user_prompt,
+            max_last_messages=c.max_last_messages,
+        )
+
     async def create_model_config_with_encryption(
         self,
         db: AsyncSession,
         obj_in: ModelConfigCreate,
         user_model: User,
     ) -> ModelConfig:
-        if obj_in.credentials:
-            if api_key := obj_in.credentials.get("api_key"):
-                obj_in.credentials["api_key"] = encrypt_secret(api_key)
-        return await self.create_by_user(db=db, obj_in=obj_in, user_model=user_model)
+        user_id = user_model.id
+        provider = await self.get_provider_by_name(
+            db=db, provider_name=obj_in.provider, user_id=user_id
+        )
+        if not provider:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Provider named {obj_in.provider} does not exist",
+            )
+        await self.create_model_config(
+            db=db, obj_in=obj_in, user_id=user_id, provider_id=provider.id
+        )
+        await db.refresh(provider)
+        dto = await self.get_all_provider_configs(
+            db=db, provider_name=provider.name, user_id=user_id
+        )
+        return dto
 
     async def update_model_config_with_encryption(
         self,
@@ -94,10 +204,95 @@ class ModelConfigRepository(
         obj_in: ModelConfigUpdate,
         user_model: User,
     ) -> ModelConfig:
-        if obj_in.credentials:
-            if api_key := obj_in.credentials.get("api_key"):
-                obj_in.credentials["api_key"] = encrypt_secret(api_key)
-        return await self.update_by_user(db=db, id_=id_, obj_in=obj_in, user=user_model)
+        cfg = await self.get_model_config(db=db, id_=id_, user_model=user_model)
+        if not cfg:
+            raise HTTPException(detail=f"Config with '{str(id_)}' does not exist")
+        return await self.update_by_user(
+            db=db, id_=cfg.id, user=user_model, obj_in=obj_in
+        )
+
+    async def get_provider_by_name(
+        self, db: AsyncSession, provider_name: str, user_id: UUID
+    ) -> ModelProvider:
+        p = await db.scalar(
+            select(ModelProvider).where(
+                and_(
+                    ModelProvider.name == provider_name,
+                    ModelProvider.creator_id == user_id,
+                )
+            )
+        )
+        return p
+
+    async def get_provider_with_configs_by_name(
+        self, db: AsyncSession, provider_name: str, user_model: User
+    ):
+        p = await db.scalar(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .where(
+                and_(
+                    ModelProvider.name == provider_name,
+                    ModelProvider.creator_id == user_model.id,
+                )
+            )
+        )
+        return p
+
+    async def get_all_configs_of_all_providers(
+        self, db: AsyncSession, user_model: User, limit: int, offset: int
+    ):
+        q = await db.scalars(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .where(
+                and_(
+                    ModelProvider.creator_id == user_model.id,
+                )
+            )
+            .order_by(ModelProvider.created_at.desc())
+            .limit(limit=limit)
+            .offset(offset=offset)
+        )
+        return [
+            ModelProviderDTO(
+                provider=p.name,
+                api_key=p.api_key,
+                configs=[
+                    ModelConfigDTO(
+                        id=c.id,
+                        name=c.name,
+                        model=c.model,
+                        system_prompt=c.system_prompt,
+                        temperature=c.temperature,
+                        credentials=c.credentials,
+                        user_prompt=c.user_prompt,
+                        max_last_messages=c.max_last_messages,
+                    )
+                    for c in p.configs
+                ],
+            )
+            for p in q.all()
+        ]
+
+    async def update_provider(
+        self,
+        db: AsyncSession,
+        provider_obj: ModelProvider,
+        upd_in: ProviderCRUDUpdate,
+    ):
+        return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in)
+
+    async def create_provider(
+        self, db: AsyncSession, provider_in: ProviderCRUDCreate, user_model: User
+    ):
+        p = ModelProvider(
+            name=provider_in.name, api_key=provider_in.api_key, creator_id=user_model.id
+        )
+        db.add(p)
+        await db.commit()
+        await db.refresh(p)
+        return p
 
 
 model_config_repo = ModelConfigRepository(ModelConfig)

@@ -1,0 +1,2 @@
+class InvalidToolNameException(BaseException):
+    pass

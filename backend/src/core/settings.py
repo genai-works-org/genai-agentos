@@ -1,11 +1,7 @@
 from functools import lru_cache
 from typing import Optional, Self
 
-from pydantic import (
-    Field,
-    model_validator,
-    field_validator,
-)
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,14 +21,14 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=False)
 
     # str type due to env vars values from .env are interpreted as strings
-    POSTGRES_HOST: str = Field(default="postgres")
+    POSTGRES_HOST: str = Field(default="genai-postgres")
     POSTGRES_USER: str = Field(default="postgres")
     POSTGRES_PASSWORD: str = Field(default="postgres")
     POSTGRES_DB: str = Field(default="postgres")
     POSTGRES_PORT: str = Field(default="5432")
     SQLALCHEMY_ASYNC_DATABASE_URI: Optional[str] = None
 
-    ROUTER_WS_URL: str = Field(default="ws://router:8080/ws")
+    ROUTER_WS_URL: str = Field(default="ws://genai-router:8080/ws")
     MASTER_BE_API_KEY: str = Field(
         default="7a3fd399-3e48-46a0-ab7c-0eaf38020283::master_server_be"
     )
@@ -43,8 +39,10 @@ class Settings(BaseSettings):
 
     DEFAULT_FILES_FOLDER_NAME: str = Field(default="files")
 
-    OPENAI_API_KEY: Optional[str] = None
-    DEEPSEEK_API_KEY: Optional[str] = None
+    REDIS_BROKER_URI: str = Field(default="redis://genai-redis:6379/0")
+    REDIS_BACKEND_URI: str = Field(default="redis://genai-redis:6379/0")
+
+    CELERY_BEAT_INTERVAL_MINUTES: int = Field(default=10)
 
     @model_validator(mode="after")
     def build_database_uri(self) -> Self:

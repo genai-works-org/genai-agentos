@@ -1,17 +1,29 @@
 import type { FC } from 'react';
 import { useRef, useEffect } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, IconButton } from '@mui/material';
 import { NodeProps, Handle, Position } from 'reactflow';
+import { ShieldX, Trash2 } from 'lucide-react';
 
-export const FlowNode: FC<NodeProps> = ({ data, id }) => {
+interface FlowNodeData {
+  label: string;
+  description: string;
+  color: string;
+  type: string;
+  isActive: boolean;
+  flow?: any[];
+  onDelete: (nodeId: string) => void;
+}
+
+export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
+  const isActive = data.isActive === true || data.isActive === undefined;
 
   useEffect(() => {
     if (nodeRef.current) {
       const height = nodeRef.current.offsetHeight;
       // Emit height to parent through custom event
       const event = new CustomEvent('nodeHeight', {
-        detail: { nodeId: id, height }
+        detail: { nodeId: id, height },
       });
       window.dispatchEvent(event);
     }
@@ -30,10 +42,28 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
         position: 'relative',
       }}
     >
+      <IconButton
+        size="small"
+        onClick={e => {
+          e.stopPropagation();
+          if (data.onDelete) {
+            data.onDelete(id);
+          }
+        }}
+        sx={{
+          position: 'absolute',
+          top: -10,
+          right: -10,
+          color: '#c1121f',
+          p: 0.5,
+        }}
+      >
+        <Trash2 size={12} />
+      </IconButton>
       <Handle
         type="target"
         position={Position.Top}
-        style={{ 
+        style={{
           top: -13,
         }}
       />
@@ -44,9 +74,43 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
           bottom: -13,
         }}
       />
-      <Typography variant="subtitle1" sx={{ mb: data.flow ? 0.5 : 0 }}>
-        {data.label}
+      <Typography
+        variant="subtitle1"
+        sx={{
+          mb: data.flow ? 0.5 : 0,
+          maxWidth: '100%',
+          overflowWrap: 'break-word',
+          textAlign: 'center',
+        }}
+      >
+        {isActive ? (
+          data.label
+        ) : (
+          <Typography
+            component="span"
+            sx={{ display: 'flex', gap: 0.5, color: '#c1121f' }}
+          >
+            <ShieldX /> {data.label}
+          </Typography>
+        )}
       </Typography>
+      {data?.type && (
+        <Typography
+          variant="caption"
+          sx={{
+            position: 'absolute',
+            top: -8,
+            left: -8,
+            padding: '0 4px',
+            fontSize: 8,
+            border: '1px solid #E65100',
+            color: '#E65100',
+            borderRadius: 2,
+          }}
+        >
+          {data.type}
+        </Typography>
+      )}
       {data.flow && (
         <Box
           sx={{
@@ -63,10 +127,10 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
             <Box
               key={index}
               id={`flow-node-${id}-${index}`}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 const event = new CustomEvent('flowStepClick', {
-                  detail: { step, nodeId: id }
+                  detail: { step, nodeId: id },
                 });
                 window.dispatchEvent(event);
               }}
@@ -85,7 +149,14 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
                 },
               }}
             >
-              <Typography variant="caption" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {step.name}
               </Typography>
             </Box>
@@ -94,4 +165,4 @@ export const FlowNode: FC<NodeProps> = ({ data, id }) => {
       )}
     </Box>
   );
-}; 
+};

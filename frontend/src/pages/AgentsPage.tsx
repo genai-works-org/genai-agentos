@@ -1,71 +1,123 @@
-import {useEffect, useState} from 'react';
-import type {FC} from 'react';
-import {AgentDTO} from '../types/agent';
-import {AgentCard} from '../components/AgentCard';
-import {Container, IconButton, Typography, CircularProgress, Box} from '@mui/material';
+import { useEffect, useState } from 'react';
+import type { FC } from 'react';
+import { AgentDTO } from '../types/agent';
+import { AgentCard } from '../components/AgentCard';
+import {
+  Container,
+  IconButton,
+  Typography,
+  CircularProgress,
+  Box,
+} from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import {MainLayout} from '../components/MainLayout';
-import {useAgent} from '../hooks/useAgent';
+import { MainLayout } from '../components/MainLayout';
+import { useAgent } from '../hooks/useAgent';
+import ConfirmModal from '../components/ConfirmModal';
 
 export const AgentsPage: FC = () => {
-    const [agents, setAgents] = useState<AgentDTO[]>([]);
-    const [activeConnectionsCount, setActiveConnectionsCount] = useState<number>(0);
-    const {isLoading, getAgents, deleteAgent} = useAgent();
+  const [agents, setAgents] = useState<AgentDTO[]>([]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<AgentDTO | null>(null);
+  const { isLoading, getAgents, deleteAgent } = useAgent();
 
-    useEffect(() => {
-        loadAgents();
-    }, []);
+  const activeAgents = agents.filter(agent => agent.is_active);
 
-    const loadAgents = async () => {
-        const response = await getAgents();
-        setAgents(response);
-        setActiveConnectionsCount(response.length);
-    };
+  useEffect(() => {
+    loadAgents();
+  }, []);
 
-    const activeAgents = agents.filter(agent => agent.is_active).length
+  const loadAgents = async () => {
+    const response = await getAgents();
+    setAgents(response);
+  };
 
-    return (
-        <MainLayout currentPage="Agents">
-            <Container maxWidth="xl" sx={{mt: 4, mb: 4}}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-                    {!isLoading && (
-                        <Box>
-                            <Typography variant="h5" component="h3">
-                                {activeConnectionsCount} agents ({activeAgents} active)
-                            </Typography>
-                        </Box>
-                    )}
-                    <Box>
-                        <IconButton
-                            color="primary"
-                            onClick={loadAgents}
-                            disabled={isLoading}
-                            sx={{mr: 2}}
-                        >
-                            <RefreshIcon/>
-                        </IconButton>
-                    </Box>
-                </Box>
-                {isLoading ? (
-                    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-                        <CircularProgress/>
-                    </Box>
-                ) : agents.length === 0 ? (
-                    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-                        <Typography variant="h6" color="text.secondary">
-                            No agents found
-                        </Typography>
-                    </Box>
-                ) : (
-                    <Box display="grid" gridTemplateColumns={{xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr'}} gap={3}>
-                        {agents.map((agent) => (
-                            <Box key={agent.agent_id}>
-                                <AgentCard agent={agent} onDelete={deleteAgent} onDeleted={loadAgents}/>
-                            </Box>
-                        ))}
-                    </Box>
-                )}
-            </Container>
-        </MainLayout>
-    );
+  const openConfirm = (agent: AgentDTO) => {
+    setSelectedAgent(agent);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDeleteAgent = async () => {
+    if (selectedAgent) {
+      await deleteAgent(selectedAgent.agent_id);
+      await loadAgents();
+      setSelectedAgent(null);
+      setIsConfirmOpen(false);
+    }
+  };
+
+  return (
+    <MainLayout currentPage="Agents">
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Box
+          display="flex"
+          alignItems="center"
+          justifyContent="space-between"
+          mb={3}
+        >
+          {!isLoading && (
+            <Box>
+              <Typography variant="h5" component="h3">
+                {agents.length} agents ({activeAgents.length} active)
+              </Typography>
+            </Box>
+          )}
+          <Box>
+            <IconButton
+              color="primary"
+              onClick={loadAgents}
+              disabled={isLoading}
+              sx={{ mr: 2 }}
+            >
+              <RefreshIcon />
+            </IconButton>
+          </Box>
+        </Box>
+        {isLoading ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
+          >
+            <CircularProgress />
+          </Box>
+        ) : agents.length === 0 ? (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
+          >
+            <Typography variant="h6" color="text.secondary">
+              No agents found
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            display="grid"
+            gridTemplateColumns={{
+              xs: '1fr',
+              sm: '1fr 1fr',
+              md: '1fr 1fr 1fr',
+            }}
+            gap={3}
+          >
+            {agents.map(agent => (
+              <Box key={agent.agent_id}>
+                <AgentCard agent={agent} onDelete={() => openConfirm(agent)} />
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Container>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        title="Delete Agent"
+        text={`Are you sure you want to delete ${selectedAgent?.agent_name || ''}?`}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={handleDeleteAgent}
+      />
+    </MainLayout>
+  );
 };

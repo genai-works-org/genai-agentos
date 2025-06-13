@@ -4,22 +4,21 @@ import socket
 from contextlib import asynccontextmanager
 from typing import Optional
 
+import tenacity
 import uvicorn
 import websockets
-import tenacity
-
 from fastapi import FastAPI, Request
-from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 from genai_session.utils.exceptions import RouterInaccessibleException
-
-from src.utils.jobs import run_startup_jobs
 from src.core.settings import get_settings
+from src.middleware.pagination import PaginationMiddleware
 from src.routes.api import api_router
-from src.routes.websocket import ws_router
 from src.routes.files.routes import files_router
+from src.routes.websocket import ws_router
+from src.utils.jobs import run_startup_jobs
 from src.utils.message_handler_validator import message_handler_validator
 from src.utils.setup_logger import init_logging
 
@@ -128,6 +127,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(PaginationMiddleware)
 
 
 @app.route("/")

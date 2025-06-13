@@ -1,8 +1,7 @@
 import type { FC, ReactNode } from 'react';
-import Header from './Header';
-import { useTheme } from '../contexts/ThemeContext';
-import { getThemeColors } from '../utils/themeUtils';
 import { Container } from '@mui/material';
+import { useTheme } from '../contexts/ThemeContext';
+import Header from './Header';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,17 +9,21 @@ interface LayoutProps {
 
 const Layout: FC<LayoutProps> = ({ children }) => {
   const { theme } = useTheme();
-  const colors = getThemeColors(theme);
-
 
   return (
-    <Container maxWidth='false' sx={{ height: '100vh', display: 'flex', flexDirection: 'column'}} disableGutters>
-      <div className={`min-h-screen flex flex-col ${theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'}`}>
+    <Container
+      maxWidth={false}
+      sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}
+      disableGutters
+    >
+      <div
+        className={`min-h-screen flex flex-col ${theme === 'light' ? 'bg-light-bg' : 'bg-dark-bg'}`}
+      >
         <Header />
         <main className="flex-1 flex items-center justify-center">
           {children}
         </main>
-        </div>
+      </div>
     </Container>
   );
 };

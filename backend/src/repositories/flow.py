@@ -1,12 +1,18 @@
 from typing import List, Optional, Union
+from uuid import UUID
 
-from sqlalchemy import delete, select, and_
-from src.repositories.base import CRUDBase
-from src.models import Agent, AgentWorkflow, User
-from src.schemas.api.flow.schemas import AgentFlowCreate, AgentFlowUpdate, FlowAgentId
-from sqlalchemy.ext.asyncio import AsyncSession
-from src.repositories.agent import agent_repo
 from fastapi import HTTPException
+from sqlalchemy import and_, delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.models import Agent, AgentWorkflow, User
+from src.repositories.base import CRUDBase
+from src.schemas.api.flow.schemas import (
+    AgentFlowAlias,
+    AgentFlowCreate,
+    AgentFlowUpdate,
+    FlowAgentId,
+)
+from src.utils.helpers import FlowValidator, generate_alias
 
 
 class AgentWorkflowRepository(
@@ -85,17 +91,21 @@ class AgentWorkflowRepository(
                 Validates that all agents in the flow exist and are owned by the user before
         creating the workflow.
         """
-        valid_flow = await self.validate_flow_agent_exists(
-            db=db, flow=obj_in.flow, user_model=user_model
+        valid_flow = await self.validate_all_agents_in_flow_are_active(
+            obj_in=obj_in, user_model=user_model
         )
         if not valid_flow:
             raise self.get_empty_flow_exception()
 
         db_obj = self.model(
-            name=obj_in.name,
+            name=obj_in.name.replace(" ", "-"),
             description=obj_in.description,
-            flow=[flow.model_dump(mode="json") for flow in obj_in.flow],
+            flow=[
+                flow.model_dump(mode="json", exclude_none=True) for flow in obj_in.flow
+            ],
             creator_id=user_model.id,
+            alias=generate_alias(obj_in.name),
+            is_active=True,
         )
 
         db.add(db_obj)
@@ -114,7 +124,7 @@ class AgentWorkflowRepository(
         await db.commit()
         return result
 
-    async def delete_all_flows_where_deleted_agent_exists(
+    async def set_inactive_for_all_flows_where_deleted_agent_exists(
         self, db: AsyncSession, agent_id: str, user_model: User
     ):
         """
@@ -132,40 +142,58 @@ class AgentWorkflowRepository(
                 This function identifies and deletes flows containing the provided agent ID.
         """
         q = await db.execute(
-            select(self.model).where(self.model.creator_id == str(user_model.id))
+            select(self.model).where(
+                and_(
+                    self.model.creator_id == str(user_model.id),
+                    self.model.is_active.is_(True),
+                )
+            )
         )
         flows = q.scalars().all()
 
-        flow_ids_to_delete: list[Optional[str]] = []
+        flow_ids_to_update: list[Optional[str]] = []
         for flow in flows:
             flow_list = flow.flow
-            agent_ids = [agent["agent_id"] for agent in flow_list]
+            agent_ids = [agent["id"] for agent in flow_list]
             if agent_id in agent_ids:
-                flow_ids_to_delete.append(str(flow.id))
+                flow_ids_to_update.append({"id": str(flow.id), "is_active": False})
 
-        if flow_ids_to_delete:
-            result = await self.delete_multiple(
-                db=db, flow_ids=flow_ids_to_delete, user_id=str(user_model.id)
+        if flow_ids_to_update:
+            await db.run_sync(
+                lambda sync_db: sync_db.bulk_update_mappings(
+                    self.model, flow_ids_to_update
+                )
             )
-            if result:
-                return flow_ids_to_delete
-
+            await db.commit()
         return None
+
+    async def set_multiple_flow_as_inactive(
+        self, db: AsyncSession, flow_ids: list[Optional[str]], user_id: UUID | str
+    ):
+        q = await db.execute(
+            update(self.model)
+            .where(and_(self.model.id.in_(flow_ids), self.model.creator_id == user_id))
+            .values(is_active=False)
+        )
+        return q.all()
 
     async def validate_all_agents_in_flow_are_active(
         self,
-        db: AsyncSession,
         obj_in: Union[AgentFlowCreate, AgentFlowUpdate],
         user_model: User,
     ) -> Optional[list[str]]:
-        agent_ids = [agent.agent_id for agent in obj_in.flow]
-        valid_agents = await agent_repo.get_agents_by_ids(
-            db=db, agent_ids=agent_ids, user_model=user_model
+        flow_validator = FlowValidator()
+        valid_agents = await flow_validator.validate_is_active_of_all_agent_types(
+            flow_agents=obj_in.flow, user_id=user_model.id
         )
-        if non_active_agents := list(set(agent_ids) - set(valid_agents)):
+
+        if non_active_agents := list(
+            set([agent.id for agent in obj_in.flow]) - set(valid_agents)
+        ):
             raise HTTPException(
                 status_code=400,
-                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}. Make sure agent was registered by you and is active before including it into the agent flow",  # noqa: E501
+                detail=f"One or more agents were not registered previously or are not active: {repr(non_active_agents)}."  # noqa: E501
+                f" Make sure agent was registered by you and is active before including it into the agent flow",
             )
         return valid_agents
 
@@ -176,13 +204,29 @@ class AgentWorkflowRepository(
         upd_data: AgentFlowUpdate,
         user_model: User,
     ) -> Optional[AgentWorkflow]:
+        alias = generate_alias(upd_data.name)
+        upd_model = AgentFlowAlias(**upd_data.__dict__, alias=alias)
         valid_agents = await self.validate_all_agents_in_flow_are_active(
-            db=db, obj_in=upd_data, user_model=user_model
+            obj_in=upd_model, user_model=user_model
         )
         if valid_agents:
-            return await self.update_by_id(
-                db=db, id_=flow_id, obj_in=upd_data, user_model=user_model
+            return await self.update_valid_flow(
+                db=db, flow_id=flow_id, upd_data=upd_data, user_model=user_model
             )
+
+    async def update_valid_flow(
+        self,
+        db: AsyncSession,
+        flow_id: str,
+        upd_data: AgentFlowUpdate,
+        user_model: User,
+    ):
+        flow_upd_data = upd_data.model_dump(mode="json")
+        flow_upd_data["alias"] = generate_alias(upd_data.name)
+        flow_upd_data["is_active"] = True
+        return await self.update_by_user(
+            db=db, id_=flow_id, obj_in=flow_upd_data, user=user_model
+        )
 
 
 agentflow_repo = AgentWorkflowRepository(AgentWorkflow)

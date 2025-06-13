@@ -1,25 +1,32 @@
 from typing import Any, Optional, Union
+from uuid import UUID
 
-from src.auth.hashing import get_password_hash, verify_password
-from src.repositories.base import CRUDBase
-from src.models import User, Project
-from src.schemas.api.user.schemas import UserCreate, UserUpdate
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.auth.hashing import get_password_hash, verify_password
+from src.models import Project, User, UserProfile
+from src.repositories.base import CRUDBase
+from src.schemas.api.user.schemas import UserCreate, UserProfileCRUDUpdate, UserUpdate
 
 
 class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
-    async def create(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
+    async def register(self, db: AsyncSession, *, obj_in: UserCreate) -> User:
         default_project = Project(name="Default")
         db.add(default_project)
         await db.flush()
 
         db_obj = User(
             username=obj_in.username,
-            password=get_password_hash(obj_in.password),
+            password=get_password_hash(obj_in.password.get_secret_value()),
             projects=[default_project],
         )
         db.add(db_obj)
+        await db.flush()
+
+        profile = UserProfile(user_id=db_obj.id)
+        db.add(profile)
+
         await db.commit()
         await db.refresh(db_obj)
         return db_obj
@@ -56,6 +63,21 @@ class UserRepository(CRUDBase[User, UserCreate, UserUpdate]):
         if not verify_password(password, user.password):
             return None
         return user
+
+    async def get_user_profile(self, db: AsyncSession, user_id: UUID):
+        q = await db.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
+        return q
+
+    async def update_user_profile(
+        self, db: AsyncSession, user_id: UUID, data_in: UserProfileCRUDUpdate
+    ):
+        user_profile = await self.get_user_profile(db=db, user_id=user_id)
+        if not user_profile:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Profile with of user with id '{user_id}' was not found",
+            )
+        return await self.update(db=db, db_obj=user_profile, obj_in=data_in)
 
 
 user_repo = UserRepository(User)

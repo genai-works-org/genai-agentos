@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { AIModel } from '../services/apiService';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Card,
@@ -13,28 +12,28 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { ModelConfig } from '../types/model';
 
 interface AIModelCardProps {
-  modelData: AIModel;
+  modelData: ModelConfig;
   onEdit: () => void;
   onDelete: () => void;
   isSelected: boolean;
-  onSelect: (model: AIModel) => void;
+  provider: string;
 }
 
 export const AIModelCard: FC<AIModelCardProps> = ({
-  modelData, 
+  modelData,
   onEdit,
   onDelete,
-  isSelected = false,
-  onSelect
+  isSelected,
+  provider,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { name, model, provider, temperature, system_prompt } = modelData;
+  const { name, model, temperature, system_prompt } = modelData;
 
   return (
-    <Card 
-      onClick={() => onSelect(modelData)}
+    <Card
       sx={{
         position: 'relative',
         border: isSelected ? 3 : 1,
@@ -47,12 +46,20 @@ export const AIModelCard: FC<AIModelCardProps> = ({
       }}
     >
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
           <Box sx={{ flex: 1 }}>
             <Typography variant="h6" component="h3" color="text.primary">
               {name}
             </Typography>
-            <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            <Box
+              sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 0.5 }}
+            >
               <Typography variant="body2" color="text.secondary">
                 Model: {model}
               </Typography>
@@ -66,7 +73,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
           </Box>
           <Box>
             <IconButton
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onEdit();
               }}
@@ -75,7 +82,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               <EditIcon />
             </IconButton>
             <IconButton
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onDelete();
               }}
@@ -86,14 +93,20 @@ export const AIModelCard: FC<AIModelCardProps> = ({
             </IconButton>
           </Box>
         </Box>
-        
+
         <Box sx={{ mt: 2 }}>
           <Button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               setIsExpanded(!isExpanded);
             }}
-            startIcon={isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            startIcon={
+              isExpanded ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )
+            }
             size="small"
             color="inherit"
             sx={{
@@ -129,4 +142,4 @@ export const AIModelCard: FC<AIModelCardProps> = ({
       </CardContent>
     </Card>
   );
-}; 
+};

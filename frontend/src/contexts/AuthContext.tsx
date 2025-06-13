@@ -1,9 +1,19 @@
 import type { FC, ReactNode } from 'react';
-import { useEffect, useState, createContext, useContext, useCallback, useMemo } from 'react';
+import {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  useCallback,
+  useMemo,
+} from 'react';
 import { authService, User } from '../services/authService';
 import { websocketService } from '../services/websocketService';
-import { REFRESH_TOKEN_KEY, TOKEN_KEY, USER_STORAGE_KEY } from '../constants/localStorage';
-import { useChatHistory } from './ChatHistoryContext';
+import {
+  REFRESH_TOKEN_KEY,
+  TOKEN_KEY,
+  USER_STORAGE_KEY,
+} from '../constants/localStorage';
 
 interface AuthContextType {
   user: User | null;
@@ -25,11 +35,10 @@ export const AuthProvider: FC<{
 }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { clearMessages } = useChatHistory();
 
   const login = useCallback(async (username: string, password: string) => {
     try {
-      const userData = await authService.login(username, password)
+      const userData = await authService.login(username, password);
       setUser(userData);
     } catch (error) {
       // Remove line 47: console.error('Login error:', error);
@@ -40,7 +49,7 @@ export const AuthProvider: FC<{
 
   const signup = useCallback(async (username: string, password: string) => {
     try {
-      await authService.signup(username, password)
+      await authService.signup(username, password);
     } catch (error) {
       // Remove line 63: console.error('Signup error:', error);
 
@@ -51,7 +60,6 @@ export const AuthProvider: FC<{
   const logout = useCallback(() => {
     // Clear all context data
     setUser(null);
-    clearMessages();
 
     // Disconnect websocket
     websocketService.disconnect();
@@ -61,7 +69,7 @@ export const AuthProvider: FC<{
 
     // Clear any other local storage items that might be related to the session
     localStorage.clear();
-  }, [clearMessages]);
+  }, []);
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
@@ -71,8 +79,9 @@ export const AuthProvider: FC<{
 
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      const storageKeys = [TOKEN_KEY, REFRESH_TOKEN_KEY, USER_STORAGE_KEY]
-      const isStorageChanged = storageKeys.some((key) => event.key === key) || !event.key;
+      const storageKeys = [TOKEN_KEY, REFRESH_TOKEN_KEY, USER_STORAGE_KEY];
+      const isStorageChanged =
+        storageKeys.some(key => event.key === key) || !event.key;
 
       if (isStorageChanged && !event.newValue) {
         logout();
@@ -83,19 +92,18 @@ export const AuthProvider: FC<{
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const value = useMemo(() => ({
-    user,
-    login,
-    signup,
-    logout,
-    isLoading,
-  }), [user, login, signup, logout, isLoading]);
-
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      user,
+      login,
+      signup,
+      logout,
+      isLoading,
+    }),
+    [user, login, signup, logout, isLoading],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

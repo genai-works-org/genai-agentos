@@ -1,13 +1,11 @@
+import traceback
 from logging import getLogger
 from traceback import format_exc
-import traceback
 from typing import Optional
 
 from fastapi import WebSocket
 from genai_session.session import GenAISession
-from genai_session.utils.naming_enums import WSMessageType
-from genai_session.utils.naming_enums import ErrorType
-
+from genai_session.utils.naming_enums import ErrorType, WSMessageType
 from pydantic import ValidationError
 from src.db.session import async_session
 from src.repositories.agent import agent_repo
@@ -16,6 +14,7 @@ from src.repositories.log import log_repo
 from src.repositories.user import user_repo
 from src.schemas.api.agent.schemas import AgentUpdate
 from src.schemas.ws.log import FrontendLogEntryDTO, LogCreate, LogEntry
+from src.utils.helpers import generate_alias
 from src.utils.validate_uuid import validate_agent_or_send_err
 from src.utils.validation_error_handler import validation_exception_handler
 from starlette.datastructures import State
@@ -68,6 +67,7 @@ async def message_handler_validator(
                         description=agent_description,
                         input_parameters=agent_input_schema or {},
                         is_active=True,
+                        alias=generate_alias(agent_name),
                     )
 
                     updated_agent = await agent_repo.update(
@@ -101,7 +101,7 @@ async def message_handler_validator(
                             f"No agent of user with id: '{agent.creator_id}' found"
                         )
                         return
-                    deleted_flows = await agentflow_repo.delete_all_flows_where_deleted_agent_exists(
+                    deleted_flows = await agentflow_repo.set_inactive_for_all_flows_where_deleted_agent_exists(
                         db=db, agent_id=str(agent.id), user_model=user
                     )
                     if deleted_flows:

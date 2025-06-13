@@ -1,6 +1,7 @@
 import copy
 import logging
 import traceback
+from datetime import datetime
 from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
@@ -10,17 +11,19 @@ from pydantic import ValidationError
 
 from src.core.settings import get_settings
 from src.db.session import AsyncDBSession
+from src.repositories.chat import chat_repo
 from src.repositories.files import files_repo
 from src.repositories.model_config import model_config_repo
 from src.schemas.api.agent.dto import AgentResponseWithFilesDTO, AgentTypeResponseDTO
+from src.schemas.api.chat.schemas import CreateChatMessage
 from src.schemas.ws.frontend import (
     AgentResponseDTO,
     IncomingFrontendMessage,
     LLMPropertiesDecryptCreds,
-    LLMPropertiesDTO,
 )
 from src.schemas.ws.ml import OutgoingMLRequestSchema
-from src.utils.get_agents_and_flows import query_agents_and_flows
+from src.utils.enums import SenderType
+from src.utils.validate_uuid import is_valid_uuid
 from src.utils.validation_error_handler import validation_exception_handler
 from src.utils.websocket import get_current_ws_user
 
@@ -33,7 +36,6 @@ ws_router = APIRouter()
 async def handle_frontend_ws(
     websocket: WebSocket,
     db: AsyncDBSession,
-    token: str,
 ):
     """
         WS endpoint to receive messages from frontend and proxy them to ML
@@ -109,7 +111,10 @@ async def handle_frontend_ws(
     query_params = websocket.query_params
     token = query_params.get("token")
     if not token:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="JWT token is expired or invalid",
+        )
         return
 
     current_user = await get_current_ws_user(websocket=websocket, db=db, token=token)
@@ -118,16 +123,45 @@ async def handle_frontend_ws(
     if not user_model:
         return
 
+    session_id = query_params.get("session_id")
+    if not session_id:
+        # if session_id was not provided
+        session_id = str(uuid4())
+    else:
+        if not is_valid_uuid(uuid=session_id):
+            await websocket.close(
+                code=status.WS_1008_POLICY_VIOLATION,
+                reason="session_id is not a valid UUID",
+            )
+            return
+
     websocket.app.state.frontend_ws = websocket
     await websocket.accept()
-    session_id = str(uuid4())
+
     session: GenAISession = websocket.app.state.genai_session
 
     try:
         while True:
-            message_obj = IncomingFrontendMessage.model_validate_json(
-                await websocket.receive_text()
+            try:
+                message_obj = IncomingFrontendMessage.model_validate_json(
+                    await websocket.receive_text()
+                )
+            except ValidationError as e:
+                await websocket.send_text(
+                    f"Message validation failed. Details: {validation_exception_handler(exc=e)}"  # noqa: E501
+                )
+            chat_title = message_obj.message[:20]
+            chat = await chat_repo.get_chat_by_session_id(
+                db=db, session_id=session_id, user_model=user_model
             )
+            if not chat:
+                await chat_repo.create_chat_by_session_id(
+                    db=db,
+                    user_model=user_model,
+                    session_id=session_id,
+                    initial_user_message=chat_title,
+                )
+
             request_id = str(uuid4())
             file_ids = message_obj.files
             if file_ids:
@@ -141,68 +175,68 @@ async def handle_frontend_ws(
             else:
                 files = []
 
-            users_model_config = await model_config_repo.find_model_by_config_name(
-                db=db,
-                config_name=message_obj.llm_name,
-                user_model=user_model,
+            provider = await model_config_repo.get_provider_by_name(
+                db=db, provider_name=message_obj.provider, user_id=user_model.id
             )
-
-            if users_model_config:
-                valid_api_key = (
-                    await model_config_repo.lookup_provider_for_valid_api_key(
-                        db=db,
-                        user_model=user_model,
-                        provider_name=users_model_config.provider,
-                    )
-                )
-                updated_credentials = {}
-
-                # looking up existing config if credentials are available in the modelconfig
-                api_key = users_model_config.credentials.get("api_key")
-                if api_key:
-                    updated_credentials = {
-                        **users_model_config.credentials,
-                        "api_key": valid_api_key,
-                    }
-
-                else:
-                    updated_credentials = users_model_config.credentials
-
-                try:
-                    enriched_llm_props = LLMPropertiesDecryptCreds(
-                        config_name=users_model_config.name,
-                        provider=users_model_config.provider,
-                        model=users_model_config.model,
-                        temperature=users_model_config.temperature,
-                        system_prompt=users_model_config.system_prompt,
-                        credentials=updated_credentials,
-                    )
-
-                except ValueError:
-                    await websocket.send_json(
-                        {
-                            "error": "Could not decrypt api_key. Make sure 'api_key' exists and model config was created beforehand "  # noqa: E501
-                        }
-                    )
-                    return
-
-            else:
-                logger.debug(
-                    f"Model config '{message_obj.llm_name}' not found for user '{user_model.username}'"
-                )
+            config = await model_config_repo.find_model_by_config_name(
+                db=db, config_name=message_obj.llm_name, user_model=user_model
+            )
+            if not provider:
                 await websocket.send_json(
-                    {"error": f"Model config '{message_obj.llm_name}' not found"}
+                    {"error": f"Provider {message_obj.provider} does not exist"}
+                )
+                await websocket.close(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason=f"Provider {message_obj.provider} does not exist",
+                )
+
+            if not config:
+                await websocket.send_json(
+                    {"error": f"Config {message_obj.llm_name} does not exist"}
+                )
+                await websocket.close(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason=f"Config {message_obj.llm_name} does not exist",
+                )
+            try:
+                enriched_llm_props = LLMPropertiesDecryptCreds(
+                    config_name=config.name,
+                    provider=provider.name,
+                    model=config.model,
+                    temperature=config.temperature,
+                    system_prompt=config.system_prompt,
+                    user_prompt=config.user_prompt,
+                    credentials={
+                        **config.credentials,
+                        "api_key": provider.api_key,
+                    },
+                    max_last_messages=config.max_last_messages,
+                )
+            except ValueError:
+                await websocket.send_json(
+                    {
+                        "error": "Could not decrypt api_key. Make sure 'api_key' exists and model config was created beforehand "  # noqa: E501
+                    }
                 )
                 return
 
-            agents_and_flows = await query_agents_and_flows(db=db)
-            ml_request = OutgoingMLRequestSchema(
-                message=message_obj.message,
-                agents=agents_and_flows.agents,
-                configs=LLMPropertiesDTO(llm=enriched_llm_props.to_json()),
-                files=files,
+            await chat_repo.add_message_to_conversation(
+                db=db,
+                user_model=user_model,
+                session_id=session_id,
+                request_id=request_id,
+                message_in=CreateChatMessage(
+                    sender_type=SenderType.user, content=message_obj.message
+                ),
             )
 
+            ml_request = OutgoingMLRequestSchema(
+                user_id=user_model.id,
+                session_id=session_id,
+                timestamp=int(datetime.now().timestamp()),
+                configs=enriched_llm_props.to_json(),
+                files=files,
+            )
             req_body = ml_request.model_dump(exclude_none=True)
 
             try:
@@ -217,6 +251,16 @@ async def handle_frontend_ws(
                     response=response.response,
                     request_id=request_id,
                     session_id=session_id,
+                )
+                await chat_repo.add_message_to_conversation(
+                    db=db,
+                    user_model=user_model,
+                    session_id=session_id,
+                    request_id=request_id,
+                    message_in=CreateChatMessage(
+                        sender_type=SenderType.master_agent,
+                        content=agent_response.response,
+                    ),
                 )
 
                 files_by_request_id = await files_repo.list_files_by_request_id(

@@ -5,11 +5,10 @@ from uuid import UUID
 from genai_session.session import GenAISession
 from genai_session.utils.naming_enums import ErrorType
 from pydantic import ValidationError
-
-from src.models import Agent
-from src.utils.validation_error_handler import validation_exception_handler
 from src.db.session import async_session
+from src.models import Agent
 from src.repositories.agent import agent_repo
+from src.utils.validation_error_handler import validation_exception_handler
 
 logger = logging.getLogger(__name__)
 
@@ -51,3 +50,10 @@ async def validate_agent_or_send_err(
             f"Invalid agent_register event request schema. Details: {validation_exception_handler(e)}"
         )
         return
+
+
+def is_valid_uuid(uuid: str) -> str | bool:
+    try:
+        return str(UUID(uuid))
+    except ValueError:
+        return False

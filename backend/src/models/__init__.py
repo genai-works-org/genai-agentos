@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -9,12 +9,14 @@ from src.db.annotations import (
     created_at,
     int_pk,
     last_invoked_at,
+    not_null_json_array_column,
     not_null_json_column,
-    not_null_json_column_flow,
+    nullable_json_column,
     updated_at,
     uuid_pk,
 )
 from src.db.base import Base
+from src.utils.enums import SenderType
 
 
 class UserProjectAssociation(Base):
@@ -100,9 +102,19 @@ class User(Base):
         back_populates="creator",
     )
 
+    model_providers: Mapped[List["ModelProvider"]] = relationship(
+        back_populates="creator",
+    )
     model_configs: Mapped[List["ModelConfig"]] = relationship(
         back_populates="creator",
     )
+
+    conversations: Mapped[List["ChatConversation"]] = relationship(
+        back_populates="creator"
+    )
+    mcpservers: Mapped[List["MCPServer"]] = relationship(back_populates="creator")
+    a2acards: Mapped[List["A2ACard"]] = relationship(back_populates="creator")
+    profile: Mapped["UserProfile"] = relationship(back_populates="user")
 
     def __repr__(self) -> str:
         return f"<User(uuid={self.id!r}, username={self.username!r})>"
@@ -111,6 +123,7 @@ class User(Base):
 class Agent(Base):
     id: Mapped[uuid_pk]
 
+    alias: Mapped[str] = mapped_column(nullable=False, unique=True)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
 
@@ -135,16 +148,18 @@ class Agent(Base):
 class AgentWorkflow(Base):
     id: Mapped[uuid_pk]
 
+    alias: Mapped[str] = mapped_column(nullable=False, unique=True)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
 
-    flow: Mapped[not_null_json_column_flow]
+    flow: Mapped[not_null_json_array_column]
 
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
     )
     creator: Mapped["User"] = relationship(back_populates="workflows")  # noqa: F821
 
+    is_active: Mapped[bool]
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
@@ -224,16 +239,41 @@ class File(Base):
     from_agent: Mapped[bool]
 
 
+class ModelProvider(Base):
+    id: Mapped[uuid_pk]
+    name: Mapped[str]
+    api_key: Mapped[str]  # encrypted in pydantic models
+
+    configs: Mapped[List["ModelConfig"]] = relationship(  # noqa: F821
+        back_populates="provider",
+    )
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    creator: Mapped["User"] = relationship(back_populates="model_providers")
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    __table_args__ = (UniqueConstraint("creator_id", "name", name="uq_user_item_name"),)
+
+
 class ModelConfig(Base):
     id: Mapped[uuid_pk]
     name: Mapped[str] = mapped_column(unique=True)
     model: Mapped[str] = mapped_column(nullable=False, index=True)
-    provider: Mapped[str] = mapped_column(nullable=False, index=True)
+
+    provider_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("modelproviders.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    provider: Mapped["ModelProvider"] = relationship(back_populates="configs")  # noqa: F821
 
     system_prompt: Mapped[str]
+    user_prompt: Mapped[str] = mapped_column(nullable=True)
+    max_last_messages: Mapped[int] = mapped_column(default=5, nullable=False)
     temperature: Mapped[float] = mapped_column(default=0.7)
 
-    credentials: Mapped[not_null_json_column]  # api_key must be hashed
+    credentials: Mapped[not_null_json_column]
 
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
@@ -242,3 +282,126 @@ class ModelConfig(Base):
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+
+
+class MCPServer(Base):
+    id: Mapped[uuid_pk]
+
+    name: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str] = mapped_column(nullable=True)
+
+    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
+
+    mcp_tools: Mapped[List["MCPTool"]] = relationship(back_populates="mcp_server")
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator: Mapped["User"] = relationship(back_populates="mcpservers")  # noqa: F821
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+
+    is_active: Mapped[bool]
+
+    def __repr__(self) -> str:
+        return f"<MCPServer(host={self.server_url!r}>"
+
+
+class MCPTool(Base):
+    id: Mapped[uuid_pk]
+    name: Mapped[str]
+    description: Mapped[str] = mapped_column(nullable=True)
+    inputSchema: Mapped[not_null_json_column]
+    annotations: Mapped[nullable_json_column]
+
+    alias: Mapped[str] = mapped_column(nullable=True)
+
+    mcp_server: Mapped["MCPServer"] = relationship(back_populates="mcp_tools")  # noqa: F821
+
+    mcp_server_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("mcpservers.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+
+class A2ACard(Base):
+    id: Mapped[uuid_pk]
+
+    name: Mapped[str] = mapped_column(nullable=True)
+    description: Mapped[str] = mapped_column(nullable=True)
+
+    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
+    card_content: Mapped[not_null_json_column]
+
+    is_active: Mapped[bool]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator: Mapped["User"] = relationship(back_populates="a2acards")  # noqa: F821
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+
+
+class ChatMessage(Base):
+    id: Mapped[uuid_pk]
+
+    request_id: Mapped[uuid.UUID] = mapped_column(nullable=True)
+
+    sender_type: Mapped[SenderType]
+    content: Mapped[str]
+
+    # 'metadata' is a reserved word by alembic
+    extra_metadata: Mapped[nullable_json_column]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    conversation_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("chatconversations.session_id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    conversation: Mapped["ChatConversation"] = relationship(back_populates="messages")
+
+
+class ChatConversation(Base):
+    """Chat history"""
+
+    session_id: Mapped[uuid_pk] = mapped_column(nullable=False, index=True)
+    title: Mapped[str]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    creator_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    creator: Mapped["User"] = relationship(back_populates="conversations")
+
+    messages: Mapped[List["ChatMessage"]] = relationship(
+        back_populates="conversation", cascade="all, delete"
+    )
+
+
+class UserProfile(Base):
+    id: Mapped[uuid.UUID] = mapped_column(
+        primary_key=True, default=uuid.uuid4, index=True
+    )
+
+    first_name: Mapped[str] = mapped_column(nullable=True)
+    last_name: Mapped[str] = mapped_column(nullable=True)
+    # TODO: other fields like address, avatar, bio, company_name, etc
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    user: Mapped["User"] = relationship(back_populates="profile", single_parent=True)
+
+    # TODO: config fields, other credentials, etc

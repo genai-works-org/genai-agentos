@@ -11,11 +11,16 @@ import 'react-toastify/dist/ReactToastify.css';
 export function App() {
   return (
     <ThemeProvider>
-      <ChatHistoryProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ChatHistoryProvider>
           <SettingsProvider>
             <LogProvider>
-              <RouterProvider router={router} />
+              <RouterProvider
+                router={router}
+                future={{
+                  v7_startTransition: true,
+                }}
+              />
               <ToastContainer
                 position="top-center"
                 autoClose={3000}
@@ -30,8 +35,8 @@ export function App() {
               />
             </LogProvider>
           </SettingsProvider>
-        </AuthProvider>
-      </ChatHistoryProvider>
+        </ChatHistoryProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

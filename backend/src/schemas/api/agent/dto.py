@@ -1,17 +1,19 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel
 from uuid import UUID
+
+from pydantic import BaseModel, Field
 from src.schemas.api.agent.schemas import AgentGet
-from src.schemas.ws.frontend import AgentResponseDTO
 from src.schemas.api.files.dto import FileDTO
+from src.schemas.ws.frontend import AgentResponseDTO
+from src.utils.enums import AgentType
 
 
 class MLAgentSchema(BaseModel):
     agent_id: str
     agent_name: str
     agent_description: str
-    agent_input_schema: dict[str, Any]
+    agent_schema: dict[str, Any]
 
 
 class MLAgentDTO(MLAgentSchema):
@@ -54,4 +56,9 @@ class AgentTypeResponseDTO(BaseModel):
 
 
 class AgentDTOWithJWT(AgentDTO):
+    alias: str
     jwt: Optional[str] = None
+
+
+class ActiveGenAIAgentDTO(MLAgentJWTDTO):
+    type: AgentType = Field(default_factory=lambda _: AgentType.genai)

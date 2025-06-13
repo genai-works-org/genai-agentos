@@ -1,3 +1,24 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+.react-flow .react-flow__edge path {
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.react-flow .react-flow__edge.selected path {
+  stroke: #f4511e;
+}
+
+.react-flow__node {
+  width: 180px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid;
+  background-color: #fff;
+}
+
+.react-flow__node.selected {
+  background-color: #fdedef;
+}

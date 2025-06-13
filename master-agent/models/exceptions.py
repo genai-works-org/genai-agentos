@@ -4,3 +4,7 @@ class AgentRunException(Exception):
 
 class AgentNotFoundError(Exception):
     pass
+
+
+class UnknownAgentTypeException(Exception):
+    pass

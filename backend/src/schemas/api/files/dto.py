@@ -1,8 +1,9 @@
 from pathlib import Path
-from uuid import UUID
-from src.schemas.api.files.schemas import FileGet
-from pydantic import BaseModel, field_validator, model_validator
 from typing import Optional, Self, Union
+from uuid import UUID
+
+from pydantic import BaseModel, field_validator, model_validator
+from src.schemas.api.files.schemas import FileGet
 
 
 class FileIdDTO(BaseModel):
@@ -52,3 +53,9 @@ class FilePathDTO(BaseModel):
         if isinstance(v, UUID):
             return str(v)
         return v
+
+
+class ShortFileDTO(BaseModel):
+    file_id: UUID
+    session_id: UUID
+    request_id: UUID

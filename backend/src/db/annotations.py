@@ -1,9 +1,10 @@
-from datetime import datetime
-from typing import Annotated, Dict, Any, List
 import uuid
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.dialects.postgresql import UUID, JSON
+from datetime import datetime
+from typing import Annotated, Any, Dict, List
+
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy.orm import mapped_column
 
 int_pk = Annotated[
     int,
@@ -27,4 +28,6 @@ last_invoked_at = Annotated[
 ]
 
 not_null_json_column = Annotated[Dict[str, Any], mapped_column(JSON)]
-not_null_json_column_flow = Annotated[List[Dict[str, str]], mapped_column(JSON)]
+not_null_json_array_column = Annotated[List[Dict[str, str]], mapped_column(JSON)]
+
+nullable_json_column = Annotated[Dict[str, Any], mapped_column(JSON, nullable=True)]
