@@ -142,9 +142,14 @@ async def handle_frontend_ws(
 
     try:
         while True:
-            message_obj = IncomingFrontendMessage.model_validate_json(
-                await websocket.receive_text()
-            )
+            try:
+                message_obj = IncomingFrontendMessage.model_validate_json(
+                    await websocket.receive_text()
+                )
+            except ValidationError as e:
+                await websocket.send_text(
+                    f"Message validation failed. Details: {validation_exception_handler(exc=e)}"  # noqa: E501
+                )
             chat_title = message_obj.message[:20]
             chat = await chat_repo.get_chat_by_session_id(
                 db=db, session_id=session_id, user_model=user_model
@@ -176,7 +181,23 @@ async def handle_frontend_ws(
             config = await model_config_repo.find_model_by_config_name(
                 db=db, config_name=message_obj.llm_name, user_model=user_model
             )
+            if not provider:
+                await websocket.send_json(
+                    {"error": f"Provider {message_obj.provider} does not exist"}
+                )
+                await websocket.close(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason=f"Provider {message_obj.provider} does not exist",
+                )
 
+            if not config:
+                await websocket.send_json(
+                    {"error": f"Config {message_obj.llm_name} does not exist"}
+                )
+                await websocket.close(
+                    code=status.WS_1003_UNSUPPORTED_DATA,
+                    reason=f"Config {message_obj.llm_name} does not exist",
+                )
             try:
                 enriched_llm_props = LLMPropertiesDecryptCreds(
                     config_name=config.name,
@@ -216,7 +237,7 @@ async def handle_frontend_ws(
                 configs=enriched_llm_props.to_json(),
                 files=files,
             )
-
+            print(f"{ml_request.model_dump_json(indent=4)}")
             req_body = ml_request.model_dump(exclude_none=True)
 
             try:
