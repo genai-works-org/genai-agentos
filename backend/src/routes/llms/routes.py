@@ -34,7 +34,7 @@ async def list_model_configs(
     )
 
 
-@llm_router.get("/model/config/{model_config_id}", response_model=ModelConfigDTO)
+@llm_router.get("/model/config/{model_config_id}")
 async def get_model_config(
     db: AsyncDBSession, user_model: CurrentUserDependency, model_config_id: UUID
 ):

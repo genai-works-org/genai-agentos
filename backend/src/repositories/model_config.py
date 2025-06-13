@@ -21,22 +21,40 @@ class ModelConfigRepository(
 ):
     async def get_config_by_user(
         self, db: AsyncSession, user_model: User, config_id: str
-    ) -> Optional[ModelConfigDTO]:
-        config = await self.get_by_user(db=db, id_=config_id, user_model=user_model)
-        if not config:
+    ):
+        c = await self.get_by_user(db=db, id_=config_id, user_model=user_model)
+        if not c:
             raise HTTPException(
-                status_code=400,
-                detail=f"Model config with id {config_id} does not exist",
+                status_code=400, detail=f"Config with id '{config_id}' was not found"
             )
 
-        return ModelConfigDTO(
-            id=config_id,
-            name=config.name,
-            model=config.model,
-            provider=config.provider,
-            system_prompt=config.system_prompt,
-            temperature=config.temperature,
-            credentials=config.credentials,
+        p = await db.scalar(
+            select(ModelProvider)
+            .options(selectinload(ModelProvider.configs))
+            .join(self.model, self.model.provider_id == ModelProvider.id)
+            .where(
+                and_(
+                    self.model.id == config_id,
+                    ModelProvider.creator_id == user_model.id,
+                )
+            )
+        )
+
+        return ModelProviderDTO(
+            provider=p.name,
+            api_key=p.api_key,
+            configs=[
+                ModelConfigDTO(
+                    id=c.id,
+                    name=c.name,
+                    model=c.model,
+                    system_prompt=c.system_prompt,
+                    temperature=c.temperature,
+                    credentials=c.credentials,
+                    user_prompt=c.user_prompt,
+                    max_last_messages=c.max_last_messages,
+                )
+            ],
         )
 
     async def find_model_by_config_name(
