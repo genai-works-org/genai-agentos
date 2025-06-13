@@ -155,7 +155,8 @@ export const AgentFlowsEditPage: FC = () => {
     Record<string, string>
   >({});
   const [links, setLinks] = useState<any[]>([]);
-  const { getAgentFlow, createAgentFlow, updateAgentFlow } = useAgent();
+  const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
+    useAgent();
   const allNodesConnected = nodes.length === links.length;
   const isSaveEnabled = allNodesConnected && nodes.length > 0;
 
@@ -203,6 +204,7 @@ export const AgentFlowsEditPage: FC = () => {
         }
 
         const flowData = await getAgentFlow(id!);
+        const genAiAgents = await getAgents();
 
         if (flowData) {
           setFlowName(normalizeString(flowData.name));
@@ -213,12 +215,16 @@ export const AgentFlowsEditPage: FC = () => {
             const agent = agentsData.find(a => a.id === id);
             const nodeId = `${id}::${Date.now() + index}`;
 
+            const label = agent
+              ? normalizeString(agent?.name)
+              : genAiAgents.find(a => a.agent_id === id)?.agent_name || '';
+
             return {
               id: nodeId,
               type: 'customNode',
               position: { x: 0, y: index * 75 },
               data: {
-                label: normalizeString(agent?.name || ''),
+                label,
                 description: agent?.agent_schema.description,
                 agent_id: id,
                 type: agent?.type,

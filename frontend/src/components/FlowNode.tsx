@@ -88,9 +88,9 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
         ) : (
           <Typography
             component="span"
-            sx={{ display: 'flex', gap: 1, color: '#c1121f' }}
+            sx={{ display: 'flex', gap: 0.5, color: '#c1121f' }}
           >
-            <ShieldX /> Inactive
+            <ShieldX /> {data.label}
           </Typography>
         )}
       </Typography>
