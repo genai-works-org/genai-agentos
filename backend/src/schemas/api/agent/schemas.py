@@ -9,6 +9,12 @@ class AgentBase(BaseModel):
     name: str
     description: str
 
+    @field_validator("name")
+    def check_name_length(cls, v):
+        if len(v) <= 55:
+            return v.replace(" ", "_").lower()
+        raise ValueError("Agent name must be less than 55 characters")
+
 
 class AgentCreateBase(AgentBase):
     id: Union[str, UUID]
