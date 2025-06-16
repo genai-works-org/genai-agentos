@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
+
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.agent import agent_repo
@@ -31,15 +32,10 @@ async def list_all_agentflows(
 async def get_agentflow_data(
     db: AsyncDBSession, user: CurrentUserDependency, agentflow_id: UUID
 ):
-    agentflow = await agentflow_repo.get_by_user(
-        db=db,
-        user_model=user,
-        id_=agentflow_id,
+    agentflow = await agentflow_repo.get_flow_and_validate_all_flow_agents(
+        db=db, flow_id=agentflow_id, user_model=user
     )
-    if not agentflow:
-        raise HTTPException(
-            status_code=400, detail=f"agentflow {str(agentflow_id)} was not found."
-        )
+
     dto: Optional[AgentDTOPayload] = await agent_repo.orm_flow_to_dto(
         flow=agentflow, db=db
     )

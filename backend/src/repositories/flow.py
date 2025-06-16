@@ -228,5 +228,21 @@ class AgentWorkflowRepository(
             db=db, id_=flow_id, obj_in=flow_upd_data, user=user_model
         )
 
+    async def get_flow_and_validate_all_flow_agents(
+        self, db: AsyncSession, flow_id: UUID, user_model: User
+    ):
+        flow = await agentflow_repo.get_by_user(
+            db=db,
+            user_model=user_model,
+            id_=flow_id,
+        )
+        if not flow:
+            raise HTTPException(status_code=400, detail="flow does not exist")  # TODO:
+        validator = FlowValidator()
+        updated_flow = await validator.trigger_flow_state_lookup_of_all_agents(
+            flow=flow, user_id=user_model.id
+        )
+        return updated_flow
+
 
 agentflow_repo = AgentWorkflowRepository(AgentWorkflow)

@@ -8,8 +8,9 @@ from uuid import UUID
 from mcp.types import Tool
 from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, validate_token
-from src.db.session import AsyncDBSession, async_session
+from src.db.session import async_session
 from src.models import A2ACard, Agent, AgentWorkflow, MCPServer, MCPTool
 from src.schemas.api.agent.dto import MLAgentJWTDTO
 from src.schemas.api.exceptions import IntegrityErrorDetails
@@ -193,6 +194,9 @@ class FlowValidator:
         a2a_ids: list[Optional[str]],
         user_id: UUID,
     ) -> list[str]:
+        """
+        Returns: list of valid (is_active=True) agents of all agent types (genai/mcp/a2a)
+        """
         tasks = (
             asyncio.create_task(
                 self._validate_genai_ids(genai_ids=genai_ids, user_id=user_id)
@@ -232,7 +236,7 @@ class FlowValidator:
         )
 
     async def trigger_flow_validation_on_agent_state_change(
-        self, db: AsyncDBSession, agent_type: AgentType
+        self, db: AsyncSession, agent_type: AgentType
     ):
         """
         Unified helper method to run during mcp/a2a lookups to set flows with inactive tools/cards as inactive
@@ -312,3 +316,24 @@ class FlowValidator:
                         .values({"is_active": True})
                     )
                     await db.commit()
+
+    async def trigger_flow_state_lookup_of_all_agents(
+        self,
+        flow: AgentWorkflow,
+        user_id: UUID,
+    ) -> AgentWorkflow:
+        agents = []
+        for a in flow.flow:
+            agent_id = FlowAgentId(**a)
+            agents.append(agent_id)
+
+        active_agents = await self.validate_is_active_of_all_agent_types(
+            flow_agents=agents, user_id=user_id
+        )
+
+        if len(flow.flow) != len(active_agents):
+            flow.is_active = False
+        else:
+            flow.is_active = True
+
+        return flow
