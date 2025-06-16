@@ -244,5 +244,22 @@ class AgentWorkflowRepository(
         )
         return updated_flow
 
+    async def get_all_flows_and_validate_all_flow_agents(
+        self,
+        db: AsyncSession,
+        user_model: User,
+        limit: int,
+        offset: int,
+    ):
+        flows = await self.get_multiple_by_user(
+            db=db, user_model=user_model, offset=offset, limit=limit
+        )
+        return [
+            await self.get_flow_and_validate_all_flow_agents(
+                db=db, flow_id=f.id, user_model=user_model
+            )
+            for f in flows
+        ]
+
 
 agentflow_repo = AgentWorkflowRepository(AgentWorkflow)
