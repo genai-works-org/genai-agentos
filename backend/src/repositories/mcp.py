@@ -1,5 +1,6 @@
 import logging
 import traceback
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional
 from uuid import UUID
@@ -103,25 +104,21 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             .order_by(MCPTool.created_at.desc())
         )
 
-        orm_tools = q.all()
-        tool_alias_container = {}
+        tool_alias_container = {
+            t.name: {"id": t.id, "alias": t.alias}
+            for t in q.all()
+            if t.name in tool_names
+        }
 
-        for t in orm_tools:
-            for tool in tools_in:
-                if t.name == tool.name:
-                    # mcp tools have unique names - no possible hash collisions
-                    tool_alias_container[t.name] = {"id": t.id, "alias": t.alias}
-
-        tools_batch = []
-        for t in tools_in:
-            batch = {
+        tools_batch = [
+            {
                 **t.model_dump(mode="json"),
-                "alias": tool_alias_container[t.name]["alias"],
+                "id": tool_alias_container.get(t.name, {}).get("id", str(uuid.uuid4())),
+                "alias": tool_alias_container.get(t.name, {}).get("alias", generate_alias(t.name)),
                 "mcp_server_id": db_obj.id,
-                "id": tool_alias_container[t.name]["id"],
                 "updated_at": datetime.now(),
-            }
-            tools_batch.append(batch)
+            } for t in tools_in
+        ]
 
         await db.run_sync(
             lambda sync_db: sync_db.bulk_update_mappings(MCPTool, tools_batch)
