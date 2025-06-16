@@ -87,9 +87,9 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
       <Box>
         <TextField
           fullWidth
-          name="deployment_name"
+          name="model"
           label="Deployment Name"
-          value={settings.data.deployment_name || ''}
+          value={settings.data.model || ''}
           onChange={handleChange}
           placeholder="Enter Azure OpenAI deployment name"
         />
