@@ -244,6 +244,7 @@ class ModelProvider(Base):
     name: Mapped[str]
     api_key: Mapped[str]  # encrypted in pydantic models
 
+    provider_metadata: Mapped[not_null_json_column]
     configs: Mapped[List["ModelConfig"]] = relationship(  # noqa: F821
         back_populates="provider",
     )

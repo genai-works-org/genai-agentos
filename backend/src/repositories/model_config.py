@@ -55,6 +55,7 @@ class ModelConfigRepository(
                     max_last_messages=c.max_last_messages,
                 )
             ],
+            metadata=p.provider_metadata,
         )
 
     async def find_model_by_config_name(
@@ -271,6 +272,7 @@ class ModelConfigRepository(
                     )
                     for c in p.configs
                 ],
+                metadata=p.provider_metadata,
             )
             for p in q.all()
         ]
@@ -280,14 +282,17 @@ class ModelConfigRepository(
         db: AsyncSession,
         provider_obj: ModelProvider,
         upd_in: ProviderCRUDUpdate,
-    ):
-        return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in)
+    ) -> ModelProvider:
+        return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in.dump())
 
     async def create_provider(
         self, db: AsyncSession, provider_in: ProviderCRUDCreate, user_model: User
     ):
         p = ModelProvider(
-            name=provider_in.name, api_key=provider_in.api_key, creator_id=user_model.id
+            name=provider_in.name,
+            api_key=provider_in.api_key,
+            creator_id=user_model.id,
+            provider_metadata=provider_in.metadata,
         )
         db.add(p)
         await db.commit()

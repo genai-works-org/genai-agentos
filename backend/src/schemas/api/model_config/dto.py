@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
@@ -32,3 +33,16 @@ class ModelPromptDTO(BaseModel):
 class ModelProviderDTO(ModelProviderBase):
     provider: str
     configs: list[ModelConfigDTO]
+    provider_metadata: Optional[dict] = Field(default={}, alias="metadata")
+
+
+class ModelProviderCreateDTO(ModelProviderBase, BaseUUIDToStrModel):
+    provider: str
+    metadata: Optional[dict] = {}
+
+    created_at: datetime
+    updated_at: datetime
+
+
+class ModelProviderUpdateDTO(ModelProviderCreateDTO):
+    pass

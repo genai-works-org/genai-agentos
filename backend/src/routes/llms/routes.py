@@ -10,7 +10,12 @@ from sqlalchemy.exc import IntegrityError
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
 from src.repositories.model_config import model_config_repo
-from src.schemas.api.model_config.dto import ModelConfigDTO, ModelPromptDTO
+from src.schemas.api.model_config.dto import (
+    ModelConfigDTO,
+    ModelPromptDTO,
+    ModelProviderCreateDTO,
+    ModelProviderUpdateDTO,
+)
 from src.schemas.api.model_config.schemas import (
     ModelConfigCreate,
     ModelConfigUpdate,
@@ -51,8 +56,16 @@ async def add_model_provider(
     provider_in: ProviderCRUDCreate,
 ):
     try:
-        return await model_config_repo.create_provider(
+        p = await model_config_repo.create_provider(
             db=db, provider_in=provider_in, user_model=user_model
+        )
+        return ModelProviderCreateDTO(
+            id=p.id,
+            provider=p.name,
+            metadata=p.provider_metadata,
+            api_key=p.api_key,
+            created_at=p.created_at,
+            updated_at=p.updated_at,
         )
     except IntegrityError:
         raise HTTPException(
@@ -116,8 +129,16 @@ async def update_provider(
             detail=f"Provider named '{provider_name}' does not exist", status_code=400
         )
 
-    return await model_config_repo.update_provider(
+    p = await model_config_repo.update_provider(
         db=db, provider_obj=provider, upd_in=provider_upd_in
+    )
+    return ModelProviderUpdateDTO(
+        id=p.id,
+        api_key=p.api_key,
+        provider=p.name,
+        metadata=p.provider_metadata,
+        created_at=p.created_at,
+        updated_at=p.updated_at,
     )
 
 

@@ -59,14 +59,22 @@ class ModelConfigDelete(BaseUUIDToStrModel):
 
 
 class ProviderCRUDUpdate(BaseModel):
-    # provider: Optional[str] = None
     api_key: Optional[str] = None
+    metadata: Optional[dict] = Field(default={})
 
     @field_validator("api_key")
     def encrypt_key(cls, v: str):
         if isinstance(v, str):
             return encrypt_secret(v)
         return v
+
+    def dump(self):
+        r = {**self.model_dump(mode="json"), "provider_metadata": self.metadata}
+        if not self.api_key:
+            # prevent update with None as api_key
+            r.pop("api_key")
+
+        return r
 
 
 class ProviderCRUDCreate(ProviderCRUDUpdate):
