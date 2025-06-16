@@ -181,7 +181,7 @@ class FilesRepository(CRUDBase[File, FileCreate, FileUpdate]):
             select(self.model).where(
                 and_(
                     self.model.session_id == session_id,
-                    self.model.user_id == user_id,
+                    self.model.creator_id == user_id,
                 )
             )
         )
