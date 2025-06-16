@@ -195,7 +195,7 @@ class FlowValidator:
         user_id: UUID,
     ) -> list[str]:
         """
-        Returns: list of valid (is_active=True) agents of all agent types (genai/mcp/a2a)
+        Returns: list of valid (is_active=True) agent ids of all agent types (genai/mcp/a2a)
         """
         tasks = (
             asyncio.create_task(
@@ -331,9 +331,10 @@ class FlowValidator:
             flow_agents=agents, user_id=user_id
         )
 
-        if len(flow.flow) != len(active_agents):
-            flow.is_active = False
-        else:
+        # lookup via all() is covering the cases when there are multiple tools in the flow with the same id
+        if all([a["id"] in active_agents for a in flow.flow]):
             flow.is_active = True
+        else:
+            flow.is_active = False
 
         return flow

@@ -237,7 +237,10 @@ class AgentWorkflowRepository(
             id_=flow_id,
         )
         if not flow:
-            raise HTTPException(status_code=400, detail="flow does not exist")  # TODO:
+            raise HTTPException(
+                status_code=400, detail=f"Flow with id '{flow_id}' does not exist"
+            )
+
         validator = FlowValidator()
         updated_flow = await validator.trigger_flow_state_lookup_of_all_agents(
             flow=flow, user_id=user_model.id
