@@ -23,7 +23,7 @@ async def list_all_agentflows(
     limit: int = 100,
 ):
     # TODO: pagination
-    return await agentflow_repo.get_multiple_by_user(
+    return await agentflow_repo.get_all_flows_and_validate_all_flow_agents(
         db=db, user_model=user, offset=offset, limit=limit
     )
 
