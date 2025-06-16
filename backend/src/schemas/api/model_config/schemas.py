@@ -78,4 +78,5 @@ class ProviderCRUDUpdate(BaseModel):
 
 
 class ProviderCRUDCreate(ProviderCRUDUpdate):
+    api_key: str
     name: str

@@ -23,6 +23,7 @@ from src.schemas.api.model_config.schemas import (
     ProviderCRUDUpdate,
 )
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
+from src.utils.helpers import prettify_integrity_error_details
 
 logger = logging.getLogger(__name__)
 llm_router = APIRouter(prefix="/llm", tags=["LLM"])
@@ -67,10 +68,12 @@ async def add_model_provider(
             created_at=p.created_at,
             updated_at=p.updated_at,
         )
-    except IntegrityError:
+    except IntegrityError as e:
+        msg = str(e._message())
+        detail = prettify_integrity_error_details(msg=msg)
         raise HTTPException(
             status_code=400,
-            detail=f"Provider named '{provider_in.name}' already exists",
+            detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
         )
     except Exception:
         logger.error(f"Unexpected error occured: {traceback.format_exc(limit=600)}")
@@ -90,11 +93,9 @@ async def add_model_config(
             db=db, obj_in=model_config_in, user_model=user_model
         )
 
-    except IntegrityError:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Model config named '{model_config_in.name}' already exists",
-        )
+    except HTTPException as e:
+        raise e
+
     except Exception:
         logger.error(f"Unexpected error occured: {traceback.format_exc(limit=600)}")
         raise HTTPException(

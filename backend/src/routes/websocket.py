@@ -208,6 +208,7 @@ async def handle_frontend_ws(
                     user_prompt=config.user_prompt,
                     credentials={
                         **config.credentials,
+                        **provider.provider_metadata,
                         "api_key": provider.api_key,
                     },
                     max_last_messages=config.max_last_messages,
