@@ -5,7 +5,7 @@ import {
   ChatMessage as IChatMessage,
   useChatHistory,
 } from '../contexts/ChatHistoryContext';
-import { fileService } from '../services/fileService';
+import { FileData, fileService } from '../services/fileService';
 import { useSettings } from '../contexts/SettingsContext';
 import ChatMessage from './ChatMessage';
 import { DotsSpinner } from './DotsSpinner/DotsSpinner';
@@ -20,6 +20,7 @@ interface AttachedFile {
 interface ChatAreaProps {
   content: ChatHistory['items'];
   id?: string;
+  files: FileData[];
 }
 
 const formatExecutionTime = (seconds: string): string => {
@@ -28,7 +29,7 @@ const formatExecutionTime = (seconds: string): string => {
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-const ChatArea: FC<ChatAreaProps> = ({ content, id }) => {
+const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
@@ -118,26 +119,59 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (content.length > 0) {
-      const convertedMessages: IChatMessage[] = content.map((item, index) => {
-        const isUser = item.sender_type === 'user';
-        const parsedContent = !isUser && JSON.parse(item.content);
-        const text = parsedContent?.response || item.content;
-        const trace = parsedContent?.agents_trace || [];
+    const convertMessagesWithFiles = async () => {
+      if (content.length === 0) return;
 
-        return {
-          id: `${index}-${item.created_at}`,
-          content: text,
-          isUser,
-          timestamp: item.created_at,
-          agents_trace: trace,
-          requestId: item.request_id,
-        };
-      });
+      const convertedMessages = await Promise.all(
+        content.map(async (item, index) => {
+          const isUser = item.sender_type === 'user';
+          const parsedContent = !isUser && JSON.parse(item.content);
+          const text = parsedContent?.response || item.content;
+          const trace = parsedContent?.agents_trace || [];
+
+          const requestId = item.request_id;
+          const matchingFiles = files.filter(
+            file => file.request_id === requestId,
+          );
+
+          let fileDetails = undefined;
+          if (matchingFiles.length > 0 && isUser) {
+            const fileMetadataList = await Promise.all(
+              matchingFiles.map(file =>
+                fileService.getFileMetadata(file.file_id),
+              ),
+            );
+            fileDetails = fileMetadataList.map(meta => ({
+              id: meta.id,
+              session_id: meta.session_id,
+              request_id: meta.request_id,
+              original_name: meta.original_name,
+              mimetype: meta.mimetype,
+              internal_id: meta.internal_id,
+              internal_name: meta.internal_name,
+              from_agent: meta.from_agent,
+              created_at: meta.created_at,
+              size: meta.size,
+            }));
+          }
+
+          return {
+            id: `${index}-${item.created_at}`,
+            content: text,
+            isUser,
+            timestamp: item.created_at,
+            agents_trace: trace,
+            requestId,
+            files: fileDetails,
+          };
+        }),
+      );
 
       setMessages(convertedMessages);
-    }
-  }, [content, addMessage]);
+    };
+
+    convertMessagesWithFiles();
+  }, [content, files, setMessages]);
 
   useEffect(() => {
     const handleWebSocketMessage = (response: AgentResponse) => {

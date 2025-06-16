@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Box, Container, CircularProgress } from '@mui/material';
 import { websocketService } from '../services/websocketService';
+import { FileData, fileService } from '../services/fileService';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../hooks/useChat';
@@ -11,6 +12,7 @@ import { ChatHistory } from '../types/chat';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<ChatHistory['items']>([]);
+  const [files, setFiles] = useState<FileData[]>([]);
   const { id } = useParams();
   const location = useLocation();
   const { clearMessages, setChats } = useChatHistory();
@@ -25,9 +27,22 @@ const ChatPage = () => {
     }
 
     if (id && id !== 'new') {
-      getChatHistory(id).then(res => {
-        setMessages(res.items);
-      });
+      getChatHistory(id)
+        .then(res => {
+          setMessages(res.items);
+        })
+        .catch(() => {
+          setMessages([]);
+        });
+
+      fileService
+        .getFilesByRequestId(id)
+        .then(res => {
+          setFiles(res);
+        })
+        .catch(() => {
+          setFiles([]);
+        });
     }
 
     // Cleanup function
@@ -60,7 +75,7 @@ const ChatPage = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <ChatArea content={messages} id={id} />
+            <ChatArea content={messages} id={id} files={files} />
           )}
         </Box>
       </Container>

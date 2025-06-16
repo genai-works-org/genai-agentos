@@ -15,27 +15,29 @@ export interface FileMetadata {
   size: number;
 }
 
+export interface FileData {
+  file_id: string;
+  session_id: string;
+  request_id: string;
+}
+
 export const fileService = {
-  async uploadFile(file: File, requestId?: string, sessionId?: string): Promise<string> {
+  async uploadFile(file: File, requestId?: string, sessionId?: string) {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     if (requestId) {
       formData.append('request_id', requestId);
     }
-    
+
     if (sessionId) {
       formData.append('session_id', sessionId);
     }
 
-    const response = await apiService.post<{ id: string }>(
-      '/files',
-      formData,
-      {
-        noStingify: true,
-        isFormData: true
-      }
-    );
+    const response = await apiService.post<{ id: string }>('/files', formData, {
+      noStingify: true,
+      isFormData: true,
+    });
 
     return response.data.id;
   },
@@ -45,7 +47,7 @@ export const fileService = {
     const response = await fetch(`${environment.apiBaseUrl}/files/${fileId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -53,26 +55,36 @@ export const fileService = {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    
     // Get the blob
     const blob = await response.blob();
-    
+
     // Create a download link
     const url = window.URL.createObjectURL(blob);
 
     return {
       url,
-      fileId
-    }
+      fileId,
+    };
   },
 
-  async getFileMetadata(fileId: string): Promise<FileMetadata> {
-    const response = await apiService.get<FileMetadata>(`/files/${fileId}/metadata`);
+  async getFileMetadata(fileId: string) {
+    const response = await apiService.get<FileMetadata>(
+      `/files/${fileId}/metadata`,
+    );
     return response.data;
   },
 
-  async getFilesByRequestId(requestId: string): Promise<FileMetadata[]> {
-    const response = await apiService.get<FileMetadata[]>(`/files/request/${requestId}`);
+  async getFilesByRequestId(sessionId: string) {
+    const response = await apiService.get<FileData[]>('/files', {
+      params: {
+        session_id: sessionId,
+      },
+    });
     return response.data;
-  }
-}; 
+  },
+
+  async getFileById(id: string) {
+    const response = await apiService.get<any>(`/files/${id}`);
+    return response.data;
+  },
+};
