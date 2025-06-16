@@ -143,7 +143,11 @@ const ChatList = memo(() => {
                     variant="standard"
                   />
                 ) : (
-                  <ListItemText primary={chat.title} />
+                  <ListItemText
+                    primary={
+                      chat.title.length === 20 ? chat.title + '...' : chat.title
+                    }
+                  />
                 )}
                 <ListItemIcon
                   onClick={e => {

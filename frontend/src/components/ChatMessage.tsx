@@ -78,7 +78,7 @@ const ChatMessage: FC<ChatMessageProps> = ({
   };
 
   const renderContent = () => {
-    if (!content)
+    if (!content && content !== '')
       return (
         <span className={`${colors.textSecondary}`}>Ops, you broke it!</span>
       );
