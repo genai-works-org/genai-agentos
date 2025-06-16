@@ -59,7 +59,13 @@ export const SettingsPage = () => {
     provider: AI_PROVIDERS.OPENAI,
     data: {},
   });
-  const { providers, systemPrompt, refetchModels } = useSettings();
+  const {
+    providers,
+    systemPrompt,
+    refetchModels,
+    activeModel,
+    setActiveModel,
+  } = useSettings();
   const {
     createProvider,
     updateProvider,
@@ -96,6 +102,9 @@ export const SettingsPage = () => {
 
     await deleteModel(selectedModel.id);
     await refetchModels();
+    if (selectedModel.id === activeModel?.id) {
+      setActiveModel(null);
+    }
     setDeleteDialogOpen(false);
     setSelectedModel(null);
   };
@@ -129,9 +138,10 @@ export const SettingsPage = () => {
     try {
       const { id, provider, ...restData } = formData;
       if (id) {
-        await updateModel(id, {
+        const updatedModel = await updateModel(id, {
           ...restData,
         });
+        id === activeModel?.id && setActiveModel(updatedModel);
       } else {
         await createModel({
           ...restData,
