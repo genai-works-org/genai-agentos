@@ -174,14 +174,14 @@ class FilesRepository(CRUDBase[File, FileCreate, FileUpdate]):
 
         return [FileDTO(**file.__dict__) for file in results]
 
-    async def get_files_by_session_request_id(
-        self, db: AsyncSession, session_id: UUID, request_id: UUID
+    async def get_files_by_session_id(
+        self, db: AsyncSession, session_id: UUID, user_id: UUID
     ):
         files = await db.scalars(
             select(self.model).where(
                 and_(
                     self.model.session_id == session_id,
-                    self.model.request_id == request_id,
+                    self.model.user_id == user_id,
                 )
             )
         )

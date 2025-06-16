@@ -125,13 +125,12 @@ async def upload_file(
 
 
 @files_router.get("/files")
-async def list_all_files_by_session_request_id(
+async def list_all_files_by_session_id(
     db: AsyncDBSession,
     user_id: Optional[uuid.UUID] = Query(None),
     authorization: Annotated[Optional[str], Header()] = None,
     x_api_key: Annotated[Optional[str], Header(convert_underscores=True)] = None,
     session_id: uuid.UUID = Query(),
-    request_id: uuid.UUID = Query(),
 ):
     if not any((user_id, authorization)):
         raise HTTPException(
@@ -161,8 +160,9 @@ async def list_all_files_by_session_request_id(
 
     if authorization:
         user_id = get_user_id_from_jwt(token=authorization.split(" ")[-1])
-    return await files_repo.get_files_by_session_request_id(
-        db=db, session_id=session_id, request_id=request_id
+
+    return await files_repo.get_files_by_session_id(
+        db=db, session_id=session_id, user_id=user_id
     )
 
 
