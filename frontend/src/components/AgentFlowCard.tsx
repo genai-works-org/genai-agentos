@@ -71,14 +71,12 @@ const DescriptionBox = styled(Box)({
 
 interface AgentFlowCardProps {
   flow: AgentFlowDTO;
-  isActive: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   flow,
-  isActive,
   onEdit,
   onDelete,
 }) => {
@@ -101,7 +99,7 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
         borderRadius: '0.5rem',
         boxShadow:
           '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        border: `2px solid ${isActive ? '#0c7c59' : '#c1121f'}`,
+        border: `2px solid ${flow.is_active ? '#0c7c59' : '#c1121f'}`,
         maxHeight: expanded ? '400px' : '200px',
         transition: 'max-height 0.3s ease-in-out',
       }}
@@ -109,7 +107,9 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
     >
       <StyledCardContent>
         <TitleBox>
-          <TitleTypography variant="h6">{flow.name}</TitleTypography>
+          <TitleTypography variant="h6">
+            {flow.name.replace(/_/g, ' ')}
+          </TitleTypography>
           <Box>
             <IconButton onClick={() => onEdit(flow.id)} disabled={isDeleting}>
               <EditIcon />

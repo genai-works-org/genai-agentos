@@ -49,9 +49,7 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
 
   useEffect(() => {
     if (!FLOW_NAME_REGEX.test(flowName)) {
-      setFlowNameError(
-        'Only letters, numbers, underscores and hyphens are allowed',
-      );
+      setFlowNameError('Only letters, numbers and hyphens are allowed');
       setError(true);
     } else {
       setFlowNameError(null);
