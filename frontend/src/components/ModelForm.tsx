@@ -131,6 +131,9 @@ export const ModelForm: FC<ModelFormProps> = ({
               onChange={handleChange}
               required
               fullWidth
+              inputProps={{
+                maxLength: 10,
+              }}
             />
 
             <TextField

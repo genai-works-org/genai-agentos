@@ -1,15 +1,5 @@
-import { useState } from 'react';
 import type { FC } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  Box,
-  Button,
-  Paper,
-} from '@mui/material';
+import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { ModelConfig } from '../types/model';
@@ -29,9 +19,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
   isSelected,
   provider,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { name, model, temperature, system_prompt, max_last_messages } =
-    modelData;
+  const { name, model, temperature, max_last_messages } = modelData;
 
   return (
     <Card
@@ -96,52 +84,6 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               <DeleteIcon />
             </IconButton>
           </Box>
-        </Box>
-
-        <Box sx={{ mt: 2 }}>
-          <Button
-            onClick={e => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}
-            startIcon={
-              isExpanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )
-            }
-            size="small"
-            color="inherit"
-            sx={{
-              textTransform: 'none',
-              fontSize: '0.875rem',
-              color: 'text.secondary',
-              '&:hover': {
-                backgroundColor: 'transparent',
-                color: 'text.primary',
-              },
-              p: 0,
-              minWidth: 'auto',
-            }}
-          >
-            {isExpanded ? 'Hide prompt' : 'Show prompt'}
-          </Button>
-          {isExpanded && (
-            <Paper
-              elevation={0}
-              sx={{
-                mt: 1,
-                p: 1,
-                bgcolor: 'grey.50',
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {system_prompt}
-              </Typography>
-            </Paper>
-          )}
         </Box>
       </CardContent>
     </Card>

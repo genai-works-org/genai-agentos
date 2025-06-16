@@ -264,7 +264,10 @@ export const SettingsPage = () => {
           settings={config}
           initialData={selectedModel}
           onSave={handleSaveModel}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => {
+            setSelectedModel(null);
+            setShowForm(false);
+          }}
           systemPrompt={systemPrompt}
           isLoading={loading}
         />
