@@ -63,9 +63,9 @@ export const OpenAISettings: FC<OpenAISettingsProps> = ({
       </Box>
 
       <Box>
-        <label className="block text-sm font-medium text-gray-700 mb-4">
+        <p className="block text-sm font-medium text-gray-700 mb-4">
           Available Models
-        </label>
+        </p>
         <AIModelGrid
           models={availableModels}
           onModelCreate={onModelCreate}

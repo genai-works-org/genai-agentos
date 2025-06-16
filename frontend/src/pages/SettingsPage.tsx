@@ -194,7 +194,11 @@ export const SettingsPage = () => {
                 disabledModelCreate={
                   !isProviderSettingsSet(providers, AI_PROVIDERS.OPENAI)
                 }
-                tooltipMessage={TOOLTIP_MESSAGES.OPENAI}
+                tooltipMessage={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.OPENAI)
+                    ? TOOLTIP_MESSAGES.OPENAI
+                    : ''
+                }
               />
             )}
 
@@ -212,7 +216,11 @@ export const SettingsPage = () => {
                 disabledModelCreate={
                   !isProviderSettingsSet(providers, AI_PROVIDERS.AZURE_OPENAI)
                 }
-                tooltipMessage={TOOLTIP_MESSAGES.AZURE_OPENAI}
+                tooltipMessage={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.AZURE_OPENAI)
+                    ? TOOLTIP_MESSAGES.AZURE_OPENAI
+                    : ''
+                }
               />
             )}
 
@@ -230,7 +238,11 @@ export const SettingsPage = () => {
                 disabledModelCreate={
                   !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
                 }
-                tooltipMessage={TOOLTIP_MESSAGES.OLLAMA}
+                tooltipMessage={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
+                    ? TOOLTIP_MESSAGES.OLLAMA
+                    : ''
+                }
               />
             )}
 

@@ -34,7 +34,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
         },
       }}
     >
-      <CardContent>
+      <CardContent sx={{ p: '12px' }}>
         <Box
           sx={{
             display: 'flex',
@@ -43,7 +43,12 @@ export const AIModelCard: FC<AIModelCardProps> = ({
           }}
         >
           <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" component="h3" color="text.primary">
+            <Typography
+              variant="h6"
+              component="h3"
+              color="text.primary"
+              sx={{ fontSize: '18px', fontWeight: 600 }}
+            >
               {name}
             </Typography>
             <Box
@@ -63,13 +68,14 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               </Typography>
             </Box>
           </Box>
-          <Box>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
             <IconButton
               onClick={e => {
                 e.stopPropagation();
                 onEdit();
               }}
               size="small"
+              sx={{ p: 0 }}
             >
               <EditIcon />
             </IconButton>
@@ -80,6 +86,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               }}
               color="error"
               size="small"
+              sx={{ p: 0 }}
             >
               <DeleteIcon />
             </IconButton>
