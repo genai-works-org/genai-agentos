@@ -155,6 +155,7 @@ export const AgentFlowsEditPage: FC = () => {
     Record<string, string>
   >({});
   const [links, setLinks] = useState<any[]>([]);
+  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
   const allNodesConnected = nodes.length === links.length;
@@ -178,6 +179,7 @@ export const AgentFlowsEditPage: FC = () => {
 
   const handleDeleteNode = useCallback(
     (nodeIdToDelete: string) => {
+      setDeletedIds(prev => [...prev, nodeIdToDelete]);
       setNodes(nds => nds.filter(node => node.id !== nodeIdToDelete));
     },
     [setNodes],
@@ -340,6 +342,9 @@ export const AgentFlowsEditPage: FC = () => {
       };
 
       const color = getAgentColor(agent.id);
+      setDeletedIds(prevIds =>
+        prevIds.filter(id => id.split('::')[0] !== agent.id),
+      );
 
       const newNode: Node = {
         id: `${agent.id}::${Date.now()}`,
@@ -348,8 +353,9 @@ export const AgentFlowsEditPage: FC = () => {
         data: {
           label: normalizeString(agent.name),
           description: agent.agent_schema.description,
-          color,
-          type: agent.type,
+          agent_id: id,
+          type: agent?.type,
+          isActive: agent?.is_active || false,
           onDelete: handleDeleteNode,
         },
         style: {
@@ -479,7 +485,7 @@ export const AgentFlowsEditPage: FC = () => {
                   error={error}
                   helperText={
                     error
-                      ? 'Only letters, numbers, underscores and hyphens are allowed'
+                      ? 'Only letters, numbers and hyphens are allowed'
                       : `${flowName.length}/55 characters`
                   }
                 />
@@ -515,7 +521,7 @@ export const AgentFlowsEditPage: FC = () => {
                         fontSize: '0.75rem',
                       }}
                     >
-                      Only letters, numbers, underscores and hyphens are allowed
+                      Only letters, numbers and hyphens are allowed
                     </Typography>
                   )}
                 </Box>
@@ -661,7 +667,13 @@ export const AgentFlowsEditPage: FC = () => {
           ) : (
             <Box maxHeight={500} overflow="auto">
               {(search.length >= 2 ? searchResults : agents).map(agent => {
-                const color = usedAgentColors[agent.id] || 'transparent';
+                const isDeleted = deletedIds.find(
+                  id => id.split('::')[0] === agent.id,
+                );
+                const color = !isDeleted
+                  ? usedAgentColors[agent.id] || 'transparent'
+                  : 'transparent';
+
                 return (
                   <Card
                     key={agent.id}

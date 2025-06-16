@@ -38,6 +38,17 @@ export const modelService = {
     return response.data;
   },
 
+  async updateProvider(
+    provider: string,
+    data: { api_key: string; metadata: Record<string, string> },
+  ) {
+    const response = await apiService.patch<Provider>(
+      `/api/llm/model/providers/${provider}`,
+      data,
+    );
+    return response.data;
+  },
+
   async createModel(model: CreateModelBody) {
     const response = await apiService.post<ModelsConfigs[]>(
       '/api/llm/model/config',

@@ -13,12 +13,13 @@ export interface ModelsConfigs {
   api_key: string;
   provider: string;
   configs: ModelConfig[];
+  metadata: Record<string, string>;
 }
 
 export interface CreateProviderBody {
   name: string;
   api_key: string;
-  credentials: Record<string, string>;
+  metadata: Record<string, string>;
 }
 
 export interface CreateModelBody {
@@ -35,11 +36,11 @@ export interface CreateModelBody {
 
 export interface Provider {
   id: string;
-  name: string;
+  provider: string;
   api_key: string;
   created_at: string;
-  creator_id: string;
   updated_at: string;
+  metadata: Record<string, string>;
 }
 
 export interface Config {
@@ -52,6 +53,8 @@ export const AI_PROVIDERS = {
   AZURE_OPENAI: 'azure openai',
   OLLAMA: 'ollama',
 } as const;
+
+export type AIProvider = (typeof AI_PROVIDERS)[keyof typeof AI_PROVIDERS];
 
 export const TOOLTIP_MESSAGES = {
   OPENAI: 'Provide OpenAI API key and model',

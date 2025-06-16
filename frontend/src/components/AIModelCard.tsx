@@ -30,7 +30,8 @@ export const AIModelCard: FC<AIModelCardProps> = ({
   provider,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { name, model, temperature, system_prompt } = modelData;
+  const { name, model, temperature, system_prompt, max_last_messages } =
+    modelData;
 
   return (
     <Card
@@ -68,6 +69,9 @@ export const AIModelCard: FC<AIModelCardProps> = ({
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Temperature: {temperature}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                LLM context length: {max_last_messages}
               </Typography>
             </Box>
           </Box>

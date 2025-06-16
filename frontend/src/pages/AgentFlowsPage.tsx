@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ActiveConnection, AgentFlowDTO, AgentType } from '../types/agent';
+import { AgentFlowDTO } from '../types/agent';
 import {
   Container,
   IconButton,
@@ -13,11 +13,9 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/MainLayout';
 import { AgentFlowCard } from '../components/AgentFlowCard';
 import { useAgent } from '../hooks/useAgent';
-import { agentService } from '../services/agentService';
 import ConfirmModal from '../components/ConfirmModal';
 
 export const AgentFlowsPage: FC = () => {
-  const [agents, setAgents] = useState<ActiveConnection[]>([]);
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -27,21 +25,15 @@ export const AgentFlowsPage: FC = () => {
 
   useEffect(() => {
     loadFlows();
-    loadAgents();
   }, []);
 
   const loadFlows = async () => {
-    const data = await getAgentFlows();
-    setFlows(data);
-  };
-
-  const loadAgents = async () => {
     setIsLoading(true);
     try {
-      const data = await agentService.getActiveAgents({
-        agent_type: AgentType.ALL,
-      });
-      setAgents(data.active_connections);
+      const data = await getAgentFlows();
+      setFlows(data);
+    } catch (error) {
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -120,22 +112,14 @@ export const AgentFlowsPage: FC = () => {
           </Box>
         ) : (
           <Box>
-            {flows.map(flow => {
-              const isActive = flow.flow.every(step => {
-                return agents.some(
-                  agent => agent.id === step.id && agent.is_active,
-                );
-              });
-              return (
-                <AgentFlowCard
-                  key={flow.id}
-                  flow={flow}
-                  isActive={isActive}
-                  onEdit={handleEdit}
-                  onDelete={() => handleDelete(flow)}
-                />
-              );
-            })}
+            {flows.map(flow => (
+              <AgentFlowCard
+                key={flow.id}
+                flow={flow}
+                onEdit={handleEdit}
+                onDelete={() => handleDelete(flow)}
+              />
+            ))}
           </Box>
         )}
       </Container>

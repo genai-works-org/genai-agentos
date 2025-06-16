@@ -31,6 +31,21 @@ const isProviderSettingsSet = (configs: ModelsConfigs[], name: string) => {
   return Boolean(provider?.api_key);
 };
 
+const isProviderSettingsChanged = (
+  provider: string,
+  oldConfig: ModelsConfigs[],
+  newConfig: Config,
+) => {
+  const targetProvider = oldConfig.find(c => c.provider === provider);
+
+  return (
+    JSON.stringify({
+      ...targetProvider?.metadata,
+      api_key: targetProvider?.api_key,
+    }) !== JSON.stringify(newConfig.data)
+  );
+};
+
 const getProviderModels = (models: ModelsConfigs[], provider: string) => {
   const providerModels = models.find(m => m.provider === provider);
   return providerModels ? providerModels.configs : [];
@@ -45,15 +60,21 @@ export const SettingsPage = () => {
     data: {},
   });
   const { providers, systemPrompt, refetchModels } = useSettings();
-  const { createProvider, createModel, updateModel, deleteModel, loading } =
-    useModels();
+  const {
+    createProvider,
+    updateProvider,
+    createModel,
+    updateModel,
+    deleteModel,
+    loading,
+  } = useModels();
 
   const handleProviderChange = (e: SelectChangeEvent<string>) => {
     const currentProvider = providers.find(p => p.provider === e.target.value);
 
     if (currentProvider) {
-      const { provider, configs, ...credentials } = currentProvider;
-      setConfig({ provider, data: credentials });
+      const { provider, metadata, api_key } = currentProvider;
+      setConfig({ provider, data: { ...metadata, api_key } });
       return;
     }
 
@@ -83,17 +104,24 @@ export const SettingsPage = () => {
     try {
       const { api_key, ...credentials } = config.data;
       const body = {
-        name: config.provider,
         api_key: api_key || '',
-        credentials: credentials || {},
+        metadata: credentials || {},
       };
 
-      await createProvider(body);
+      if (isProviderSettingsSet(providers, config.provider)) {
+        await updateProvider(config.provider, body);
+      } else {
+        await createProvider({
+          ...body,
+          name: config.provider,
+        });
+      }
+
+      toast.success('Settings saved successfully');
     } catch (error) {
       console.error('Failed to create provider');
     } finally {
       refetchModels();
-      toast.success('Settings saved successfully');
     }
   };
 
@@ -122,8 +150,8 @@ export const SettingsPage = () => {
   useEffect(() => {
     const provider = providers.find(p => p.provider === config.provider);
     if (provider) {
-      const { provider: providerName, configs, ...credentials } = provider;
-      setConfig({ provider: providerName, data: credentials });
+      const { provider: providerName, metadata, api_key } = provider;
+      setConfig({ provider: providerName, data: { ...metadata, api_key } });
     }
   }, [providers]);
 
@@ -213,9 +241,7 @@ export const SettingsPage = () => {
                 color="primary"
                 onClick={handleSaveProvider}
                 disabled={
-                  config.provider === AI_PROVIDERS.OLLAMA
-                    ? !config.data.base_url
-                    : !config.data.api_key
+                  !isProviderSettingsChanged(config.provider, providers, config)
                 }
               >
                 Save Settings

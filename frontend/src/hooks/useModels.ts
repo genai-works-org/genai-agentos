@@ -50,6 +50,28 @@ export const useModels = () => {
     }
   }, []);
 
+  const updateProvider = useCallback(
+    async (
+      provider: string,
+      data: { api_key: string; metadata: Record<string, string> },
+    ) => {
+      setLoading(true);
+      try {
+        const updatedProvider = await modelService.updateProvider(
+          provider,
+          data,
+        );
+        return updatedProvider;
+      } catch (err) {
+        toast.showError('Failed to update provider');
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
   const createModel = useCallback(async (model: CreateModelBody) => {
     setLoading(true);
     try {
@@ -96,6 +118,7 @@ export const useModels = () => {
     fetchModels,
     fetchSystemPrompt,
     createProvider,
+    updateProvider,
     createModel,
     updateModel,
     deleteModel,
