@@ -155,7 +155,6 @@ export const AgentFlowsEditPage: FC = () => {
     Record<string, string>
   >({});
   const [links, setLinks] = useState<any[]>([]);
-  const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
   const allNodesConnected = nodes.length - 1 === edges.length;
@@ -164,7 +163,6 @@ export const AgentFlowsEditPage: FC = () => {
 
   const handleDeleteNode = useCallback(
     (nodeIdToDelete: string) => {
-      setDeletedIds(prev => [...prev, nodeIdToDelete]);
       setNodes(nds => nds.filter(node => node.id !== nodeIdToDelete));
       setEdges(edg =>
         edg.filter(
@@ -173,7 +171,7 @@ export const AgentFlowsEditPage: FC = () => {
         ),
       );
     },
-    [setNodes, setDeletedIds, setEdges],
+    [setNodes, setEdges],
   );
 
   // Fetch agents and flow data
@@ -332,10 +330,6 @@ export const AgentFlowsEditPage: FC = () => {
           Math.min(finalPosition.y, reactFlowBounds.height - nodeHeight),
         ),
       };
-
-      setDeletedIds(prevIds =>
-        prevIds.filter(id => id.split('::')[0] !== agent.id),
-      );
 
       const newNode: Node = {
         id: `${agent.id}::${Date.now()}`,
@@ -659,12 +653,10 @@ export const AgentFlowsEditPage: FC = () => {
           ) : (
             <Box maxHeight={500} overflow="auto">
               {(search.length >= 2 ? searchResults : agents).map(agent => {
-                const isDeleted = deletedIds.find(
-                  id => id.split('::')[0] === agent.id,
+                const isNodeInFlow = nodes.find(
+                  node => node.id.split('::')[0] === agent.id,
                 );
-                const color = !isDeleted
-                  ? usedAgentColors[agent.id] || 'transparent'
-                  : 'transparent';
+                const color = isNodeInFlow ? '#4CAF50' : 'transparent';
 
                 return (
                   <Card
