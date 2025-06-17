@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { Card, CardContent, Chip, Stack, Typography, Box } from '@mui/material';
 import { MCPAgent, AgentType } from '../../types/agent';
+import { normalizeString } from '../../utils/normalizeString';
 
 interface AgentCardProps {
   agent: MCPAgent;
@@ -65,13 +66,14 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
             {agent.mcp_tools.map(tool => (
               <Chip
                 key={tool.id}
-                label={tool.name}
+                label={normalizeString(tool.name)}
                 size="small"
                 sx={{
                   fontSize: '0.75rem',
                   fontWeight: 500,
                   backgroundColor: '#E3F2FD',
                   color: '#1565C0',
+                  textTransform: 'lowercase',
                 }}
               />
             ))}

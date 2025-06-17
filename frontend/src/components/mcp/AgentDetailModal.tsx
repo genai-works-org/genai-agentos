@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { MCPAgent } from '../../types/agent';
 import { Modal } from '../Modal';
+import { normalizeString } from '../../utils/normalizeString';
 
 interface AgentDetailModalProps {
   open: boolean;
@@ -56,12 +57,12 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
                   variant="body2"
                   color="text.secondary"
                   sx={{
-                    textTransform: 'capitalize',
+                    textTransform: 'lowercase',
                     fontSize: '0.8rem',
                     fontWeight: 500,
                   }}
                 >
-                  {tool.name}
+                  {normalizeString(tool.name)}
                 </Typography>
               </Box>
             ))}

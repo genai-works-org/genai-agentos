@@ -75,6 +75,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
                 fontWeight: 500,
                 backgroundColor: '#E3F2FD',
                 color: '#1565C0',
+                textTransform: 'lowercase',
               }}
             />
           ))}
