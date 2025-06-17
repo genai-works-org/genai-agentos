@@ -73,7 +73,7 @@ async def lookup_mcp_server(
                     is_active=True,
                 )
 
-    except* (OSError, httpx.ConnectError, McpError):
+    except* (OSError, httpx.ConnectError, httpx.HTTPStatusError, McpError):
         logger.warning(f"Could not connect to {url}. Details: {traceback.format_exc()}")
 
     return MCPServerData(is_active=False)
