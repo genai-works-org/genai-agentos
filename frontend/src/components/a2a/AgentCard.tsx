@@ -33,7 +33,12 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           alignItems="center"
           mb={1}
         >
-          <Typography variant="h6" fontWeight={600} color="text.primary">
+          <Typography
+            variant="h6"
+            fontWeight={600}
+            color="text.primary"
+            sx={{ maxWidth: '250px', wordBreak: 'break-all' }}
+          >
             {normalizeString(agent.name || '')}
           </Typography>
           <Chip
