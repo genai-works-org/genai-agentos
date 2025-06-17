@@ -13,6 +13,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
     <Card
       onClick={() => setSelectedAgent(agent)}
       sx={{
+        width: '350px',
         cursor: 'pointer',
         borderRadius: '0.5rem',
         boxShadow:

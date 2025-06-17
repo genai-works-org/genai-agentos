@@ -36,7 +36,7 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const navigate = useNavigate();
 
-  const description = agent.agent_schema.function.description;
+  const description = agent.agent_description;
 
   const handleExpandClick = (e: MouseEvent) => {
     e.stopPropagation();
@@ -53,7 +53,7 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
   };
 
   const renderParameters = () => {
-    if (!agent.agent_schema.function.parameters.properties) return null;
+    if (!agent.agent_schema.function?.parameters?.properties) return null;
 
     return (
       <Box sx={{ mt: 2 }}>
@@ -119,7 +119,11 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
             alignItems: 'flex-start',
           }}
         >
-          <Typography variant="h6" component="div">
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ width: '280px', wordBreak: 'break-all' }}
+          >
             {normalizeString(agent.agent_name)}
           </Typography>
           <IconButton onClick={handleDelete} color="error" size="small">

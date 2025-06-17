@@ -93,17 +93,9 @@ export const AgentsPage: FC = () => {
             </Typography>
           </Box>
         ) : (
-          <Box
-            display="grid"
-            gridTemplateColumns={{
-              xs: '1fr',
-              sm: '1fr 1fr',
-              md: '1fr 1fr 1fr',
-            }}
-            gap={3}
-          >
+          <Box display="flex" gap={2} flexWrap="wrap">
             {agents.map(agent => (
-              <Box key={agent.agent_id}>
+              <Box key={agent.agent_id} sx={{ width: '350px' }}>
                 <AgentCard agent={agent} onDelete={() => openConfirm(agent)} />
               </Box>
             ))}

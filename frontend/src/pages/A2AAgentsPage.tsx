@@ -58,7 +58,7 @@ const A2AAgentsPage = () => {
             <CircularProgress />
           </Box>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 min-h-[200px]">
+          <div className="flex flex-wrap gap-4 min-h-[200px]">
             <AIModelCreateCard
               onClick={() => setIsCreateModalOpen(true)}
               disabled={false}
