@@ -7,6 +7,21 @@ This repository provides the complete infrastructure for running GenAI agents, i
 * Master Agents
 * PostgreSQL Database
 * Frontend
+* CLI
+* Redis
+* Celery
+
+## 📎 Repository Link
+
+👉 [GitHub Repository](https://github.com/genai-works-org/genai-agentos)
+
+## 🛠️ Readme Files
+
+* [CLI](cli/README.md)
+* [Backend](backend/README.md)
+* [Master Agents](master-agent/README.md)
+* [Router](router/README.md)
+* [Frontend](frontend/README.md)
 
 ## 🧠 Supported Agent Types
 
@@ -17,6 +32,8 @@ The system supports multiple kinds of Agents:
 | **GenAI Agents** | Connected via [`genai-protocol`](https://pypi.org/project/genai-protocol/) library interface. |
 | **MCP Servers**  | MCP (Model Context Protocol) servers can be added by pasting their URL in the UI.             |
 | **A2A Servers**  | A2A (Agent to Agent Protocol) servers can be added by pasting their URL in the UI.            |
+
+---
 
 ## 📦 Prerequisites
 
@@ -48,7 +65,9 @@ Make sure you have the following installed:
    * All variables in `.env-example` are commented.
      You can customize any environment setting by **uncommenting** the relevant line and providing a new value.
 
-3. Start the infrastructure:
+3. Start Docker desktop and ensure it is running.
+
+4. Start the infrastructure:
 
    ```bash
    make up
@@ -56,10 +75,10 @@ Make sure you have the following installed:
    docker compose up
    ```
 
-4. After startup:
+5. After startup:
 
-   * Swagger API Docs: [http://localhost:8000/docs#/](http://localhost:8000/docs#/)
    * Frontend UI: [http://localhost:3000/](http://localhost:3000/)
+   * Swagger API Docs: [http://localhost:8000/docs#/](http://localhost:8000/docs#/)
 
 ## 👾 Supported Providers and Models
 * OpenAI: gpt-4o
@@ -97,20 +116,31 @@ Ngrok can be used to expose the local WebSocket endpoint.
 
 ---
 
-## 📎 Repository Link
+## 🤖GenAI Agent registration quick start (For more data check [CLI](cli/README.md))
+```bash
+cd cli/
 
-👉 [GitHub Repository](https://github.com/genai-works-org/genai-agentos)
+python cli.py signup -u <username> # Register a new user, also available in [UI](http://localhost:3000/)
 
----
+python cli.py login -u <username> -p <password> # Login to the system, get JWT user token
+
+python cli.py register_agent --name <agent_name> --description <agent_description>
+
+cd agents/
+
+# Run the agent
+uv run python <agent_name>.py # or alternatively 
+python <agent_name>.py 
+```
 
 ## 💎 Environment Variables
 
 | Variable                    | Description                                                          | Example / Default                                                                       |
 |-----------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------|
 | `FRONTEND_PORT`             | Port to start a frontend                                             | `3000` - default. Can be changed by run in terminal ` source FRONTEND_PORT=<your_port>` |
-| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://genai-router:8080/ws` - host is either `localhost` or `router` container name           |
+| `ROUTER_WS_URL`             | WebSocket URL for the `router` container                             | `ws://genai-router:8080/ws` - host is either `localhost` or `router` container name     |
 | `SECRET_KEY`                | Secret key for cryptographic operations - JWT/ LLM config encryption | `$(openssl rand -hex 32)`                                                               |
-| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `genai-postgres`                                                                              |
+| `POSTGRES_HOST`             | PostgreSQL Host                                                      | `genai-postgres`                                                                        |
 | `POSTGRES_USER`             | PostgreSQL Username                                                  | `postgres`                                                                              |
 | `POSTGRES_PASSWORD`         | PostgreSQL Password                                                  | `postgres`                                                                              |
 | `POSTGRES_DB`               | PostgreSQL Database Name                                             | `postgres`                                                                              |
