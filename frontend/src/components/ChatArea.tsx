@@ -45,10 +45,11 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
 
   const sortedMessages = useMemo(
     () =>
-      [...messages].sort(
-        (a, b) =>
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
-      ),
+      [...messages].sort((a, b) => {
+        const aDate = a.id.split('-').slice(1).join('-');
+        const bDate = b.id.split('-').slice(1).join('-');
+        return new Date(aDate).getTime() - new Date(bDate).getTime();
+      }),
     [messages],
   );
 
@@ -131,6 +132,9 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
           const text = parsedContent?.response || item.content;
           const trace = parsedContent?.agents_trace || [];
 
+          const utcFixed = item.created_at.split('.')[0] + 'Z';
+          const timestamp = new Date(utcFixed).toString();
+
           const requestId = item.request_id;
           const matchingFiles = files.filter(
             file => file.request_id === requestId,
@@ -161,7 +165,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
             id: `${index}-${item.created_at}`,
             content: text,
             isUser,
-            timestamp: item.created_at,
+            timestamp,
             agents_trace: trace,
             requestId,
             files: fileDetails,
