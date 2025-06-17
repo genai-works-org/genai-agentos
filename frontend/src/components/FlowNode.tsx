@@ -135,8 +135,11 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
                 window.dispatchEvent(event);
               }}
               sx={{
+                maxWidth: '180px',
+                wordBreak: 'break-all',
+                textAlign: 'center',
                 p: 0.5,
-                bgcolor: 'white',
+                bgcolor: '#fff',
                 borderRadius: '4px',
                 border: `1px solid ${step.is_success ? '#4CAF50' : '#F44336'}`,
                 minHeight: '20px',

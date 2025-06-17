@@ -158,31 +158,22 @@ export const AgentFlowsEditPage: FC = () => {
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
-  const allNodesConnected = nodes.length === links.length;
-  const isSaveEnabled = allNodesConnected && nodes.length > 0;
-
-  // Generate a random color for an agent
-  const getAgentColor = useCallback(
-    (agentId: string) => {
-      if (usedAgentColors[agentId]) {
-        return usedAgentColors[agentId];
-      }
-      const r = Math.floor(Math.random() * 256);
-      const g = Math.floor(Math.random() * 256);
-      const b = Math.floor(Math.random() * 256);
-      const color = `rgb(${r}, ${g}, ${b})`;
-      setUsedAgentColors(prev => ({ ...prev, [agentId]: color }));
-      return color;
-    },
-    [usedAgentColors],
-  );
+  const allNodesConnected = nodes.length - 1 === edges.length;
+  const isSaveEnabled =
+    allNodesConnected && nodes.length > 0 && edges.length > 0;
 
   const handleDeleteNode = useCallback(
     (nodeIdToDelete: string) => {
       setDeletedIds(prev => [...prev, nodeIdToDelete]);
       setNodes(nds => nds.filter(node => node.id !== nodeIdToDelete));
+      setEdges(edg =>
+        edg.filter(
+          edge =>
+            edge.source !== nodeIdToDelete && edge.target !== nodeIdToDelete,
+        ),
+      );
     },
-    [setNodes],
+    [setNodes, setDeletedIds, setEdges],
   );
 
   // Fetch agents and flow data
@@ -234,7 +225,7 @@ export const AgentFlowsEditPage: FC = () => {
                 onDelete: handleDeleteNode,
               },
               style: {
-                borderColor: agent?.is_active ? getAgentColor(id) : '#c1121f',
+                borderColor: agent?.is_active ? '#4CAF50' : '#c1121f',
               },
             };
           });
@@ -341,7 +332,6 @@ export const AgentFlowsEditPage: FC = () => {
         ),
       };
 
-      const color = getAgentColor(agent.id);
       setDeletedIds(prevIds =>
         prevIds.filter(id => id.split('::')[0] !== agent.id),
       );
@@ -359,12 +349,12 @@ export const AgentFlowsEditPage: FC = () => {
           onDelete: handleDeleteNode,
         },
         style: {
-          borderColor: color,
+          borderColor: '#4CAF50',
         },
       };
       setNodes(nds => nds.concat(newNode));
     },
-    [setNodes, getAgentColor],
+    [setNodes],
   );
 
   const onDragOver = useCallback((event: DragEvent) => {
