@@ -90,7 +90,9 @@ const Sidebar: FC<SidebarProps> = memo(({ isOpen, onClose }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <UserAvatar username={user?.username || ''} />
-            <span className={`text-sm font-medium ${colors.text}`}>
+            <span
+              className={`text-sm font-medium ${colors.text} max-w-[150px] truncate`}
+            >
               {user?.username}
             </span>
           </div>
