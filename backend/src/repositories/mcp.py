@@ -26,7 +26,6 @@ from src.utils.helpers import (
     generate_alias,
     mcp_tool_to_json_schema,
     prettify_integrity_error_details,
-    strip_endpoints_from_url,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,15 +44,9 @@ async def lookup_mcp_server(
     Returns:
         MCPServerData model with tools, prompts, resources
     """
-    # During initial lookup of the server (during POST request to add a MCP server)
-    # `url` will be of type AnyHttpUrl, which is used here to construct a base_url for the server
-
-    # `url` will be of string type only whenever celery beat task will invoke this lookup function.
-    # In this case, trailing slash is trimmed
-    url = strip_endpoints_from_url(url=url)
     try:
         async with streamablehttp_client(
-            f"{url}/mcp",
+            url=str(url),
             headers=headers,
             timeout=timedelta(seconds=timeout),
         ) as (read_stream, write_stream, _):
@@ -69,7 +62,7 @@ async def lookup_mcp_server(
 
                 return MCPServerData(
                     mcp_tools=tools.tools,
-                    server_url=url,
+                    server_url=str(url),
                     is_active=True,
                 )
 
