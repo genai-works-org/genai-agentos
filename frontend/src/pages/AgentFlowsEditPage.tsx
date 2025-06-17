@@ -223,6 +223,7 @@ export const AgentFlowsEditPage: FC = () => {
                 type: agent?.type,
                 isActive: agent?.is_active || false,
                 onDelete: handleDeleteNode,
+                isDeletable: true,
               },
               style: {
                 borderColor: agent?.is_active ? '#4CAF50' : '#c1121f',
@@ -347,6 +348,7 @@ export const AgentFlowsEditPage: FC = () => {
           type: agent?.type,
           isActive: agent?.is_active || false,
           onDelete: handleDeleteNode,
+          isDeletable: true,
         },
         style: {
           borderColor: '#4CAF50',

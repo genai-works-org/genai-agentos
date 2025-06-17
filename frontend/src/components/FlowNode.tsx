@@ -12,6 +12,7 @@ interface FlowNodeData {
   isActive: boolean;
   flow?: any[];
   onDelete: (nodeId: string) => void;
+  isDeletable?: boolean;
 }
 
 export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
@@ -42,24 +43,26 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
         position: 'relative',
       }}
     >
-      <IconButton
-        size="small"
-        onClick={e => {
-          e.stopPropagation();
-          if (data.onDelete) {
-            data.onDelete(id);
-          }
-        }}
-        sx={{
-          position: 'absolute',
-          top: -10,
-          right: -10,
-          color: '#c1121f',
-          p: 0.5,
-        }}
-      >
-        <Trash2 size={12} />
-      </IconButton>
+      {data.isDeletable && (
+        <IconButton
+          size="small"
+          onClick={e => {
+            e.stopPropagation();
+            if (data.onDelete) {
+              data.onDelete(id);
+            }
+          }}
+          sx={{
+            position: 'absolute',
+            top: -10,
+            right: -10,
+            color: '#c1121f',
+            p: 0.5,
+          }}
+        >
+          <Trash2 size={12} />
+        </IconButton>
+      )}
       <Handle
         type="target"
         position={Position.Top}

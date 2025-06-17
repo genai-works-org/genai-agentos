@@ -62,6 +62,10 @@ export const router = createBrowserRouter(
           index: true,
           loader: () => redirect('/chat/new'),
         },
+        {
+          path: '/chat',
+          loader: () => redirect('/chat/new'),
+        },
       ],
     },
     {
