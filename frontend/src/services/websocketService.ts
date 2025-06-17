@@ -209,7 +209,7 @@ class WebSocketService {
           const message = JSON.parse(event.data);
           this.notifyMessageHandlers(message);
         } catch {
-          console.error('Failed to parse WebSocket message:', event.data);
+          // console.error('Failed to parse WebSocket message:', event.data);
         }
       };
 

@@ -2,7 +2,6 @@ import type { FC } from 'react';
 import { UserIcon, GitBranch, ClipboardIcon } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-// import { AgentPlan } from '../services/websocketService';
 import { ChatMessage as IChatMessage } from '../contexts/ChatHistoryContext';
 import { getThemeColors } from '../utils/themeUtils';
 import FilePreviewCard from './FilePreviewCard';
@@ -38,32 +37,6 @@ const ChatMessage: FC<ChatMessageProps> = ({
   const { theme } = useTheme();
   const navigate = useNavigate();
   const colors = getThemeColors(theme);
-
-  // const renderAgentPlan = (plan: AgentPlan) => {
-  //   return (
-  //     <div key={plan.id} className="mt-2 p-2 rounded border border-gray-200">
-  //       <div className="font-medium">{plan.type}</div>
-  //       <div className="text-sm text-gray-500">
-  //         <div>Input: {plan.input_params.name}</div>
-  //         <div className="text-xs">{plan.input_params.description}</div>
-  //       </div>
-  //       {plan.agents.length > 0 && (
-  //         <div className="mt-2">
-  //           <div className="text-sm font-medium">Sub-agents:</div>
-  //           {plan.agents.map(agent => (
-  //             <div key={agent.id} className="ml-4 text-sm">
-  //               <div>{agent.type}</div>
-  //               <div className="text-xs text-gray-500">
-  //                 <div>Input: {agent.input_params.name}</div>
-  //                 <div>{agent.input_params.description}</div>
-  //               </div>
-  //             </div>
-  //           ))}
-  //         </div>
-  //       )}
-  //     </div>
-  //   );
-  // };
 
   const handleViewFlow = () => {
     navigate(`/agents-trace?requestId=${requestId}`, {
@@ -174,9 +147,6 @@ const ChatMessage: FC<ChatMessageProps> = ({
             } rounded-lg px-4 py-2 shadow-sm`}
           >
             {renderContent()}
-            {/* {!isUser && !isError && agentsPlan && agentsPlan.length > 0 && (
-              <div className="mt-2">{agentsPlan.map(renderAgentPlan)}</div>
-            )} */}
             {files && files.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {files

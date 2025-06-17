@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, FC, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatInput from './ChatInput';
 import { websocketService, AgentResponse } from '../services/websocketService';
 import {
@@ -40,6 +41,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; type: string; size: number }>
   >({});
+  const navigate = useNavigate();
 
   const sortedMessages = useMemo(
     () =>
@@ -192,6 +194,10 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
           files: response.response.files,
         };
         addMessage(newMessage);
+      }
+
+      if (id === 'new' && response.response.session_id) {
+        navigate(`/chat/${response.response.session_id}`);
       }
     };
 

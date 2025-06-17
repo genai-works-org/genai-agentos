@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Box, Container, CircularProgress } from '@mui/material';
 import { websocketService } from '../services/websocketService';
 import { FileData, fileService } from '../services/fileService';
@@ -14,7 +14,6 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<ChatHistory['items']>([]);
   const [files, setFiles] = useState<FileData[]>([]);
   const { id } = useParams();
-  const location = useLocation();
   const { clearMessages, setChats } = useChatHistory();
   const { user } = useAuth();
   const { getChatHistory, isLoading, getChatsList } = useChat();
@@ -56,7 +55,7 @@ const ChatPage = () => {
         });
       }
     };
-  }, [user, clearMessages, id, location]);
+  }, [user, clearMessages, id]);
 
   return (
     <MainLayout currentPage="Chat">
