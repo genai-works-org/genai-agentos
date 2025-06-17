@@ -21,12 +21,12 @@ class ModelConfigDTO(ModelConfigBase, BaseUUIDToStrModel):
 
 class ModelPromptDTO(BaseModel):
     # TODO: model and provider
-    system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT)
+    system_prompt: Optional[str] = Field(default=DEFAULT_SYSTEM_PROMPT.lstrip("\n"))
 
     @field_validator("system_prompt")
     def return_default_system_prompt(cls, v):
         if not v:
-            return DEFAULT_SYSTEM_PROMPT
+            return DEFAULT_SYSTEM_PROMPT.lstrip("\n")
         return v
 
 
