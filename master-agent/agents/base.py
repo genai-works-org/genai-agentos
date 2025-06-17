@@ -1,7 +1,6 @@
 import json
 from abc import ABC, abstractmethod
 from typing import Any
-from urllib.parse import urljoin
 
 from langchain.chat_models.base import BaseChatModel
 from langchain_core.messages import ToolMessage
@@ -73,7 +72,7 @@ class BaseMasterAgent(ABC):
                 agent_config = MCPConfig(
                     id=agent_to_execute.get("id"),
                     name=remove_last_underscore_segment(agent_name),
-                    endpoint=urljoin(agent_to_execute.get("url", ""), "mcp"),
+                    endpoint=agent_to_execute.get("url", ""),
                     arguments=agent_call["args"]
                 )
             elif agent_type == AgentTypeEnum.a2a.value:
