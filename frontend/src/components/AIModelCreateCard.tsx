@@ -5,19 +5,21 @@ interface AIModelCardProps {
   disabled: boolean;
   tooltipMessage: string;
   onClick: () => void;
+  width?: string;
 }
 
 export const AIModelCreateCard: FC<AIModelCardProps> = ({
   onClick,
   disabled,
   tooltipMessage,
+  width = 'auto',
 }) => {
   return (
     <Tooltip title={tooltipMessage}>
       <Card
         onClick={disabled ? undefined : onClick}
         sx={{
-          width: '350px',
+          width,
           cursor: disabled ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s ease-in-out',
           opacity: disabled ? 0.5 : 1,

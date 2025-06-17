@@ -62,6 +62,7 @@ const MCPServersPage = () => {
               onClick={() => setIsCreateModalOpen(true)}
               disabled={false}
               tooltipMessage="Create a new MCP Server"
+              width="350px"
             />
             {agents.map(agent => (
               <AgentCard

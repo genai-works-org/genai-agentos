@@ -63,6 +63,7 @@ const A2AAgentsPage = () => {
               onClick={() => setIsCreateModalOpen(true)}
               disabled={false}
               tooltipMessage="Create a new A2A Agent"
+              width="350px"
             />
             {agents.map(agent => (
               <AgentCard
