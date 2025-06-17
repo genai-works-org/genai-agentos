@@ -55,7 +55,7 @@ Make sure you have the following installed:
    cd genai-agentos/
    ```
 
-2. Create a `.env` file by copying the example:
+2. Create a `.env` file by copying the example (can be empty and customized later):
 
    ```bash
    cp .env-example .env
