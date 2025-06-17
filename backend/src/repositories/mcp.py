@@ -195,13 +195,9 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
 
         server_url = str(mcp_server.server_url)
 
-        # AnyHttpUrl always returns url with trailing slash,
-        # trimming slash here to ensure consistency across all urls and to painlessly append suffixes like '/mcp'
-        trimmed_url = server_url[:-1] if server_url.endswith("/") else server_url
-
         try:
             mcp_in = MCPServer(
-                server_url=trimmed_url,
+                server_url=server_url,
                 creator_id=user_model.id,
                 is_active=mcp_server.is_active,
             )
