@@ -3,6 +3,7 @@ import random
 import re
 import string
 from typing import Any, Optional
+from urllib.parse import urlparse, urlunparse
 from uuid import UUID
 
 from mcp.types import Tool
@@ -131,14 +132,28 @@ def prettify_integrity_error_details(msg: str) -> Optional[IntegrityErrorDetails
 
 
 def strip_endpoints_from_url(url: AnyHttpUrl | str) -> str:
-    if isinstance(url, AnyHttpUrl):
-        port = (
-            f":{url.port}"
-            if url.port and url.host in ("localhost", "0.0.0.0", "host.docker.internal")
-            else ""
+    """
+    Strips the path, query, and fragment from a URL to return only the base address.
+
+    Args:
+        url: The URL to process, as a string or Pydantic AnyHttpUrl.
+
+    Returns:
+        The root URL string (e.g., 'http://example.com:8080').
+
+    """
+    url_str = str(url)
+    parsed_url = urlparse(url_str)
+    return urlunparse(
+        (
+            parsed_url.scheme,
+            parsed_url.netloc,
+            "",  # path
+            "",  # params
+            "",  # query
+            "",  # fragment
         )
-        return f"{url.scheme}://{str(url.host)}{port}"
-    return url.rstrip("/")
+    )
 
 
 class FlowValidator:

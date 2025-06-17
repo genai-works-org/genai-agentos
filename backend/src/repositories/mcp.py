@@ -73,7 +73,7 @@ async def lookup_mcp_server(
                     is_active=True,
                 )
 
-    except* (OSError, httpx.ConnectError, McpError):
+    except* (OSError, httpx.ConnectError, httpx.HTTPStatusError, McpError):
         logger.warning(f"Could not connect to {url}. Details: {traceback.format_exc()}")
 
     return MCPServerData(is_active=False)
@@ -114,10 +114,13 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             {
                 **t.model_dump(mode="json"),
                 "id": tool_alias_container.get(t.name, {}).get("id", str(uuid.uuid4())),
-                "alias": tool_alias_container.get(t.name, {}).get("alias", generate_alias(t.name)),
+                "alias": tool_alias_container.get(t.name, {}).get(
+                    "alias", generate_alias(t.name)
+                ),
                 "mcp_server_id": db_obj.id,
                 "updated_at": datetime.now(),
-            } for t in tools_in
+            }
+            for t in tools_in
         ]
 
         await db.run_sync(
@@ -186,7 +189,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             if not mcp_server.is_active:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible. Make sure to specify /mcp or /sse suffix depending on the protocol used by your server",  # noqa: E501
+                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible",  # noqa: E501
                 )
         except* InvalidToolNameException as eg:  # noqa: F821
             res = eg.split(InvalidToolNameException)

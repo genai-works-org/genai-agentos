@@ -53,7 +53,7 @@ class A2AAgentCard(BaseModel):
         try:
             # in pydantic 2 anyhttpurl returns URL obj, which needs to be cast to str
             url = AnyHttpUrl(url=v)
-            return str(url)
+            return str(url)[:-1]  # strip trailing slash
         except ValidationError:
             return v
 
