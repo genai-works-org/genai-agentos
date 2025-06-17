@@ -17,16 +17,6 @@ const MCPServersPage = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { getServers, createServer, deleteServer, isLoading } = useMcpAgents();
 
-  // const groupedAgents = agents.reduce<Record<string, MCPAgent[]>>(
-  //   (acc, agent) => {
-  //     const url = agent.url;
-  //     if (!acc[url]) acc[url] = [];
-  //     acc[url].push(agent);
-  //     return acc;
-  //   },
-  //   {},
-  // );
-
   const handleCreateServer = async (url: string) => {
     await createServer(url);
     const updatedAgents = await getServers();
