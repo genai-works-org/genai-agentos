@@ -32,7 +32,7 @@ async def receive_message(
         timestamp: str
 ):
     try:
-        graph_config = {"configurable": {"session": session}}
+        graph_config = {"configurable": {"session": session}, "recursion_limit": 100}  # recursion_limit can be adjusted
 
         base_system_prompt = configs.get("system_prompt")
         user_system_prompt = configs.get("user_prompt")
