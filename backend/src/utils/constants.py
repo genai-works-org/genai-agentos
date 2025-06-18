@@ -66,7 +66,8 @@ If no composite tool can solve the current substep:
 
 ### Final Response Format
 - Final response is your response to user when you don't select any tools
-- Always generate a final response on the same language as initial user query
+- Always generate a final response on the same language as initial user query unless the user asks you to respond 
+on another language.
 """
 
 SPECIAL_CHARS: set[str] = {
