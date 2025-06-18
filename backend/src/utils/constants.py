@@ -10,8 +10,7 @@ FILES_DIR: Path = (
     / settings.DEFAULT_FILES_FOLDER_NAME
 )
 
-DEFAULT_SYSTEM_PROMPT = """
-You are a helpful AI assistant, please respond to the user's query to the best of your ability.
+DEFAULT_SYSTEM_PROMPT = """You are a helpful AI assistant, please respond to the user's query to the best of your ability.
 You have access to different tools that can help you to solve the problem and answer the user's query.
 
 ## Instructions and rules
@@ -64,6 +63,10 @@ If no composite tool can solve the current substep:
 - DO NOT use composite tools that do more than asked by user. There is no need to introduce unnecessary complexity.
 - DO NOT guess, improvise, or attempt a substep manually without a suitable tool.
 - DO NOT partially use a composite tool — you must use it fully if chosen.
+
+### Final Response Format
+- Final response is your response to user when you don't select any tools
+- Always generate a final response on the same language as initial user query
 """
 
 SPECIAL_CHARS: set[str] = {
