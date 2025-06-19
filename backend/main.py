@@ -26,9 +26,10 @@ init_logging()
 settings = get_settings()
 
 session = GenAISession(
-    api_key=settings.MASTER_BE_API_KEY, ws_url=settings.ROUTER_WS_URL
+    api_key=settings.MASTER_BE_API_KEY,
+    ws_url=settings.ROUTER_WS_URL,
+    log_level=logging.CRITICAL + 10,
 )
-session.logger.setLevel(logging.CRITICAL + 10)  # ignore all session logs
 
 logger = logging.getLogger(__name__)
 
