@@ -372,6 +372,36 @@ class FlowValidator:
                     )
                     await db.commit()
 
+            if AgentType.genai == agent_type:
+                active_agents = await db.scalars(
+                    select(Agent).where(
+                        and_(
+                            Agent.id.in_([a["id"] for a in flow_agent_ids]),
+                            Agent.is_active.is_(True),
+                        )
+                    )
+                )
+                if len(active_agents.all()) != len(
+                    [
+                        f["id"]
+                        for f in flow_agent_ids
+                        if f["type"] == AgentType.genai.value
+                    ]
+                ):
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": False})
+                    )
+                    await db.commit()
+                else:
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": True})
+                    )
+                    await db.commit()
+
     async def trigger_flow_state_lookup_of_all_agents(
         self,
         flow: AgentWorkflow,
