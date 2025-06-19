@@ -77,9 +77,10 @@ async def message_handler_validator(
                         obj_in=agent_in,
                     )
                     flow_validator = FlowValidator()
-                    flow_validator.trigger_flow_validation_on_agent_state_change(
+                    await flow_validator.trigger_flow_validation_on_agent_state_change(
                         db=db, agent_type=AgentType.genai
                     )
+                    await db.refresh(updated_agent)
                     logger.debug(f"Agent updated: {str(updated_agent.id)}")
 
             except ValidationError as e:

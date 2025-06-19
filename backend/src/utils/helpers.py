@@ -260,12 +260,9 @@ class FlowValidator:
         Unified helper method to run during mcp/a2a lookups to set flows with inactive tools/cards as inactive
         """
         active_flows = await db.scalars(
-            select(AgentWorkflow)
-            .where(AgentWorkflow.is_active.is_(True))
-            .order_by(AgentWorkflow.created_at)
+            select(AgentWorkflow).order_by(AgentWorkflow.created_at)
         )
         flows: list[AgentWorkflow] = active_flows.all()
-
         for flow in flows:
             flow_agent_ids = []  # either mcp/a2a ids
             for tool in flow.flow:
