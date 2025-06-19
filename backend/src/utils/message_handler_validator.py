@@ -14,7 +14,8 @@ from src.repositories.log import log_repo
 from src.repositories.user import user_repo
 from src.schemas.api.agent.schemas import AgentUpdate
 from src.schemas.ws.log import FrontendLogEntryDTO, LogCreate, LogEntry
-from src.utils.helpers import generate_alias
+from src.utils.enums import AgentType
+from src.utils.helpers import FlowValidator, generate_alias
 from src.utils.validate_uuid import validate_agent_or_send_err
 from src.utils.validation_error_handler import validation_exception_handler
 from starlette.datastructures import State
@@ -75,6 +76,10 @@ async def message_handler_validator(
                         db_obj=valid_agent,
                         obj_in=agent_in,
                     )
+                    flow_validator = FlowValidator()
+                    flow_validator.trigger_flow_validation_on_agent_state_change(
+                        db=db, agent_type=AgentType.genai
+                    )
                     logger.debug(f"Agent updated: {str(updated_agent.id)}")
 
             except ValidationError as e:
@@ -101,11 +106,13 @@ async def message_handler_validator(
                             f"No agent of user with id: '{agent.creator_id}' found"
                         )
                         return
-                    deleted_flows = await agentflow_repo.set_inactive_for_all_flows_where_deleted_agent_exists(
+                    set_inactive_flows = await agentflow_repo.set_inactive_for_all_flows_where_deleted_agent_exists(
                         db=db, agent_id=str(agent.id), user_model=user
                     )
-                    if deleted_flows:
-                        logger.debug(f"Deleted flows: {''.join(deleted_flows)}")
+                    if set_inactive_flows:
+                        logger.debug(
+                            f"Flows set as inactive: {''.join(set_inactive_flows)}"
+                        )
 
                     inactive_agent = await agent_repo.set_agent_as_inactive(
                         db=db, id_=agent_uuid, user_id=agent.creator_id

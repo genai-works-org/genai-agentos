@@ -6,6 +6,7 @@ from typing import Any, Optional
 from urllib.parse import urlparse, urlunparse
 from uuid import UUID
 
+from fastapi import HTTPException
 from mcp.types import Tool
 from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select, update
@@ -30,6 +31,8 @@ def generate_alias(agent_name: str):
 
 def get_user_id_from_jwt(token: str) -> Optional[str]:
     token_data = validate_token(token=token, lifespan_type=TokenLifespanType.api)
+    if not token_data:
+        raise HTTPException(status_code=400, detail="JWT token is invalid or expired")
     return token_data.sub
 
 
@@ -316,6 +319,36 @@ class FlowValidator:
                         f["id"]
                         for f in flow_agent_ids
                         if f["type"] == AgentType.a2a.value
+                    ]
+                ):
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": False})
+                    )
+                    await db.commit()
+                else:
+                    await db.execute(
+                        update(AgentWorkflow)
+                        .where(AgentWorkflow.id == flow.id)
+                        .values({"is_active": True})
+                    )
+                    await db.commit()
+
+            if AgentType.genai == agent_type:
+                active_agents = await db.scalars(
+                    select(Agent).where(
+                        and_(
+                            Agent.id.in_([a["id"] for a in flow_agent_ids]),
+                            Agent.is_active.is_(True),
+                        )
+                    )
+                )
+                if len(active_agents.all()) != len(
+                    [
+                        f["id"]
+                        for f in flow_agent_ids
+                        if f["type"] == AgentType.genai.value
                     ]
                 ):
                     await db.execute(
