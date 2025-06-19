@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { SendIcon, PaperclipIcon } from 'lucide-react';
 import { useSettings } from '../../contexts/SettingsContext';
 import {
@@ -27,7 +27,12 @@ const Toolbar: FC<ToolbarProps> = ({
   hasContent,
   onSubmit,
 }) => {
-  const { activeModel, availableModels, setActiveModel } = useSettings();
+  const { activeModel, providers, setActiveModel } = useSettings();
+
+  const availableModels = useMemo(() => {
+    return providers.flatMap(provider => provider.configs);
+  }, [providers]);
+
   const isModelAvailable = availableModels.length > 0;
   const isModelSelected = Boolean(activeModel);
 

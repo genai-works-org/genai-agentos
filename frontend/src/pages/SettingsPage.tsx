@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
 import {
   Select,
@@ -11,6 +11,12 @@ import {
 } from '@mui/material';
 import { useSettings } from '../contexts/SettingsContext';
 import { useModels } from '../hooks/useModels';
+import {
+  getInitialConfig,
+  getProviderModels,
+  isProviderSettingsChanged,
+  isProviderSettingsSet,
+} from '../utils/settings';
 import { MainLayout } from '../components/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
@@ -22,43 +28,13 @@ import {
   Config,
   CreateModelBody,
   ModelConfig,
-  ModelsConfigs,
   TOOLTIP_MESSAGES,
 } from '../types/model';
-
-const isProviderSettingsSet = (configs: ModelsConfigs[], name: string) => {
-  const provider = configs.find(c => c.provider === name);
-  return Boolean(provider?.api_key);
-};
-
-const isProviderSettingsChanged = (
-  provider: string,
-  oldConfig: ModelsConfigs[],
-  newConfig: Config,
-) => {
-  const targetProvider = oldConfig.find(c => c.provider === provider);
-
-  return (
-    JSON.stringify({
-      ...targetProvider?.metadata,
-      api_key: targetProvider?.api_key,
-    }) !== JSON.stringify(newConfig.data)
-  );
-};
-
-const getProviderModels = (models: ModelsConfigs[], provider: string) => {
-  const providerModels = models.find(m => m.provider === provider);
-  return providerModels ? providerModels.configs : [];
-};
 
 export const SettingsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [config, setConfig] = useState<Config>({
-    provider: AI_PROVIDERS.OPENAI,
-    data: {},
-  });
   const {
     providers,
     systemPrompt,
@@ -66,6 +42,9 @@ export const SettingsPage = () => {
     activeModel,
     setActiveModel,
   } = useSettings();
+  const [config, setConfig] = useState<Config>(() =>
+    getInitialConfig(providers),
+  );
   const {
     createProvider,
     updateProvider,
@@ -156,14 +135,6 @@ export const SettingsPage = () => {
       setSelectedModel(null);
     }
   };
-
-  useEffect(() => {
-    const provider = providers.find(p => p.provider === config.provider);
-    if (provider) {
-      const { provider: providerName, metadata, api_key } = provider;
-      setConfig({ provider: providerName, data: { ...metadata, api_key } });
-    }
-  }, [providers]);
 
   return (
     <MainLayout currentPage="Settings">

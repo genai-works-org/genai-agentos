@@ -5,18 +5,17 @@ import {
   useState,
   useEffect,
   useCallback,
-  useMemo,
 } from 'react';
+import localStorage from '../services/localStorageService';
 import { useModels } from '../hooks/useModels';
-import { ModelConfig, ModelsConfigs } from '../types/model';
+import { ModelConfig, ModelsConfigs, ActiveModel } from '../types/model';
+import { ACTIVE_MODEL_KEY } from '../constants/localStorage';
 import { useAuth } from './AuthContext';
 
 interface SettingsContextType {
   systemPrompt: string;
   providers: ModelsConfigs[];
-  activeModel: ModelConfig | null;
-  availableModels: ModelConfig[];
-  activeProvider: string;
+  activeModel: ActiveModel | null;
   setActiveModel: (model: ModelConfig | null) => void;
   refetchModels: () => Promise<void>;
 }
@@ -28,19 +27,35 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
 export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [systemPrompt, setSystemPrompt] = useState('');
   const [providers, setProviders] = useState<ModelsConfigs[]>([]);
-  const [activeModel, setActiveModel] = useState<ModelConfig | null>(null);
-  const [activeProvider, setActiveProvider] = useState('');
+  const [model, setModel] = useState<ActiveModel | null>(() =>
+    localStorage.get(ACTIVE_MODEL_KEY),
+  );
   const { fetchModels, fetchSystemPrompt } = useModels();
   const { user } = useAuth();
-
-  const availableModels = useMemo(() => {
-    return providers.flatMap(provider => provider.configs);
-  }, [providers]);
 
   const refetchModels = useCallback(async () => {
     const models = await fetchModels();
     setProviders(models);
   }, [fetchModels]);
+
+  const setActiveModel = useCallback(
+    (model: ModelConfig | null) => {
+      const providerName = providers.find(provider =>
+        provider.configs.some(m => m.id === model?.id),
+      )?.provider;
+
+      const activeModel = model
+        ? {
+            ...model,
+            provider: providerName || '',
+          }
+        : null;
+
+      localStorage.set(ACTIVE_MODEL_KEY, activeModel);
+      setModel(activeModel);
+    },
+    [providers],
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -48,24 +63,12 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
     fetchModels().then(setProviders);
   }, [fetchSystemPrompt, fetchModels, user]);
 
-  useEffect(() => {
-    const providerName = providers.find(provider =>
-      provider.configs.some(m => m.id === activeModel?.id),
-    )?.provider;
-
-    if (providerName) {
-      setActiveProvider(providerName);
-    }
-  }, [providers, activeModel]);
-
   return (
     <SettingsContext.Provider
       value={{
         systemPrompt,
         providers,
-        activeModel,
-        availableModels,
-        activeProvider,
+        activeModel: model,
         setActiveModel,
         refetchModels,
       }}

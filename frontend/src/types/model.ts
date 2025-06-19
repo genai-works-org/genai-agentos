@@ -48,6 +48,10 @@ export interface Config {
   data: Record<string, string>;
 }
 
+export interface ActiveModel extends ModelConfig {
+  provider: string;
+}
+
 export const AI_PROVIDERS = {
   OPENAI: 'openai',
   AZURE_OPENAI: 'azure openai',
