@@ -25,7 +25,7 @@ class MCPToolDTO(BaseUUIDToStrModel):
 
 class MCPServerDTO(BaseModel):
     server_url: str
-    mcp_tools: list[dict]
+    mcp_tools: list[dict] | list[MCPToolDTO]
     is_active: bool
     created_at: datetime
     updated_at: datetime

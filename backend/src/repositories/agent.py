@@ -542,7 +542,6 @@ LIMIT :limit OFFSET :offset;
             select(AgentWorkflow).where(
                 and_(
                     AgentWorkflow.creator_id == user_id,
-                    AgentWorkflow.is_active.is_(True),
                 )
             )
         )
@@ -721,13 +720,17 @@ LIMIT :limit OFFSET :offset;
         tools = []
         for s in mcp_servers:
             for tool in s.mcp_tools:
+                tool_schema = mcp_tool_to_json_schema(
+                    tool=tool, aliased_title=tool.alias
+                )
+
                 tools.append(
                     AgentDTOPayload(
-                        id=tool["title"],
-                        name=tool["title"],
+                        id=tool.id,
+                        name=tool.name,
                         type=AgentType.mcp,
                         url=s.server_url,
-                        agent_schema=tool,
+                        agent_schema=tool_schema,
                         created_at=s.created_at,
                         updated_at=s.updated_at,
                     ).model_dump(mode="json", exclude_none=True)

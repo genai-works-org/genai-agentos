@@ -157,6 +157,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     ) -> list[MCPServerDTO]:
         q = await db.scalars(
             select(self.model)
+            .options(selectinload(self.model.mcp_tools))
             .where(
                 and_(
                     self.model.is_active == True,  # noqa: E712
@@ -167,7 +168,23 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             .limit(limit=limit)
             .offset(offset=offset)
         )
-        return [MCPServerDTO(**server.__dict__) for server in q.all()]
+        servers = q.all()
+        dto = []
+        for s in servers:
+            tools = []
+            for t in s.mcp_tools:
+                tools.append(MCPToolDTO(**t.__dict__))
+
+            dto.append(
+                MCPServerDTO(
+                    server_url=s.server_url,
+                    mcp_tools=tools,
+                    is_active=s.is_active,
+                    created_at=s.created_at,
+                    updated_at=s.updated_at,
+                )
+            )
+        return dto
 
     async def list_remote_urls_of_all_servers(self, db: AsyncSession):
         q = await db.scalars(select(self.model.server_url))
