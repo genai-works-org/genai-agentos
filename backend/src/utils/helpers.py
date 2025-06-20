@@ -390,14 +390,14 @@ class FlowValidator:
                 ):
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": False})
                     )
                     await db.commit()
                 else:
                     await db.execute(
                         update(AgentWorkflow)
-                        .where(AgentWorkflow.id == flow.id)
+                        .where(AgentWorkflow.id == flow_id)
                         .values({"is_active": True})
                     )
                     await db.commit()
