@@ -27,20 +27,7 @@ class FlowAgentId(BaseModel):
         if v not in (AgentType.genai.value, AgentType.mcp.value, AgentType.a2a.value):
             raise HTTPException(
                 status_code=400,
-                detail=f"Agent type must be one of '{AgentType.genai.value}', '{AgentType.mcp.value}', or '{AgentType.a2a.value}'",
-            )
-
-        return v
-
-    def to_json(self) -> dict:
-        return {"id": self.id, "type": self.type}
-
-    @field_validator("type")
-    def validate_type(cls, v) -> str:
-        if v not in (AgentType.genai.value, AgentType.mcp.value, AgentType.a2a.value):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Agent type must be one of '{AgentType.genai.value}', '{AgentType.mcp.value}', or '{AgentType.a2a.value}'",
+                detail=f"Agent type must be one of '{AgentType.genai.value}', '{AgentType.mcp.value}', or '{AgentType.a2a.value}'",  # noqa: E501
             )
 
         return v

@@ -49,7 +49,6 @@ async def lookup_mcp_server(
 
     # `url` will be of string type only whenever celery beat task will invoke this lookup function.
     # In this case, trailing slash is trimmed
-    url = strip_endpoints_from_url(url=url)
     try:
         async with streamablehttp_client(
             url=str(url),
@@ -205,7 +204,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             if not mcp_server.is_active:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible",  # noqa: E501
+                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'streamable-http' protocol and is remotely accesible.",  # noqa: E501
                 )
         except* InvalidToolNameException as eg:  # noqa: F821
             res = eg.split(InvalidToolNameException)
@@ -230,9 +229,10 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
 
             tools: list[Optional[MCPTool]] = []
             for tool in mcp_server.mcp_tools:
+                aliased_name = generate_alias(tool.name)
                 tool_in = MCPTool(
-                    name=tool.name,
-                    alias=generate_alias(tool.name),
+                    name=aliased_name,
+                    alias=aliased_name,
                     description=tool.description,
                     inputSchema=tool.inputSchema,
                     annotations=tool.annotations.model_dump(mode="json")
@@ -314,10 +314,6 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
                 ).model_dump(mode="json", exclude_none=True)
             )
         return s
-
-    async def get_tool_by_id(self, db: AsyncSession, id_: UUID):
-        q = await db.scalar(select(MCPTool).where(MCPTool.id == id_))
-        return q
 
     async def get_tool_by_id(self, db: AsyncSession, id_: UUID):
         q = await db.scalar(select(MCPTool).where(MCPTool.id == id_))

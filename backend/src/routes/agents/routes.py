@@ -99,20 +99,6 @@ async def list_all_agents(
         for agent in result
     ]
 
-    return [
-        MLAgentJWTDTO(
-            agent_id=str(agent.id),
-            agent_name=agent.name,
-            agent_description=agent.description,
-            agent_schema=agent.input_parameters,
-            created_at=agent.created_at,
-            updated_at=agent.updated_at,
-            is_active=agent.is_active,
-            agent_jwt=agent.jwt,
-        )
-        for agent in result
-    ]
-
 
 @agent_router.get("/{agent_id}")
 async def get_data(
