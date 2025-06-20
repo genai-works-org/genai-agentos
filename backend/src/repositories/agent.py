@@ -618,7 +618,8 @@ LIMIT :limit OFFSET :offset;
                         annotations=ToolAnnotations(**col["json_data2"])
                         if col["json_data2"]
                         else None,
-                    )
+                    ),
+                    aliased_title=col["name"],
                 )
                 mcp_tool = AgentDTOPayload(
                     id=col["id"],
@@ -664,13 +665,6 @@ LIMIT :limit OFFSET :offset;
                     id_=col["id"],
                 )
 
-                agent_card = a2a_repo.agent_card_to_dto(
-                    agent_card=agent_schema,
-                    created_at=created_at,
-                    updated_at=updated_at,
-                    id_=col["id"],
-                )
-
                 response.append(agent_card)
 
             if agent_type == "agents":
@@ -680,13 +674,13 @@ LIMIT :limit OFFSET :offset;
                 for field in fields_to_pop:
                     col.pop(field)
 
-                alias = generate_alias(col["name"])
                 input_params = col["json_data1"]
                 if input_params:
-                    input_params["function"]["name"] = alias
+                    input_params["function"]["name"] = col["alias"]
+                print(col["alias"])
                 agent = ActiveGenAIAgentDTO(
                     agent_id=str(col["id"]),
-                    agent_name=alias,
+                    agent_name=col["alias"],
                     agent_description=col["description"],
                     agent_schema=input_params,
                     agent_jwt=col["jwt"],

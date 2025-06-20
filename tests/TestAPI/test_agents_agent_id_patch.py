@@ -26,9 +26,8 @@ http_client = AsyncHTTPClient(timeout=10)
 async def test_agents_patch_agent_valid_full_request_body(
     input_parameters,
     user_jwt_token: str,
-    get_user: Callable[[str], Awaitable[str]],
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
@@ -63,7 +62,7 @@ async def test_agents_patch_agent_valid_full_request_body(
         )
 
         assert isinstance(response, dict), "Response is not of a dict type"
-        expected_response = active_genai_agent_response_factory(
+        expected_response = genai_agent_response_factory(
             response.get("agent_name"),
             json_data["description"],
             dummy_agent.id,
@@ -93,7 +92,7 @@ async def test_agents_patch_agent_valid_full_request_body(
 
         assert updated_at > created_at
 
-        expected_agent = active_genai_agent_response_factory(
+        expected_agent = genai_agent_response_factory(
             dummy_agent.name,
             json_data["description"],
             session.agent_id,

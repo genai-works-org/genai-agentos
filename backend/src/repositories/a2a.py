@@ -96,7 +96,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
         card_url = card_content.pop("url")
         try:
             a2a_agent = A2ACard(
-                name=card_name,
+                name=generate_alias(card_name),
                 description=card_description,
                 server_url=card_url,
                 card_content=card_content,
@@ -189,7 +189,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
     @staticmethod
     def _agent_card_to_json_schema(agent_card: A2AAgentCard):
         return A2AJsonSchema(
-            title=generate_alias(agent_card.name.strip()),
+            title=agent_card.name.strip(),
             description=get_agent_description_from_skills(
                 agent_card.description,
                 [s.model_dump(mode="json") for s in agent_card.skills],

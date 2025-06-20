@@ -1,14 +1,15 @@
-from typing import Awaitable, Callable
-import uuid
-import pytest
 import asyncio
 import logging
+import uuid
+from typing import Awaitable, Callable
 
+import pytest
 from genai_session.session import GenAISession
-from tests.http_client.AsyncHTTPClient import AsyncHTTPClient
-from tests.conftest import DummyAgent
 
-AGENTFLOWS_REGISTER_FLOW = "/api/agentflows/register-flow"
+from tests.http_client.AsyncHTTPClient import AsyncHTTPClient
+from tests.schemas import AgentDTOWithJWT
+
+AGENTFLOWS_REGISTER_FLOW = "/api/agentflows/register"
 AGENTFLOWS = "/api/agentflows/"
 AGENTFLOW_ID = "/api/agentflows/{agentflow_id}"
 
@@ -18,17 +19,17 @@ http_client = AsyncHTTPClient(timeout=10)
 @pytest.mark.asyncio
 async def test_agentflows_delete(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, list, bool], dict],
 ):
     AIRFLOW_NAME = "Airflow Name"
     AIRFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN_1 = await agent_jwt_factory(user_jwt_token)
-    JWT_TOKEN_2 = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN_1 = dummy_agent_1.jwt
+    JWT_TOKEN_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN_1)
     session_2 = GenAISession(jwt_token=JWT_TOKEN_2)
@@ -66,8 +67,8 @@ async def test_agentflows_delete(
             "name": AIRFLOW_NAME,
             "description": AIRFLOW_DESCRIPTION,
             "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
+                {"id": session_1.agent_id, "type": "genai"},
+                {"id": session_2.agent_id, "type": "genai"},
             ],
         }
 
@@ -83,16 +84,12 @@ async def test_agentflows_delete(
             expected_status_codes=[200],
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
-
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            }
+            crud_flow_output_factory(AIRFLOW_NAME, AIRFLOW_DESCRIPTION, flow, True)
         ]
 
         assert len(agentflows) == 1
@@ -150,17 +147,17 @@ async def test_agentflows_delete_with_invalid_flow_id(
     invalid_agentflow_id,
     expected_status_code,
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, list, bool], dict],
 ):
     AIRFLOW_NAME = "Airflow Name"
     AIRFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN_1 = await agent_jwt_factory(user_jwt_token)
-    JWT_TOKEN_2 = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN_1 = dummy_agent_1.jwt
+    JWT_TOKEN_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN_1)
     session_2 = GenAISession(jwt_token=JWT_TOKEN_2)
@@ -198,8 +195,8 @@ async def test_agentflows_delete_with_invalid_flow_id(
             "name": AIRFLOW_NAME,
             "description": AIRFLOW_DESCRIPTION,
             "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
+                {"id": session_1.agent_id, "type": "genai"},
+                {"id": session_2.agent_id, "type": "genai"},
             ],
         }
 
@@ -215,16 +212,12 @@ async def test_agentflows_delete_with_invalid_flow_id(
             expected_status_codes=[200],
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
-
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            }
+            crud_flow_output_factory(AIRFLOW_NAME, AIRFLOW_DESCRIPTION, flow, True)
         ]
 
         assert len(agentflows) == 1
@@ -271,17 +264,17 @@ async def test_agentflows_delete_with_invalid_flow_id(
 @pytest.mark.asyncio
 async def test_agentflows_delete_already_deleted_agentflow(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, str, bool], dict],
 ):
     AIRFLOW_NAME = "Airflow Name"
     AIRFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN_1 = await agent_jwt_factory(user_jwt_token)
-    JWT_TOKEN_2 = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN_1 = dummy_agent_1.jwt
+    JWT_TOKEN_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN_1)
     session_2 = GenAISession(jwt_token=JWT_TOKEN_2)
@@ -319,8 +312,8 @@ async def test_agentflows_delete_already_deleted_agentflow(
             "name": AIRFLOW_NAME,
             "description": AIRFLOW_DESCRIPTION,
             "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
+                {"id": session_1.agent_id, "type": "genai"},
+                {"id": session_2.agent_id, "type": "genai"},
             ],
         }
 
@@ -337,15 +330,12 @@ async def test_agentflows_delete_already_deleted_agentflow(
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            }
+            crud_flow_output_factory(AIRFLOW_NAME, AIRFLOW_DESCRIPTION, flow, True)
         ]
 
         assert len(agentflows) == 1

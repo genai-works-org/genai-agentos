@@ -29,7 +29,8 @@ async def test_agents_with_valid_offset_and_limit(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    clean_genai_agents_table,
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
@@ -66,7 +67,7 @@ async def test_agents_with_valid_offset_and_limit(
         assert updated_at
 
         expected_agents = [
-            active_genai_agent_response_factory(
+            genai_agent_response_factory(
                 dummy_agent.name,
                 dummy_agent.description,
                 dummy_agent.id,
@@ -101,11 +102,9 @@ async def test_agents_with_valid_offset_and_limit_less_then_agents_amount(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    clean_genai_agents_table,
 ):
-    # AGENT_NAME = "Agent Name"
-    # AGENT_DESCRIPTION = "Agent Description"
-
     dummy_agent = await agent_factory(user_jwt_token)
     JWT_TOKEN = dummy_agent.jwt
 
@@ -163,6 +162,7 @@ async def test_agents_with_valid_offset_and_limit_equal_to_agents_amount(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    clean_genai_agents_table,
 ):
     dummy_agent = await agent_factory(user_jwt_token)
     JWT_TOKEN = dummy_agent.jwt
@@ -221,7 +221,8 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    clean_genai_agents_table,
 ):
     dummy_agent1 = await agent_factory(user_jwt_token)
     dummy_agent2 = await agent_factory(user_jwt_token)
@@ -276,7 +277,7 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
         assert updated_at
 
         expected_agents = [
-            active_genai_agent_response_factory(
+            genai_agent_response_factory(
                 dummy_agent2.name, dummy_agent2.description, dummy_agent2.id, AUTH_JWT_2
             )
         ]
@@ -307,7 +308,8 @@ async def test_agents_offset_and_limit_above_agents_amount(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    clean_genai_agents_table,
 ):
     agent1 = await agent_factory(user_jwt_token)
     agent2 = await agent_factory(user_jwt_token)
@@ -371,10 +373,10 @@ async def test_agents_offset_and_limit_above_agents_amount(
         assert updated_at_2
 
         expected_agents = [
-            active_genai_agent_response_factory(
+            genai_agent_response_factory(
                 agent1.name, agent1.description, agent1.id, agent1.jwt
             ),
-            active_genai_agent_response_factory(
+            genai_agent_response_factory(
                 agent2.name, agent2.description, agent2.id, agent2.jwt
             ),
         ]
@@ -400,10 +402,7 @@ async def test_agents_offset_and_limit_above_agents_amount(
     ids=["valid offset and valid limit with no active agents"],
 )
 async def test_agents_with_valid_offset_and_limit_and_no_active_agents(
-    offset,
-    limit,
-    displayed_agents,
-    user_jwt_token,
+    offset, limit, displayed_agents, user_jwt_token, clean_genai_agents_table
 ):
     await asyncio.sleep(3)
 
@@ -429,7 +428,8 @@ async def test_agents_with_default_offset_and_limit_with_agent(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    clean_genai_agents_table,
 ):
     agent = await agent_factory(user_jwt_token)
     AUTH_JWT = agent.jwt
@@ -465,7 +465,7 @@ async def test_agents_with_default_offset_and_limit_with_agent(
         assert updated_at
 
         expected_agents = [
-            active_genai_agent_response_factory(
+            genai_agent_response_factory(
                 agent.name, agent.description, agent.id, agent.jwt
             ),
         ]

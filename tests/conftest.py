@@ -4,9 +4,11 @@ import string
 from datetime import datetime
 from multiprocessing import Process
 from typing import Awaitable, Callable, Optional
+from uuid import UUID
 
 import aiohttp
 import jwt
+import pytest
 import pytest_asyncio
 from a2a.server.apps import A2AStarletteApplication
 from a2a.server.request_handlers import DefaultRequestHandler
@@ -16,19 +18,25 @@ from a2a_resources import ReimbursementAgent, ReimbursementAgentExecutor
 from mcp.server import FastMCP
 from pydantic import BaseModel, Field
 from sqlalchemy import NullPool, inspect, text
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from tests.constants import SPECIAL_CHARS, TEST_FILES_FOLDER
-from tests.schemas import AgentDTOPayload, AgentDTOWithJWT, AgentType
+from tests.schemas import AgentDTOPayload, AgentDTOWithJWT, AgentType, MCPToolDTO
+from tests.utils import a2a_agent_card_to_dto, mcp_tool_to_json_schema
 
 os.environ["ROUTER_WS_URL"] = "ws://0.0.0.0:8080/ws"
 os.environ["DEFAULT_FILES_FOLDER_NAME"] = TEST_FILES_FOLDER
+os.environ["IS_DOCKER_HOST"] = "True"
 
-
-# TODO:
-# - add db connection, cleanup on session stop
-# - clean up mcp/a2a instances
-# -
+# if tests are running in the container (cicd) -> pass IS_DOCKER_HOST=True
+# to be able to access the mcp/a2a servers that were started in pytest fixtures
+host_url = (
+    "http://host.docker.internal"
+    if os.environ.get("IS_DOCKER_HOST")
+    else "http://localhost"
+)
+MCP_PORT = 8888
+A2A_PORT = 10002
 
 
 class HttpClient:
@@ -61,8 +69,42 @@ def _construct_db_uri():
     return "postgresql+asyncpg://postgres:postgres@0.0.0.0:5432/postgres"
 
 
+@pytest.fixture(scope="session")
+def async_db_engine():
+    db_uri = _construct_db_uri()
+    assert db_uri is not None
+    engine = create_async_engine(
+        db_uri,
+        poolclass=NullPool,
+        future=True,
+        pool_pre_ping=True,
+    )
+    return engine
+
+
 @pytest_asyncio.fixture(scope="session", autouse=True)
-async def db_cleanup():
+async def db_cleanup(async_db_engine: AsyncEngine):
+    # simplified db cleanup before pytest session starts
+    # looking up all of the table names and running DELETE FROM vs test db
+    # not running 'DROP SCHEMA public CASCADE' in order to not run migrations on test DB
+    # DB cleanup is required to register MCP/A2A agents as their URLs should be unique
+    async with async_db_engine.begin() as conn:
+        tables: list[str] = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
+
+        for t in tables:
+            await conn.execute(text(f"DELETE FROM {t};"))
+
+    return
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def clean_genai_agents_table():
+    """
+    Function scope fixture to delete all objects so the test starts with empty db,
+    required for genai, flow tests
+    """
     db_uri = _construct_db_uri()
     assert db_uri is not None
     engine = create_async_engine(
@@ -72,18 +114,25 @@ async def db_cleanup():
         pool_pre_ping=True,
     )
 
-    # simplified db cleanup before pytest session starts
-    # looking up all of the table names and running DELETE FROM vs test db
-    # not running 'DROP SCHEMA public CASCADE' in order to not run migrations on test DB
-    # DB cleanup is required to register MCP/A2A agents as their URLs should be unique
     async with engine.begin() as conn:
         tables: list[str] = await conn.run_sync(
             lambda sync_conn: inspect(sync_conn).get_table_names()
         )
-        for t in tables:
-            await conn.execute(text(f"DELETE FROM {t};"))
 
-    return
+        for t in tables:
+            if t != "users":
+                await conn.execute(text(f"DELETE FROM {t};"))
+
+    yield
+
+    async with engine.begin() as conn:
+        tables: list[str] = await conn.run_sync(
+            lambda sync_conn: inspect(sync_conn).get_table_names()
+        )
+
+        for t in tables:
+            if t != "users":
+                await conn.execute(text(f"DELETE FROM {t};"))
 
 
 def _generate_password_with_special_char(length: int):
@@ -158,7 +207,7 @@ async def dummy_agent_factory():
     return generate_dummy_agent
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(autouse=True)
 async def agent_factory(
     dummy_agent_factory,
 ) -> Callable[[str], Awaitable[AgentDTOWithJWT]]:
@@ -186,9 +235,16 @@ async def get_user():
     return decode_token
 
 
-@pytest_asyncio.fixture
-def active_genai_agent_response_factory():
-    def build_agent_body(name: str, description: str, agent_id: str, jwt_token: str):
+@pytest.fixture
+def genai_agent_response_factory():
+    def build_agent_body(
+        name: str,
+        description: str,
+        agent_id: str,
+        jwt_token: str,
+        created_at: Optional[str] = None,
+        updated_at: Optional[str] = None,
+    ):
         body = {
             "agent_id": agent_id,
             "agent_name": name,
@@ -208,7 +264,42 @@ def active_genai_agent_response_factory():
             "agent_jwt": jwt_token,
             "is_active": True,
         }
+        if created_at:
+            body["created_at"] = created_at
+
+        if updated_at:
+            body["updated_at"] = updated_at
+
         return body
+
+    return build_agent_body
+
+
+@pytest.fixture
+def active_genai_agent_response_factory(genai_agent_response_factory):
+    def build_agent_body(
+        name: str,
+        description: str,
+        agent_id: str,
+        jwt_token: str,
+        created_at: Optional[str] = None,
+        updated_at: Optional[str] = None,
+    ):
+        body = genai_agent_response_factory(
+            name, description, agent_id, jwt_token, created_at, updated_at
+        )
+        created_at = body.get("created_at")
+        updated_at = body.get("updated_at")
+
+        return AgentDTOPayload(
+            id=body["agent_id"],
+            name=body["agent_name"],
+            type=AgentType.genai.value,
+            agent_schema=body["agent_schema"],
+            created_at=created_at,
+            updated_at=updated_at,
+            is_active=body["is_active"],
+        ).model_dump(exclude_none=True, mode="json")
 
     return build_agent_body
 
@@ -231,12 +322,12 @@ def genai_agent_register_response_factory():
 def mcp_server():
     server = FastMCP("TestServer")
 
-    @server.tool(name="test_tool")
+    @server.tool(name="test_tool", description="Returns name")
     def test_tool(name: str) -> str:
         return f"Tool named {name}"
 
     server.settings.host = "0.0.0.0"
-    server.settings.port = 8888
+    server.settings.port = MCP_PORT
     server.settings.log_level = "DEBUG"
     server.run(transport="streamable-http")
 
@@ -260,11 +351,94 @@ async def registered_mcp_server(
     add_mcp_url = "/api/mcp/servers"
     server_data = await http_client.post(
         path=add_mcp_url,
-        # TODO: replace before using tests in compose
-        json={"server_url": "http://host.docker.internal:8888/mcp"},
+        json={"server_url": f"{host_url}:{MCP_PORT}/mcp"},
         headers={"Authorization": f"Bearer {user_jwt_token}"},
     )
     return server_data
+
+
+@pytest_asyncio.fixture
+async def registered_mcp_tools(
+    user_jwt_token, registered_mcp_server, async_db_engine: AsyncEngine
+):
+    async with async_db_engine.begin() as conn:
+        mcp_server_id: Optional[UUID] = await conn.scalar(
+            text(
+                f"SELECT id FROM mcpservers WHERE server_url='{host_url}:{MCP_PORT}/mcp' LIMIT 1"
+            )
+        )
+    server_detail_url = f"/api/mcp/servers/{str(mcp_server_id)}"
+    server_details = await http_client.get(
+        path=server_detail_url, headers={"Authorization": f"Bearer {user_jwt_token}"}
+    )
+
+    tools = server_details["mcp_tools"]
+
+    dto = []
+    for t in tools:
+        json_schema = mcp_tool_to_json_schema(MCPToolDTO(**t), aliased_title=t["name"])
+        json_schema["description"] = t["description"]
+        json_schema.pop("alias")
+        # tool_id = json_schema["id"]
+        json_schema.pop("id")
+        json_schema.pop("mcp_server_id")
+
+        dto.append(
+            AgentDTOPayload(
+                id=t["id"],
+                name=t["name"],
+                type=AgentType.mcp,
+                url=server_details["server_url"],
+                agent_schema=json_schema,
+                created_at=server_details["mcp_tools"][0]["created_at"],
+                updated_at=server_details["mcp_tools"][0]["updated_at"],
+                is_active=server_details["is_active"],
+            ).model_dump(mode="json", exclude_none=True)
+        )
+
+    return dto
+
+
+@pytest_asyncio.fixture
+async def a2a_server_url():
+    return f"http://localhost:{A2A_PORT}"
+
+
+@pytest_asyncio.fixture
+async def mcp_server_url():
+    return f"http://localhost:{MCP_PORT}"
+
+
+@pytest_asyncio.fixture(scope="session")
+async def a2a_skill():
+    skill = AgentSkill(
+        id="process_reimbursement",
+        name="Process Reimbursement Tool",
+        description="Helps with the reimbursement process for users given the amount and purpose of the reimbursement.",  # noqa: E501
+        tags=["reimbursement"],
+        examples=["Can you reimburse me $20 for my lunch with the clients?"],
+    )
+    return skill
+
+
+@pytest_asyncio.fixture(scope="session")
+async def a2a_capabilities():
+    return AgentCapabilities(streaming=True)
+
+
+@pytest_asyncio.fixture(scope="session")
+async def a2a_card(a2a_capabilities, a2a_skill):
+    card = AgentCard(
+        name="Reimbursement Agent",
+        description="This agent handles the reimbursement process for the employees given the amount and purpose of the reimbursement.",  # noqa: E501
+        url=f"{host_url}:{A2A_PORT}/",
+        version="1.0.0",
+        defaultInputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
+        defaultOutputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
+        capabilities=a2a_capabilities,
+        skills=[a2a_skill],
+    )
+    return card
 
 
 def run_a2a_server():
@@ -279,7 +453,7 @@ def run_a2a_server():
     card = AgentCard(
         name="Reimbursement Agent",
         description="This agent handles the reimbursement process for the employees given the amount and purpose of the reimbursement.",  # noqa: E501
-        url="http://localhost:10002/",
+        url=f"http://localhost:{A2A_PORT}/",
         version="1.0.0",
         defaultInputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
         defaultOutputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
@@ -293,7 +467,7 @@ def run_a2a_server():
     server = A2AStarletteApplication(agent_card=card, http_handler=request_handler)
     import uvicorn
 
-    uvicorn.run(server.build(), host="localhost", port=10002, loop="asyncio")
+    uvicorn.run(server.build(), host="localhost", port=A2A_PORT, loop="asyncio")
 
 
 @pytest_asyncio.fixture(autouse=True, scope="session")
@@ -308,15 +482,23 @@ async def run_a2a():
     proc.terminate()
 
 
-@pytest_asyncio.fixture(autouse=True)
-async def registered_a2a_card(user_jwt_token, run_a2a):
+@pytest_asyncio.fixture(autouse=True, scope="session")
+async def registered_a2a_card(user_jwt_token, a2a_card: AgentCard, run_a2a):
+    # TODO: figure out how to get a2a server_url
     add_mcp_url = "/api/a2a/agents"
     server_data = await http_client.post(
         path=add_mcp_url,
-        json={"server_url": "http://host.docker.internal:10002"},
+        json={"server_url": f"{host_url}:{A2A_PORT}"},
         headers={"Authorization": f"Bearer {user_jwt_token}"},
     )
-    return server_data
+
+    a2a_card.name = server_data["name"]
+    return a2a_agent_card_to_dto(
+        id_=server_data["id"],
+        agent_card=a2a_card,
+        created_at=server_data["created_at"],
+        updated_at=server_data["updated_at"],
+    ).model_dump(mode="json", exclude_none=True)
 
 
 @pytest_asyncio.fixture
@@ -340,6 +522,48 @@ async def active_agent_factory():
             is_active=is_active,
             created_at=created_at,
             updated_at=updated_at,
-        )
+        ).model_dump(mode="json", exclude_none=True)
+
+    return build_agent_dto
+
+
+@pytest.fixture
+def crud_flow_output_factory():
+    def build(name: str, description: str, flow: list[dict], is_active: bool):
+        camel_case_name = name.lower().replace(" ", "_")
+        return {
+            "description": description,
+            "flow": flow,
+            "is_active": is_active,
+            "name": camel_case_name,
+        }
+
+    return build
+
+
+@pytest.fixture
+def flow_dto_factory():
+    async def build_agent_dto(
+        id: str,
+        name: str,
+        type: AgentType,
+        flow: list[dict],
+        agent_schema: dict,
+        is_active: bool,
+        created_at: Optional[datetime] = None,
+        updated_at: Optional[datetime] = None,
+        url: Optional[str] = None,
+    ):
+        return AgentDTOPayload(
+            id=id,
+            name=name,
+            type=type,
+            url=url,
+            flow=[f["id"] for f in flow],
+            agent_schema=agent_schema,
+            is_active=is_active,
+            created_at=created_at,
+            updated_at=updated_at,
+        ).model_dump(mode="json", exclude_none=True)
 
     return build_agent_dto

@@ -18,7 +18,7 @@ http_client = AsyncHTTPClient(timeout=10)
 async def test_agent_agent_id_valid_agent_id(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
+    genai_agent_response_factory: Callable[[str, str, str, str], dict],
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
@@ -50,7 +50,7 @@ async def test_agent_agent_id_valid_agent_id(
         assert created_at
         assert updated_at
 
-        expected_agent = active_genai_agent_response_factory(
+        expected_agent = genai_agent_response_factory(
             dummy_agent.name, dummy_agent.description, dummy_agent.id, dummy_agent.jwt
         )
         assert agent == expected_agent
@@ -69,7 +69,6 @@ async def test_agent_agent_id_valid_agent_id(
 async def test_agent_agent_id_wrong_agent_id(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str], dict],
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
