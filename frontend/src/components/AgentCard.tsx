@@ -14,7 +14,6 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
 import { AgentDTO } from '../types/agent';
-import { normalizeString } from '../utils/normalizeString';
 
 const ExpandMore = styled((props: { expanded: boolean } & any) => {
   const { expanded, ...other } = props;
@@ -124,7 +123,7 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
             component="div"
             sx={{ width: '280px', wordBreak: 'break-all' }}
           >
-            {normalizeString(agent.agent_name)}
+            {agent.agent_name.replace(/_/g, ' ')}
           </Typography>
           <IconButton onClick={handleDelete} color="error" size="small">
             <DeleteIcon />
