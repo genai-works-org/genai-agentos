@@ -333,7 +333,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         )
         return q.scalars().all()
 
-    async def filter_out_nameless_agents(
+    async def filter_out_empty_agents(
         self, db: AsyncSession, user_model: User, limit: int, offset: int
     ):
         q = await db.scalars(
@@ -381,7 +381,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             # return [map_genai_agent_to_unified_dto(a) for a in agents]
             return agents
 
-        return await self.filter_out_nameless_agents(
+        return await self.filter_out_empty_agents(
             db=db, user_model=user_model, limit=limit, offset=offset
         )
 
