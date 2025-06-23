@@ -35,7 +35,7 @@ export const useAgent = () => {
     }
   };
 
-  const createAgent = async (agent: AgentCreate): Promise<AgentDTO> => {
+  const createAgent = async (agent: AgentCreate) => {
     setIsLoading(true);
     setError(null);
     try {
