@@ -16,7 +16,7 @@ import { AgentDTO } from '../types/agent';
 import { MainLayout } from '../components/MainLayout';
 import { JSONTree } from 'react-json-tree';
 import { jsonTreeTheme } from '../constants/jsonTreeTheme';
-import { normalizeString } from '../utils/normalizeString';
+import { removeUnderscore } from '../utils/normalizeString';
 
 export const AgentDetailsPage: FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -89,7 +89,7 @@ export const AgentDetailsPage: FC = () => {
               </Typography>
               <TextField
                 fullWidth
-                value={normalizeString(agent.agent_name)}
+                value={removeUnderscore(agent.agent_name)}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}
@@ -104,7 +104,7 @@ export const AgentDetailsPage: FC = () => {
                 fullWidth
                 multiline
                 rows={4}
-                value={agent.agent_schema.function.description}
+                value={agent.agent_description}
                 variant="outlined"
                 disabled
                 sx={{ mt: 1 }}

@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { A2AAgent, AgentType } from '../../types/agent';
 import { Modal } from '../Modal';
-import { normalizeString } from '../../utils/normalizeString';
+import { removeUnderscore } from '../../utils/normalizeString';
 
 interface AgentDetailModalProps {
   open: boolean;
@@ -30,7 +30,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title={normalizeString(agent.name || '')}
+      title={removeUnderscore(agent.name || '')}
     >
       <Stack spacing={2}>
         <Box>
@@ -72,7 +72,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
             {agent.card_content.skills.map(skill => (
               <Chip
                 key={skill.id}
-                label={normalizeString(skill.id)}
+                label={removeUnderscore(skill.id)}
                 size="small"
                 sx={{
                   fontSize: '0.75rem',

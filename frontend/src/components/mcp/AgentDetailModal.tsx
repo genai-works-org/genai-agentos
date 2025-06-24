@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { MCPAgent } from '../../types/agent';
 import { Modal } from '../Modal';
-import { normalizeString } from '../../utils/normalizeString';
+import { removeUnderscore } from '../../utils/normalizeString';
 
 interface AgentDetailModalProps {
   open: boolean;
@@ -62,7 +62,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
                     fontWeight: 500,
                   }}
                 >
-                  {normalizeString(tool.name)}
+                  {removeUnderscore(tool.name)}
                 </Typography>
               </Box>
             ))}
