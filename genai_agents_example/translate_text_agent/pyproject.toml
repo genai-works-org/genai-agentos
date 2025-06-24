@@ -1,0 +1,10 @@
+[project]
+name = "translate-text-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "genai-protocol>=1.0.9",
+    "openapi>=2.0.0",
+]

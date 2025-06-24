@@ -9,7 +9,7 @@ import CreateModal from '../components/CreateModal';
 import AgentDetailModal from '../components/a2a/AgentDetailModal';
 import AgentCard from '../components/a2a/AgentCard';
 import ConfirmModal from '../components/ConfirmModal';
-import { normalizeString } from '../utils/normalizeString';
+import { removeUnderscore } from '../utils/normalizeString';
 
 const A2AAgentsPage = () => {
   const [agents, setAgents] = useState<A2AAgent[]>([]);
@@ -94,9 +94,9 @@ const A2AAgentsPage = () => {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Delete Agent"
-        text={`Are you sure you want to delete ${normalizeString(
+        text={`Are you sure you want to delete ${removeUnderscore(
           selectedAgent?.name || '',
-        )} agent?`}
+        )}?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />

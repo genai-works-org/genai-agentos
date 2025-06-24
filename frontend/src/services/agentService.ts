@@ -7,6 +7,7 @@ import {
   A2AAgent,
   MCPAgent,
   Flow,
+  AgentCreateResponse,
 } from '../types/agent';
 import { apiService } from './apiService';
 
@@ -31,8 +32,8 @@ export const agentService = {
     return response.data;
   },
 
-  async createAgent(agent: AgentCreate): Promise<AgentDTO> {
-    const response = await apiService.post<AgentDTO>(
+  async createAgent(agent: AgentCreate) {
+    const response = await apiService.post<AgentCreateResponse>(
       '/api/agents/register',
       agent,
     );

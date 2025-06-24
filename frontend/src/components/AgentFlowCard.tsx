@@ -12,6 +12,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { styled } from '@mui/material/styles';
+import { removeUnderscore } from '../utils/normalizeString';
 
 const StyledCard = styled(Card)({
   height: '100%',
@@ -108,7 +109,7 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
       <StyledCardContent>
         <TitleBox>
           <TitleTypography variant="h6">
-            {flow.name.replace(/_/g, ' ')}
+            {removeUnderscore(flow.name)}
           </TitleTypography>
           <Box>
             <IconButton onClick={() => onEdit(flow.id)} disabled={isDeleting}>

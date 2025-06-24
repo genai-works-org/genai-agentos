@@ -1,24 +1,32 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
-import { AgentDTO } from '../types/agent';
-import { AgentCard } from '../components/AgentCard';
+import { Copy } from 'lucide-react';
 import {
   Container,
   IconButton,
   Typography,
   CircularProgress,
   Box,
+  Button,
+  TextField,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/layout/MainLayout';
+import { AgentDTO } from '../types/agent';
 import { useAgent } from '../hooks/useAgent';
+import { useToast } from '../hooks/useToast';
+import { AgentCard } from '../components/AgentCard';
 import ConfirmModal from '../components/ConfirmModal';
+import { Modal as GenerateTokenModal } from '../components/Modal';
 
 export const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [token, setToken] = useState('');
   const [selectedAgent, setSelectedAgent] = useState<AgentDTO | null>(null);
-  const { isLoading, getAgents, deleteAgent } = useAgent();
+  const { isLoading, getAgents, deleteAgent, createAgent } = useAgent();
+  const toast = useToast();
 
   const activeAgents = agents.filter(agent => agent.is_active);
 
@@ -45,15 +53,35 @@ export const AgentsPage: FC = () => {
     }
   };
 
+  const createNewAgent = async () => {
+    const template = {
+      name: '',
+      description: '',
+      input_parameters: {
+        additionalProp1: {},
+      },
+      is_active: false,
+    };
+
+    const res = await createAgent(template);
+    setIsGenerateOpen(true);
+    setToken(res.jwt);
+  };
+
+  const copyToken = () => {
+    navigator.clipboard.writeText(token);
+    toast.showSuccess('Copied to clipboard');
+  };
+
+  const closeTokenModal = () => {
+    setIsGenerateOpen(false);
+    setToken('');
+  };
+
   return (
     <MainLayout currentPage="Agents">
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={3}
-        >
+        <Box display="flex" alignItems="center" mb={3}>
           {!isLoading && (
             <Box>
               <Typography variant="h5" component="h3">
@@ -61,6 +89,13 @@ export const AgentsPage: FC = () => {
               </Typography>
             </Box>
           )}
+          <Button
+            variant="contained"
+            onClick={createNewAgent}
+            sx={{ ml: 'auto', mr: 2 }}
+          >
+            Generate Token
+          </Button>
           <Box>
             <IconButton
               color="primary"
@@ -112,6 +147,27 @@ export const AgentsPage: FC = () => {
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />
+
+      <GenerateTokenModal
+        isOpen={isGenerateOpen}
+        onClose={closeTokenModal}
+        title="Generated Token"
+        className="relative"
+      >
+        <TextField
+          multiline
+          maxRows={6}
+          value={token}
+          fullWidth
+          disabled
+          sx={{ '& .MuiInputBase-root': { pr: 5 } }}
+        />
+        <Copy
+          size={20}
+          className="absolute top-[84px] right-[30px] cursor-pointer"
+          onClick={copyToken}
+        />
+      </GenerateTokenModal>
     </MainLayout>
   );
 };
