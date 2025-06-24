@@ -85,8 +85,10 @@ async def list_all_agents(
         db=db, user_model=user, filter_field=filter, offset=offset, limit=limit
     )
 
-    return [
-        MLAgentJWTDTO(
+    response = []
+    for agent in result:
+        agent.input_parameters["function"]["name"] = agent.name
+        agent_dto = MLAgentJWTDTO(
             agent_id=str(agent.id),
             agent_name=agent.name,
             agent_description=agent.description,
@@ -96,8 +98,9 @@ async def list_all_agents(
             is_active=agent.is_active,
             agent_jwt=agent.jwt,
         )
-        for agent in result
-    ]
+        response.append(agent_dto)
+
+    return response
 
 
 @agent_router.get("/{agent_id}")
@@ -112,6 +115,8 @@ async def get_data(
         raise HTTPException(
             status_code=400, detail=f"Agent '{str(agent_id)}' does not exist"
         )
+    if func := agent.input_parameters.get("function"):
+        func["name"] = agent.name
     return MLAgentJWTDTO(
         agent_id=str(agent.id),
         agent_name=agent.name,

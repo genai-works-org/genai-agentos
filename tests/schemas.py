@@ -35,12 +35,13 @@ class AgentDTOPayload(BaseUUIDToStrModel):
     Unified DTO model for all of the resources in the platform - genai agents, flows, mcp, a2a
     """
 
+    id: Optional[UUID | str] = None
     model_config = ConfigDict(extra="forbid")
 
     name: str  # alias
     type: AgentType
     url: Optional[AnyHttpUrl] = None
-    agent_schema: dict
+    agent_schema: Optional[dict | list[dict]] = None
     flow: Optional[list] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

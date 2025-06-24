@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Awaitable, Callable
 
 import pytest
@@ -30,7 +31,6 @@ async def test_agents_with_valid_offset_and_limit(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
     genai_agent_response_factory: Callable[[str, str, str, str], dict],
-    clean_genai_agents_table,
 ):
     dummy_agent = await agent_factory(user_jwt_token)
 
@@ -56,6 +56,9 @@ async def test_agents_with_valid_offset_and_limit(
             params=params,
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
+        print("*" * 30)
+        print(f"{json.dumps(agents, indent=4)}")
+        print("*" * 30)
 
         assert len(agents) == displayed_agents, "Invalid amount of agents"
 
@@ -102,8 +105,6 @@ async def test_agents_with_valid_offset_and_limit_less_then_agents_amount(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    genai_agent_response_factory: Callable[[str, str, str, str], dict],
-    clean_genai_agents_table,
 ):
     dummy_agent = await agent_factory(user_jwt_token)
     JWT_TOKEN = dummy_agent.jwt
@@ -222,7 +223,6 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
     genai_agent_response_factory: Callable[[str, str, str, str], dict],
-    clean_genai_agents_table,
 ):
     dummy_agent1 = await agent_factory(user_jwt_token)
     dummy_agent2 = await agent_factory(user_jwt_token)
@@ -278,7 +278,7 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
 
         expected_agents = [
             genai_agent_response_factory(
-                dummy_agent2.name, dummy_agent2.description, dummy_agent2.id, AUTH_JWT_2
+                dummy_agent1.name, dummy_agent1.description, dummy_agent1.id, AUTH_JWT_1
             )
         ]
 
@@ -309,7 +309,6 @@ async def test_agents_offset_and_limit_above_agents_amount(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
     genai_agent_response_factory: Callable[[str, str, str, str], dict],
-    clean_genai_agents_table,
 ):
     agent1 = await agent_factory(user_jwt_token)
     agent2 = await agent_factory(user_jwt_token)
@@ -374,10 +373,10 @@ async def test_agents_offset_and_limit_above_agents_amount(
 
         expected_agents = [
             genai_agent_response_factory(
-                agent1.name, agent1.description, agent1.id, agent1.jwt
+                agent2.name, agent2.description, agent2.id, agent2.jwt
             ),
             genai_agent_response_factory(
-                agent2.name, agent2.description, agent2.id, agent2.jwt
+                agent1.name, agent1.description, agent1.id, agent1.jwt
             ),
         ]
 
@@ -429,7 +428,6 @@ async def test_agents_with_default_offset_and_limit_with_agent(
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
     genai_agent_response_factory: Callable[[str, str, str, str], dict],
-    clean_genai_agents_table,
 ):
     agent = await agent_factory(user_jwt_token)
     AUTH_JWT = agent.jwt

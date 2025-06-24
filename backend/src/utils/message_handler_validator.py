@@ -115,11 +115,11 @@ async def message_handler_validator(
                             f"Flows set as inactive: {''.join(set_inactive_flows)}"
                         )
 
-                    inactive_agent = await agent_repo.set_agent_as_inactive(
+                    state_update_ok = await agent_repo.set_agent_as_inactive(
                         db=db, id_=agent_uuid, user_id=agent.creator_id
                     )
-                    if inactive_agent:
-                        logger.debug(f"Set agent as inactive: {str(inactive_agent.id)}")
+                    if state_update_ok:
+                        logger.debug(f"Set agent as inactive: {agent_uuid}")
 
             except ValidationError:
                 logger.error(

@@ -366,7 +366,6 @@ async def test_active_agents_with_default_offset_and_limit_with_active_agent(
                 active_agents["active_connections"][0]["updated_at"],
             ),
         ]
-        active_connections.extend(registered_mcp_tools)
         active_connections.append(
             await active_agent_factory(
                 registered_a2a_card["id"],
@@ -379,6 +378,8 @@ async def test_active_agents_with_default_offset_and_limit_with_active_agent(
                 registered_a2a_card["updated_at"],
             ),
         )
+        active_connections.extend(registered_mcp_tools)
+
         expected_active_agents = {
             "count_active_connections": expected_active_connections,
             "active_connections": active_connections,

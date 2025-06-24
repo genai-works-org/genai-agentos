@@ -207,7 +207,7 @@ async def dummy_agent_factory():
     return generate_dummy_agent
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture
 async def agent_factory(
     dummy_agent_factory,
 ) -> Callable[[str], Awaitable[AgentDTOWithJWT]]:
@@ -252,7 +252,7 @@ def genai_agent_response_factory():
             "agent_schema": {
                 "type": "function",
                 "function": {
-                    "name": agent_id,
+                    "name": name,
                     "description": description,
                     "parameters": {
                         "type": "object",
@@ -344,23 +344,14 @@ async def run_mcp():
     proc.terminate()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")
-async def registered_mcp_server(
-    user_jwt_token, run_mcp
-) -> Callable[[], Awaitable[dict]]:
+@pytest_asyncio.fixture
+async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
     add_mcp_url = "/api/mcp/servers"
-    server_data = await http_client.post(
+    await http_client.post(
         path=add_mcp_url,
         json={"server_url": f"{host_url}:{MCP_PORT}/mcp"},
         headers={"Authorization": f"Bearer {user_jwt_token}"},
     )
-    return server_data
-
-
-@pytest_asyncio.fixture
-async def registered_mcp_tools(
-    user_jwt_token, registered_mcp_server, async_db_engine: AsyncEngine
-):
     async with async_db_engine.begin() as conn:
         mcp_server_id: Optional[UUID] = await conn.scalar(
             text(
@@ -371,7 +362,6 @@ async def registered_mcp_tools(
     server_details = await http_client.get(
         path=server_detail_url, headers={"Authorization": f"Bearer {user_jwt_token}"}
     )
-
     tools = server_details["mcp_tools"]
 
     dto = []
@@ -379,7 +369,6 @@ async def registered_mcp_tools(
         json_schema = mcp_tool_to_json_schema(MCPToolDTO(**t), aliased_title=t["name"])
         json_schema["description"] = t["description"]
         json_schema.pop("alias")
-        # tool_id = json_schema["id"]
         json_schema.pop("id")
         json_schema.pop("mcp_server_id")
 
@@ -482,7 +471,7 @@ async def run_a2a():
     proc.terminate()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def registered_a2a_card(user_jwt_token, a2a_card: AgentCard, run_a2a):
     # TODO: figure out how to get a2a server_url
     add_mcp_url = "/api/a2a/agents"
@@ -528,6 +517,34 @@ async def active_agent_factory():
 
 
 @pytest.fixture
+def flow_dto_factory():
+    async def build_agent_dto(
+        name: str,
+        type: AgentType,
+        flow: list[dict],
+        agent_schema: dict,
+        is_active: bool,
+        created_at: Optional[datetime] = None,
+        updated_at: Optional[datetime] = None,
+        url: Optional[str] = None,
+        id: Optional[str] = None,
+    ):
+        return AgentDTOPayload(
+            name=name,
+            type=type,
+            url=url,
+            flow=flow,
+            agent_schema=agent_schema,
+            is_active=is_active,
+            created_at=created_at,
+            updated_at=updated_at,
+            id=id,
+        ).model_dump(mode="json", exclude_none=True)
+
+    return build_agent_dto
+
+
+@pytest.fixture
 def crud_flow_output_factory():
     def build(name: str, description: str, flow: list[dict], is_active: bool):
         camel_case_name = name.lower().replace(" ", "_")
@@ -542,28 +559,25 @@ def crud_flow_output_factory():
 
 
 @pytest.fixture
-def flow_dto_factory():
-    async def build_agent_dto(
+def flow_response_factory():
+    def build_dto(
         id: str,
         name: str,
-        type: AgentType,
+        description: str,
         flow: list[dict],
-        agent_schema: dict,
         is_active: bool,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        url: Optional[str] = None,
+        created_at: str,
+        updated_at: str,
     ):
-        return AgentDTOPayload(
-            id=id,
-            name=name,
-            type=type,
-            url=url,
-            flow=[f["id"] for f in flow],
-            agent_schema=agent_schema,
-            is_active=is_active,
-            created_at=created_at,
-            updated_at=updated_at,
-        ).model_dump(mode="json", exclude_none=True)
+        camel_case_name = name.lower().replace(" ", "_")
+        return {
+            "name": camel_case_name,
+            "description": description,
+            "flow": flow,
+            "created_at": created_at,
+            "updated_at": updated_at,
+            "id": id,
+            "is_active": is_active,
+        }
 
-    return build_agent_dto
+    return build_dto

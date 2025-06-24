@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from mcp.types import Tool, ToolAnnotations
 from pydantic import BaseModel
-from sqlalchemy import and_, select, text
+from sqlalchemy import and_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, create_access_token, validate_token
 from src.models import A2ACard, Agent, AgentWorkflow, MCPTool, User
@@ -239,11 +239,17 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
 
         agent = await self.get_by_user(db=db, id_=id_, user_model=user)
         if agent:
-            agent.is_active = False
+            await db.execute(
+                update(self.model)
+                .where(
+                    and_(self.model.id == agent.id, self.model.creator_id == user_id)
+                )
+                .values({"is_active": False})
+            )
+            await db.commit()
+            return True
 
-        await db.commit()
-        await db.refresh(agent)
-        return agent
+        return
 
     async def validate_agent_by_jwt(
         self, db: AsyncSession, agent_jwt: str
@@ -677,7 +683,6 @@ LIMIT :limit OFFSET :offset;
                 input_params = col["json_data1"]
                 if input_params:
                     input_params["function"]["name"] = col["alias"]
-                print(col["alias"])
                 agent = ActiveGenAIAgentDTO(
                     agent_id=str(col["id"]),
                     agent_name=col["alias"],
