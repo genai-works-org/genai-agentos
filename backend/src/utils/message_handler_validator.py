@@ -15,7 +15,7 @@ from src.repositories.user import user_repo
 from src.schemas.api.agent.schemas import AgentUpdate
 from src.schemas.ws.log import FrontendLogEntryDTO, LogCreate, LogEntry
 from src.utils.enums import AgentType
-from src.utils.helpers import FlowValidator, generate_alias
+from src.utils.helpers import FlowValidator
 from src.utils.validate_uuid import validate_agent_or_send_err
 from src.utils.validation_error_handler import validation_exception_handler
 from starlette.datastructures import State
@@ -68,7 +68,7 @@ async def message_handler_validator(
                         description=agent_description,
                         input_parameters=agent_input_schema or {},
                         is_active=True,
-                        alias=generate_alias(agent_name),
+                        alias=valid_agent.alias,
                     )
 
                     updated_agent = await agent_repo.update(
@@ -119,7 +119,7 @@ async def message_handler_validator(
                         db=db, id_=agent_uuid, user_id=agent.creator_id
                     )
                     if inactive_agent:
-                        logger.debug(f"Set agent as inactive: {str(inactive_agent.id)}")
+                        logger.debug(f"Set agent as inactive: {agent_uuid}")
 
             except ValidationError:
                 logger.error(

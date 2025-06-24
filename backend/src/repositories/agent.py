@@ -4,7 +4,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from mcp.types import Tool, ToolAnnotations
 from pydantic import BaseModel
-from sqlalchemy import and_, select, text
+from sqlalchemy import and_, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.jwt import TokenLifespanType, create_access_token, validate_token
 from src.models import A2ACard, Agent, AgentWorkflow, MCPTool, User
@@ -239,11 +239,17 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
 
         agent = await self.get_by_user(db=db, id_=id_, user_model=user)
         if agent:
-            agent.is_active = False
+            await db.execute(
+                update(self.model)
+                .where(
+                    and_(self.model.id == agent.id, self.model.creator_id == user_id)
+                )
+                .values({"is_active": False})
+            )
+            await db.commit()
+            return True
 
-        await db.commit()
-        await db.refresh(agent)
-        return agent
+        return
 
     async def validate_agent_by_jwt(
         self, db: AsyncSession, agent_jwt: str
@@ -349,7 +355,6 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 limit=limit,
                 offset=offset,
             )
-            # return [map_genai_agent_to_unified_dto(a) for a in agents]
             return agents
 
         if filter_field.description:
@@ -360,7 +365,6 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
                 limit=limit,
                 offset=offset,
             )
-            # return [map_genai_agent_to_unified_dto(a) for a in agents]
             return agents
 
         return await self.get_multiple_by_user(
@@ -620,7 +624,8 @@ LIMIT :limit OFFSET :offset;
                         annotations=ToolAnnotations(**col["json_data2"])
                         if col["json_data2"]
                         else None,
-                    )
+                    ),
+                    aliased_title=col["name"],
                 )
                 mcp_tool = AgentDTOPayload(
                     id=col["id"],
@@ -675,8 +680,8 @@ LIMIT :limit OFFSET :offset;
                 for field in fields_to_pop:
                     col.pop(field)
 
-                alias = generate_alias(col["name"])
                 input_params = col["json_data1"]
+                alias = col["alias"]
                 if input_params:
                     input_params["function"]["name"] = alias
                 agent = ActiveGenAIAgentDTO(
@@ -685,7 +690,7 @@ LIMIT :limit OFFSET :offset;
                     agent_description=col["description"],
                     agent_schema=input_params,
                     agent_jwt=col["jwt"],
-                    agent_alias=col["alias"],
+                    agent_alias=alias,
                     is_active=col["is_active"],
                     created_at=col["created_at"],
                     updated_at=col["updated_at"],

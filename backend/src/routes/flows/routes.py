@@ -6,11 +6,9 @@ from fastapi.responses import Response
 
 from src.auth.dependencies import CurrentUserDependency
 from src.db.session import AsyncDBSession
-from src.repositories.agent import agent_repo
 from src.repositories.flow import agentflow_repo
 from src.schemas.api.flow.dto import AgentFlowDTO
 from src.schemas.api.flow.schemas import AgentFlowCreate, AgentFlowUpdate
-from src.schemas.base import AgentDTOPayload
 
 flow_router = APIRouter(tags=["agentflows"], prefix="/agentflows")
 
@@ -28,18 +26,14 @@ async def list_all_agentflows(
     )
 
 
-@flow_router.get("/{agentflow_id}")
+@flow_router.get("/{agentflow_id}", response_model=AgentFlowDTO)
 async def get_agentflow_data(
     db: AsyncDBSession, user: CurrentUserDependency, agentflow_id: UUID
 ):
     agentflow = await agentflow_repo.get_flow_and_validate_all_flow_agents(
         db=db, flow_id=agentflow_id, user_model=user
     )
-
-    dto: Optional[AgentDTOPayload] = await agent_repo.orm_flow_to_dto(
-        flow=agentflow, db=db
-    )
-    return dto.model_dump(exclude_none=True)
+    return agentflow
 
 
 @flow_router.post("/register")
@@ -54,10 +48,7 @@ async def register_agentflow(
     result = await agentflow_repo.create_by_user(
         db=db, obj_in=agentflow_in, user_model=user
     )
-    dto: Optional[AgentDTOPayload] = await agent_repo.orm_flow_to_dto(
-        flow=result, db=db
-    )
-    return dto.model_dump(exclude_none=True)
+    return result
 
 
 @flow_router.patch("/{agentflow_id}")
