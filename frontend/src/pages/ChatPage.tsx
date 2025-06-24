@@ -7,7 +7,7 @@ import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../hooks/useChat';
 import ChatArea from '../components/ChatArea';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { ChatHistory } from '../types/chat';
 
 const ChatPage = () => {

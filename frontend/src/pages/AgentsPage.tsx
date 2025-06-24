@@ -10,7 +10,7 @@ import {
   Box,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { useAgent } from '../hooks/useAgent';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -106,7 +106,9 @@ export const AgentsPage: FC = () => {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Delete Agent"
-        text={`Are you sure you want to delete ${selectedAgent?.agent_name || ''}?`}
+        text={`Are you sure you want to delete ${
+          selectedAgent?.agent_name || ''
+        }?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />

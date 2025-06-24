@@ -10,7 +10,7 @@ import ReactFlow, {
 } from 'reactflow';
 import { JSONTree } from 'react-json-tree';
 import 'reactflow/dist/style.css';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { useLogs } from '../hooks/useLogs';
 import { useFlowNodes } from '../hooks/useFlowNodes';
 import { FlowNode } from '../components/FlowNode';

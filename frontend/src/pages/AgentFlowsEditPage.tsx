@@ -27,7 +27,7 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';

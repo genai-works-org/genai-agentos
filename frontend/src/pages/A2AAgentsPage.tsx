@@ -3,7 +3,7 @@ import { CircularProgress, Container, Box } from '@mui/material';
 
 import { useA2aAgents } from '../hooks/useA2aAgents';
 import { A2AAgent } from '../types/agent';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { AIModelCreateCard } from '../components/AIModelCreateCard';
 import CreateModal from '../components/CreateModal';
 import AgentDetailModal from '../components/a2a/AgentDetailModal';
@@ -94,7 +94,9 @@ const A2AAgentsPage = () => {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Delete Agent"
-        text={`Are you sure you want to delete ${normalizeString(selectedAgent?.name || '')} agent?`}
+        text={`Are you sure you want to delete ${normalizeString(
+          selectedAgent?.name || '',
+        )} agent?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />

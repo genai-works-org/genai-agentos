@@ -13,7 +13,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { agentService } from '../services/agentService';
 import { AgentDTO } from '../types/agent';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { JSONTree } from 'react-json-tree';
 import { jsonTreeTheme } from '../constants/jsonTreeTheme';
 import { normalizeString } from '../utils/normalizeString';

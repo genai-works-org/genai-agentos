@@ -3,7 +3,7 @@ import { CircularProgress, Container, Box } from '@mui/material';
 
 import { useMcpAgents } from '../hooks/useMcpAgents';
 import { MCPAgent } from '../types/agent';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { AIModelCreateCard } from '../components/AIModelCreateCard';
 import CreateModal from '../components/CreateModal';
 import AgentDetailModal from '../components/mcp/AgentDetailModal';

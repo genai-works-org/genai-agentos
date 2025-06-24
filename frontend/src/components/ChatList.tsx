@@ -2,13 +2,10 @@ import { useState, MouseEvent, useEffect, memo, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { EllipsisVertical } from 'lucide-react';
 import {
-  List,
-  ListItemButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Box,
   Typography,
   TextField,
 } from '@mui/material';
@@ -94,35 +91,29 @@ const ChatList = memo(() => {
   }, [editingSessionId]);
 
   return (
-    <Box sx={{ maxHeight: 'calc(100% - 315px)', overflowY: 'auto' }}>
-      <Typography
-        variant="h6"
-        gutterBottom
-        position="sticky"
-        top={0}
-        bgcolor="#fff"
-        zIndex={1}
-      >
-        Chats
-      </Typography>
+    <div className="mt-[30px] pl-2">
+      <p className="font-medium text-text-secondary mb-1.5">Chats</p>
 
       {chats.length === 0 ? (
         <Typography variant="body1" align="center" mt={2}>
           No chats found
         </Typography>
       ) : (
-        <List dense disablePadding>
+        <ul className="p-0">
           {sortedChats.map(chat => {
             const isEditing = editingSessionId === chat.session_id;
+            const isSelected = location.pathname.includes(chat.session_id);
             return (
-              <ListItemButton
+              <li
                 key={chat.session_id}
-                selected={location.pathname.includes(chat.session_id)}
                 onClick={() => {
                   if (!isEditing) {
                     navigate(`/chat/${chat.session_id}`);
                   }
                 }}
+                className={`flex items-center justify-between h-9 font-medium cursor-pointer ${
+                  isSelected ? 'text-primary-accent' : ''
+                }`}
               >
                 {isEditing ? (
                   <TextField
@@ -166,7 +157,7 @@ const ChatList = memo(() => {
                 >
                   <EllipsisVertical size={18} />
                 </ListItemIcon>
-              </ListItemButton>
+              </li>
             );
           })}
 
@@ -178,7 +169,7 @@ const ChatList = memo(() => {
             <MenuItem onClick={handleRename}>Rename</MenuItem>
             <MenuItem onClick={() => setIsConfirmOpen(true)}>Delete</MenuItem>
           </Menu>
-        </List>
+        </ul>
       )}
 
       <ConfirmModal
@@ -188,7 +179,7 @@ const ChatList = memo(() => {
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDelete}
       />
-    </Box>
+    </div>
   );
 });
 

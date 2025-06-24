@@ -17,7 +17,7 @@ import {
   isProviderSettingsChanged,
   isProviderSettingsSet,
 } from '../utils/settings';
-import { MainLayout } from '../components/MainLayout';
+import { MainLayout } from '../components/layout/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
 import { OllamaSettings } from '../components/settings/OllamaSettings';
