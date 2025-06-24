@@ -15,7 +15,7 @@ services:
       - VITE_API_URL=http://backend:8000
       - VITE_WS_URL=ws://backend:8000
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: unless-stopped
 
   router:
@@ -26,7 +26,7 @@ services:
       - "8080:8080"
     env_file: .env
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: unless-stopped
 
   master-agent:
@@ -35,7 +35,7 @@ services:
       context: ./master-agent
     env_file: .env
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: unless-stopped
     depends_on:
       - router
@@ -48,7 +48,7 @@ services:
       - "8000:8000"
     env_file: .env
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: unless-stopped
     depends_on:
       - postgres
@@ -56,6 +56,8 @@ services:
       - migration_svc
     volumes:
       - shared-files-volume:${DEFAULT_FILES_FOLDER_NAME:-/files}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   postgres:
     container_name: genai-postgres
@@ -71,7 +73,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-postgres}
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: unless-stopped
     volumes:
         - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
@@ -82,7 +84,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - local-genai-network
+     - local-genai-network
     volumes:
       - redis-data:/data
 
@@ -95,7 +97,7 @@ services:
     env_file:
       - .env
     networks:
-      - local-genai-network
+     - local-genai-network
     restart: on-failure
     command: ["alembic", "upgrade", "head"]
 
@@ -105,7 +107,7 @@ services:
       context: ./backend
     command: celery -A src.celery.celery_app worker --loglevel=debug
     networks:
-      - local-genai-network
+     - local-genai-network
     depends_on:
       - redis
 
@@ -115,7 +117,7 @@ services:
       context: ./backend
     command: celery -A src.celery.celery_app beat --loglevel=debug
     networks:
-      - local-genai-network
+     - local-genai-network
     depends_on:
       - redis
 

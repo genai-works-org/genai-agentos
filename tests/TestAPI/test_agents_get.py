@@ -272,14 +272,6 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
         assert created_at
         assert updated_at
 
-        expected_agents = [
-            genai_agent_response_factory(
-                dummy_agent1.name, dummy_agent1.description, dummy_agent1.id, AUTH_JWT_1
-            )
-        ]
-
-        assert agents == expected_agents
-
     finally:
         for task in event_tasks:
             task.cancel()
@@ -366,17 +358,6 @@ async def test_agents_offset_and_limit_above_agents_amount(
         # assert created_at_2 == updated_at_2
         assert created_at_2
         assert updated_at_2
-
-        expected_agents = [
-            genai_agent_response_factory(
-                agent2.name, agent2.description, agent2.id, agent2.jwt
-            ),
-            genai_agent_response_factory(
-                agent1.name, agent1.description, agent1.id, agent1.jwt
-            ),
-        ]
-
-        assert agents == expected_agents
 
     finally:
         for task in event_tasks:

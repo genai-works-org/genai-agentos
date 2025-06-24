@@ -26,15 +26,12 @@ from tests.utils import a2a_agent_card_to_dto, mcp_tool_to_json_schema
 
 os.environ["ROUTER_WS_URL"] = "ws://0.0.0.0:8080/ws"
 os.environ["DEFAULT_FILES_FOLDER_NAME"] = TEST_FILES_FOLDER
-os.environ["IS_DOCKER_HOST"] = "True"
 
+# IS_DOCKER = bool(os.environ.get("IS_DOCKER_HOST"))
 # if tests are running in the container (cicd) -> pass IS_DOCKER_HOST=True
 # to be able to access the mcp/a2a servers that were started in pytest fixtures
-host_url = (
-    "http://host.docker.internal"
-    if os.environ.get("IS_DOCKER_HOST")
-    else "http://localhost"
-)
+host_url = "http://0.0.0.0"
+invoke_url = "http://host.docker.internal"
 MCP_PORT = 8888
 A2A_PORT = 10002
 
@@ -349,20 +346,24 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
     add_mcp_url = "/api/mcp/servers"
     await http_client.post(
         path=add_mcp_url,
-        json={"server_url": f"{host_url}:{MCP_PORT}/mcp"},
+        json={"server_url": f"{invoke_url}:{MCP_PORT}/mcp"},
         headers={"Authorization": f"Bearer {user_jwt_token}"},
     )
+
     async with async_db_engine.begin() as conn:
         mcp_server_id: Optional[UUID] = await conn.scalar(
             text(
-                f"SELECT id FROM mcpservers WHERE server_url='{host_url}:{MCP_PORT}/mcp' LIMIT 1"
+                f"SELECT id FROM mcpservers WHERE server_url='{invoke_url}:{MCP_PORT}/mcp' LIMIT 1"
             )
         )
     server_detail_url = f"/api/mcp/servers/{str(mcp_server_id)}"
     server_details = await http_client.get(
         path=server_detail_url, headers={"Authorization": f"Bearer {user_jwt_token}"}
     )
-    tools = server_details["mcp_tools"]
+    tools = server_details.get("mcp_tools")
+    assert tools, (
+        "MCP tools of mocked server should not be None or empty list. Mock server always has one tool"
+    )
 
     dto = []
     for t in tools:
@@ -390,12 +391,12 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
 
 @pytest_asyncio.fixture
 async def a2a_server_url():
-    return f"http://localhost:{A2A_PORT}"
+    return f"http://0.0.0.0:{A2A_PORT}"
 
 
 @pytest_asyncio.fixture
 async def mcp_server_url():
-    return f"http://localhost:{MCP_PORT}"
+    return f"http://0.0.0.0:{MCP_PORT}"
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -442,7 +443,7 @@ def run_a2a_server():
     card = AgentCard(
         name="Reimbursement Agent",
         description="This agent handles the reimbursement process for the employees given the amount and purpose of the reimbursement.",  # noqa: E501
-        url=f"http://localhost:{A2A_PORT}/",
+        url=f"{host_url}:{A2A_PORT}/",
         version="1.0.0",
         defaultInputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
         defaultOutputModes=ReimbursementAgent.SUPPORTED_CONTENT_TYPES,
@@ -456,7 +457,7 @@ def run_a2a_server():
     server = A2AStarletteApplication(agent_card=card, http_handler=request_handler)
     import uvicorn
 
-    uvicorn.run(server.build(), host="localhost", port=A2A_PORT, loop="asyncio")
+    uvicorn.run(server.build(), host="0.0.0.0", port=A2A_PORT, loop="asyncio")
 
 
 @pytest_asyncio.fixture(autouse=True, scope="session")
@@ -477,7 +478,7 @@ async def registered_a2a_card(user_jwt_token, a2a_card: AgentCard, run_a2a):
     add_mcp_url = "/api/a2a/agents"
     server_data = await http_client.post(
         path=add_mcp_url,
-        json={"server_url": f"{host_url}:{A2A_PORT}"},
+        json={"server_url": f"{invoke_url}:{A2A_PORT}"},
         headers={"Authorization": f"Bearer {user_jwt_token}"},
     )
 
