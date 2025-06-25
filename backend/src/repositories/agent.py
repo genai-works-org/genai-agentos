@@ -652,7 +652,7 @@ LIMIT :limit OFFSET :offset;
                 updated_at = col.pop("updated_at")
 
                 card_content: dict = col["json_data1"]
-                # name = card_content.pop("name", None)
+                card_content.pop("name", None)
                 description = card_content.pop("description", None)
                 url = card_content.pop("url", None)
                 alias = col["alias"]
