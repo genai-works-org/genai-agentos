@@ -16,6 +16,7 @@ import {
   getProviderModels,
   isProviderSettingsChanged,
   isProviderSettingsSet,
+  getInitialMetadata,
 } from '../utils/settings';
 import { MainLayout } from '../components/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
@@ -63,7 +64,10 @@ export const SettingsPage = () => {
       return;
     }
 
-    setConfig({ provider: e.target.value, data: {} });
+    setConfig({
+      provider: e.target.value,
+      data: getInitialMetadata(e.target.value),
+    });
   };
 
   const handleEditModel = (model: ModelConfig) => {
