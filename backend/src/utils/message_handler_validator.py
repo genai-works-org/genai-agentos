@@ -15,7 +15,7 @@ from src.repositories.user import user_repo
 from src.schemas.api.agent.schemas import AgentUpdate
 from src.schemas.ws.log import FrontendLogEntryDTO, LogCreate, LogEntry
 from src.utils.enums import AgentType
-from src.utils.helpers import FlowValidator
+from src.utils.helpers import FlowValidator, generate_alias
 from src.utils.validate_uuid import validate_agent_or_send_err
 from src.utils.validation_error_handler import validation_exception_handler
 from starlette.datastructures import State
@@ -62,13 +62,19 @@ async def message_handler_validator(
                         )
                         return  # TODO: raise invalid agent jwt
 
+                    old_name = "".join(valid_agent.alias.rsplit("_", 1)[:-1])
+                    if agent_name == old_name:
+                        alias = valid_agent.alias
+                    else:
+                        alias = generate_alias(agent_name)
+
                     agent_in = AgentUpdate(
                         id=valid_agent.id,
                         name=agent_name,
                         description=agent_description,
                         input_parameters=agent_input_schema or {},
                         is_active=True,
-                        alias=valid_agent.alias,
+                        alias=alias,
                     )
 
                     updated_agent = await agent_repo.update(
