@@ -34,7 +34,9 @@ const Toolbar: FC<ToolbarProps> = ({
   }, [providers]);
 
   const isModelAvailable = availableModels.length > 0;
-  const isModelSelected = Boolean(activeModel);
+  const isModelSelected = availableModels.some(
+    model => model.id === activeModel?.id,
+  );
 
   const handleSelectChange = (event: SelectChangeEvent<string>) => {
     const { value } = event.target;
