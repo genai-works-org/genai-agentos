@@ -39,7 +39,7 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
 
   return (
     <aside
-      className={`pt-[34px] px-2 transition-all duration-300 ease-in-out ${
+      className={`max-h-[calc(100vh-64px)] pt-[34px] px-2 transition-all duration-300 ease-in-out ${
         collapsed ? 'w-[56px]' : 'w-[220px]'
       }`}
     >
@@ -86,9 +86,8 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
             </button>
           );
         })}
-
-        <ChatList />
       </nav>
+      {!collapsed && <ChatList />}
     </aside>
   );
 });

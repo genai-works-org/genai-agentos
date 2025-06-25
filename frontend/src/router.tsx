@@ -91,17 +91,21 @@ export const router = createBrowserRouter(
     {
       path: '/settings',
       element: (
-        <Suspense fallback={<LoadingFallback />}>
-          <SettingsPage />
-        </Suspense>
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsPage />
+          </Suspense>
+        </ProtectedRoute>
       ),
     },
     {
       path: '/chat/:id',
       element: (
-        <Suspense fallback={<LoadingFallback />}>
-          <ChatPage />
-        </Suspense>
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <ChatPage />
+          </Suspense>
+        </ProtectedRoute>
       ),
     },
     {

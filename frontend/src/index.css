@@ -5,9 +5,10 @@
 
 @layer base {
   body {
-    @apply text-text-main font-sans;
+    @apply text-text-main font-sans font-medium;
   }
 }
+
 .react-flow .react-flow__edge path {
   stroke: #000;
   stroke-width: 2px;

@@ -1,12 +1,11 @@
 import { useState, MouseEvent, useEffect, memo, useRef, useMemo } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { EllipsisVertical } from 'lucide-react';
+import { EllipsisVertical, Pencil, Trash2 } from 'lucide-react';
 import {
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
-  Typography,
   TextField,
 } from '@mui/material';
 import { useChat } from '../hooks/useChat';
@@ -91,15 +90,13 @@ const ChatList = memo(() => {
   }, [editingSessionId]);
 
   return (
-    <div className="mt-[30px] pl-2">
-      <p className="font-medium text-text-secondary mb-1.5">Chats</p>
+    <div className="mt-[30px]">
+      <p className="font-medium text-text-secondary mb-1.5 pl-2">Chats</p>
 
       {chats.length === 0 ? (
-        <Typography variant="body1" align="center" mt={2}>
-          No chats found
-        </Typography>
+        <p>No chats found</p>
       ) : (
-        <ul className="p-0">
+        <ul className="p-0 max-h-[calc(100vh-395px)] overflow-y-auto">
           {sortedChats.map(chat => {
             const isEditing = editingSessionId === chat.session_id;
             const isSelected = location.pathname.includes(chat.session_id);
@@ -111,8 +108,8 @@ const ChatList = memo(() => {
                     navigate(`/chat/${chat.session_id}`);
                   }
                 }}
-                className={`flex items-center justify-between h-9 font-medium cursor-pointer ${
-                  isSelected ? 'text-primary-accent' : ''
+                className={`flex items-center justify-between h-9 px-2 font-medium rounded-xl cursor-pointer ${
+                  isSelected ? 'bg-primary-white' : ''
                 }`}
               >
                 {isEditing ? (
@@ -132,6 +129,11 @@ const ChatList = memo(() => {
                     autoFocus
                     fullWidth
                     variant="standard"
+                    sx={{
+                      '& .MuiInputBase-root::after': {
+                        borderBottomColor: '#008765',
+                      },
+                    }}
                   />
                 ) : (
                   <ListItemText
@@ -148,6 +150,8 @@ const ChatList = memo(() => {
                   sx={{
                     justifyContent: 'end',
                     minWidth: 0,
+                    paddingTop: '9px',
+                    paddingBottom: '9px',
                     '& .MuiTypography-root': {
                       textOverflow: 'ellipsis',
                       overflow: 'hidden',
@@ -155,7 +159,7 @@ const ChatList = memo(() => {
                     },
                   }}
                 >
-                  <EllipsisVertical size={18} />
+                  <EllipsisVertical size={18} className="text-text-main" />
                 </ListItemIcon>
               </li>
             );
@@ -165,16 +169,49 @@ const ChatList = memo(() => {
             anchorEl={anchorEl}
             open={Boolean(anchorEl)}
             onClose={handleMenuClose}
+            slotProps={{
+              paper: {
+                sx: {
+                  width: 200,
+                  borderRadius: '16px',
+                },
+              },
+              list: {
+                autoFocusItem: false,
+              },
+            }}
+            sx={{
+              '& .MuiButtonBase-root': {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '8px 12px',
+                fontWeight: 500,
+                color: '#00231A',
+
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                },
+              },
+            }}
           >
-            <MenuItem onClick={handleRename}>Rename</MenuItem>
-            <MenuItem onClick={() => setIsConfirmOpen(true)}>Delete</MenuItem>
+            <MenuItem onClick={handleRename}>
+              <Pencil />
+              Rename
+            </MenuItem>
+            <MenuItem
+              onClick={() => setIsConfirmOpen(true)}
+              style={{ color: '#BA1A1A' }}
+            >
+              <Trash2 />
+              Delete
+            </MenuItem>
           </Menu>
         </ul>
       )}
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Chat"
         text={'Are you sure you want to delete this chat?'}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDelete}
