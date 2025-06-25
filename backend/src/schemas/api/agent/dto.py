@@ -24,6 +24,7 @@ class MLAgentDTO(MLAgentSchema):
 
 class MLAgentJWTDTO(MLAgentDTO):
     agent_jwt: Optional[str] = None
+    agent_alias: Optional[str] = None
 
 
 class AgentDTO(AgentGet):

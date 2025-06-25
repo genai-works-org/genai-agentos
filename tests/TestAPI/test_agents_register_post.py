@@ -45,6 +45,7 @@ async def test_agents_register_inactive_agent(
     assert updated_at
 
     expected_agent = genai_agent_register_response_factory(
+        dummy_agent.alias,
         dummy_agent.name,
         dummy_agent.description,
         dummy_agent.id,

@@ -63,6 +63,7 @@ async def test_agents_patch_agent_valid_full_request_body(
 
         assert isinstance(response, dict), "Response is not of a dict type"
         expected_response = genai_agent_response_factory(
+            response.get("agent_alias"),
             response.get("agent_name"),
             json_data["description"],
             dummy_agent.id,
@@ -93,6 +94,7 @@ async def test_agents_patch_agent_valid_full_request_body(
         assert updated_at > created_at
 
         expected_agent = genai_agent_response_factory(
+            dummy_agent.alias,
             dummy_agent.name,
             json_data["description"],
             session.agent_id,

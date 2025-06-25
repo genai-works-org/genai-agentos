@@ -51,7 +51,11 @@ async def test_agent_agent_id_valid_agent_id(
         assert updated_at
 
         expected_agent = genai_agent_response_factory(
-            dummy_agent.name, dummy_agent.description, dummy_agent.id, dummy_agent.jwt
+            dummy_agent.alias,
+            dummy_agent.name,
+            dummy_agent.description,
+            dummy_agent.id,
+            dummy_agent.jwt,
         )
         assert agent == expected_agent
 

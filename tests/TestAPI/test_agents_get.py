@@ -67,6 +67,7 @@ async def test_agents_with_valid_offset_and_limit(
 
         expected_agents = [
             genai_agent_response_factory(
+                dummy_agent.alias,
                 dummy_agent.name,
                 dummy_agent.description,
                 dummy_agent.id,
@@ -218,7 +219,6 @@ async def test_agents_with_offset_and_limit_are_equal_and_less_then_agents_amoun
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    genai_agent_response_factory: Callable[[str, str, str, str], dict],
 ):
     dummy_agent1 = await agent_factory(user_jwt_token)
     dummy_agent2 = await agent_factory(user_jwt_token)
@@ -296,7 +296,6 @@ async def test_agents_offset_and_limit_above_agents_amount(
     displayed_agents,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    genai_agent_response_factory: Callable[[str, str, str, str], dict],
 ):
     agent1 = await agent_factory(user_jwt_token)
     agent2 = await agent_factory(user_jwt_token)
@@ -441,7 +440,7 @@ async def test_agents_with_default_offset_and_limit_with_agent(
 
         expected_agents = [
             genai_agent_response_factory(
-                agent.name, agent.description, agent.id, agent.jwt
+                agent.alias, agent.name, agent.description, agent.id, agent.jwt
             ),
         ]
 

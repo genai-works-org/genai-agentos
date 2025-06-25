@@ -67,6 +67,7 @@ async def test_active_agents_with_valid_limit_and_offset(
         active_connections = [
             active_genai_agent_response_factory(
                 dummy_agent.alias,
+                dummy_agent.name,
                 dummy_agent.description,
                 dummy_agent.id,
                 dummy_agent.jwt,
@@ -78,7 +79,7 @@ async def test_active_agents_with_valid_limit_and_offset(
         active_connections.append(
             await active_agent_factory(
                 a2a_card["id"],
-                a2a_card["name"],
+                a2a_card["alias"],
                 AgentType.a2a,
                 a2a_server_url,
                 a2a_card["agent_schema"],
@@ -236,7 +237,6 @@ async def test_active_agents_with_offset_and_limit_are_equal_and_less_then_activ
     expected_active_connections,
     user_jwt_token: str,
     agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
-    active_genai_agent_response_factory: Callable[[str, str, str, str, str, str], dict],
     registered_mcp_tools: list[AgentDTOPayload],
 ):
     dummy_agent_1 = await agent_factory(user_jwt_token)
@@ -359,6 +359,7 @@ async def test_active_agents_with_default_offset_and_limit_with_active_agent(
         active_connections = [
             active_genai_agent_response_factory(
                 dummy_agent.alias,
+                dummy_agent.name,
                 dummy_agent.description,
                 dummy_agent.id,
                 dummy_agent.jwt,
@@ -369,7 +370,7 @@ async def test_active_agents_with_default_offset_and_limit_with_active_agent(
         active_connections.append(
             await active_agent_factory(
                 registered_a2a_card["id"],
-                registered_a2a_card["name"],
+                registered_a2a_card["alias"],
                 AgentType.a2a,
                 a2a_server_url,
                 registered_a2a_card["agent_schema"],

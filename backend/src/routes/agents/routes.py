@@ -98,6 +98,7 @@ async def list_all_agents(
             updated_at=agent.updated_at,
             is_active=agent.is_active,
             agent_jwt=agent.jwt,
+            agent_alias=agent.alias,
         )
         response.append(agent_dto)
 
@@ -127,6 +128,7 @@ async def get_data(
         updated_at=agent.updated_at,
         is_active=agent.is_active,
         agent_jwt=agent.jwt,
+        agent_alias=agent.alias,
     )
 
 

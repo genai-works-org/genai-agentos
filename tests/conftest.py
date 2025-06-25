@@ -235,6 +235,7 @@ async def get_user():
 @pytest.fixture
 def genai_agent_response_factory():
     def build_agent_body(
+        alias: str,
         name: str,
         description: str,
         agent_id: str,
@@ -259,6 +260,7 @@ def genai_agent_response_factory():
                 },
             },
             "agent_jwt": jwt_token,
+            "agent_alias": alias,
             "is_active": True,
         }
         if created_at:
@@ -275,6 +277,7 @@ def genai_agent_response_factory():
 @pytest.fixture
 def active_genai_agent_response_factory(genai_agent_response_factory):
     def build_agent_body(
+        alias: str,
         name: str,
         description: str,
         agent_id: str,
@@ -283,14 +286,15 @@ def active_genai_agent_response_factory(genai_agent_response_factory):
         updated_at: Optional[str] = None,
     ):
         body = genai_agent_response_factory(
-            name, description, agent_id, jwt_token, created_at, updated_at
+            alias, name, description, agent_id, jwt_token, created_at, updated_at
         )
         created_at = body.get("created_at")
         updated_at = body.get("updated_at")
 
+        body["agent_schema"]["function"]["name"] = alias
         return AgentDTOPayload(
             id=body["agent_id"],
-            name=body["agent_name"],
+            name=alias,
             type=AgentType.genai.value,
             agent_schema=body["agent_schema"],
             created_at=created_at,
@@ -303,8 +307,11 @@ def active_genai_agent_response_factory(genai_agent_response_factory):
 
 @pytest_asyncio.fixture
 def genai_agent_register_response_factory():
-    def build_response_body(name: str, description: str, agent_id: str, jwt_token: str):
+    def build_response_body(
+        alias: str, name: str, description: str, agent_id: str, jwt_token: str
+    ):
         return {
+            "agent_alias": alias,
             "agent_id": agent_id,
             "agent_name": name,
             "agent_description": description,
@@ -367,7 +374,7 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
 
     dto = []
     for t in tools:
-        json_schema = mcp_tool_to_json_schema(MCPToolDTO(**t), aliased_title=t["name"])
+        json_schema = mcp_tool_to_json_schema(MCPToolDTO(**t), aliased_title=t["alias"])
         json_schema["description"] = t["description"]
         json_schema.pop("alias")
         json_schema.pop("id")
@@ -376,7 +383,7 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
         dto.append(
             AgentDTOPayload(
                 id=t["id"],
-                name=t["name"],
+                name=t["alias"],
                 type=AgentType.mcp,
                 url=server_details["server_url"],
                 agent_schema=json_schema,
@@ -391,12 +398,7 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
 
 @pytest_asyncio.fixture
 async def a2a_server_url():
-    return f"http://0.0.0.0:{A2A_PORT}"
-
-
-@pytest_asyncio.fixture
-async def mcp_server_url():
-    return f"http://0.0.0.0:{MCP_PORT}"
+    return f"{host_url}:{A2A_PORT}"
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -483,12 +485,15 @@ async def registered_a2a_card(user_jwt_token, a2a_card: AgentCard, run_a2a):
     )
 
     a2a_card.name = server_data["name"]
-    return a2a_agent_card_to_dto(
+    dto = a2a_agent_card_to_dto(
         id_=server_data["id"],
         agent_card=a2a_card,
         created_at=server_data["created_at"],
         updated_at=server_data["updated_at"],
     ).model_dump(mode="json", exclude_none=True)
+    dto["alias"] = server_data["alias"]
+    dto["agent_schema"]["title"] = server_data["alias"]
+    return dto
 
 
 @pytest_asyncio.fixture
