@@ -6,7 +6,6 @@ import {
   ActiveAgentsResponse,
   A2AAgent,
   MCPAgent,
-  Flow,
 } from '../types/agent';
 import { apiService } from './apiService';
 
@@ -49,12 +48,14 @@ export const agentService = {
   },
 
   async getAgentFlow(id: string) {
-    const response = await apiService.get<Flow>(`/api/agentflows/${id}`);
+    const response = await apiService.get<AgentFlowDTO>(
+      `/api/agentflows/${id}`,
+    );
     return response.data;
   },
 
   async createAgentFlow(flow: AgentFlowBody) {
-    const response = await apiService.post<Flow>(
+    const response = await apiService.post<AgentFlowDTO>(
       '/api/agentflows/register',
       flow,
     );

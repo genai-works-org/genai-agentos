@@ -35,16 +35,6 @@ export interface AgentCreate {
   output_parameters?: string | Record<string, any>;
 }
 
-export interface Flow {
-  id: string;
-  name: string;
-  type: string;
-  agent_schema: AgentSchema;
-  flow: string[];
-  created_at: string;
-  updated_at: string;
-}
-
 export interface AgentFlowDTO {
   id: string;
   name: string;

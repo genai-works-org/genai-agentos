@@ -199,10 +199,10 @@ export const AgentFlowsEditPage: FC = () => {
 
         if (flowData) {
           setFlowName(normalizeString(flowData.name));
-          setFlowDescription(flowData.agent_schema.function.description || '');
+          setFlowDescription(flowData.description);
 
           // Create nodes from flow data with unique IDs
-          const flowNodes: Node[] = flowData.flow.map((id, index) => {
+          const flowNodes: Node[] = flowData.flow.map(({ id }, index) => {
             const agent = agentsData.find(a => a.id === id);
             const nodeId = `${id}::${Date.now() + index}`;
 
