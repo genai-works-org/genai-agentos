@@ -231,7 +231,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             for tool in mcp_server.mcp_tools:
                 aliased_name = generate_alias(tool.name)
                 tool_in = MCPTool(
-                    name=aliased_name,
+                    name=tool.name,
                     alias=aliased_name,
                     description=tool.description,
                     inputSchema=tool.inputSchema,

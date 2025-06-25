@@ -10,6 +10,7 @@ from src.utils.enums import AgentType
 
 class A2ACardDTO(BaseUUIDToStrModel):
     name: str
+    alias: Optional[str] = None
     description: str
     server_url: str
     # dict type is due to {} being a default value for the json field in DB

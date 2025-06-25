@@ -436,7 +436,7 @@ SELECT
     updated_at,
     NULL as last_invoked_at,
     is_active,
-    NULL as alias,
+    alias,
     NULL as json_data2
 FROM a2acards
 WHERE creator_id = :creator_id AND is_active = TRUE
@@ -625,7 +625,7 @@ LIMIT :limit OFFSET :offset;
                         if col["json_data2"]
                         else None,
                     ),
-                    aliased_title=col["name"],
+                    aliased_title=col["alias"],
                 )
                 mcp_tool = AgentDTOPayload(
                     id=col["id"],
@@ -644,7 +644,6 @@ LIMIT :limit OFFSET :offset;
                 fields_to_pop = [
                     "jwt",
                     "last_invoked_at",
-                    "alias",
                 ]
                 for field in fields_to_pop:
                     col.pop(field)
@@ -653,13 +652,13 @@ LIMIT :limit OFFSET :offset;
                 updated_at = col.pop("updated_at")
 
                 card_content: dict = col["json_data1"]
-                name = card_content.pop("name", None)
+                # name = card_content.pop("name", None)
                 description = card_content.pop("description", None)
                 url = card_content.pop("url", None)
-
+                alias = col["alias"]
                 agent_schema = A2AAgentCard(
                     **card_content,
-                    name=name if name else col["name"],
+                    name=alias if alias else col["alias"],
                     description=description if description else col["description"],
                     url=url if url else col["server_url"],
                 )
