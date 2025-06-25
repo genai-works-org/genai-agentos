@@ -1,12 +1,14 @@
 import type { FC, FormEvent, ChangeEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 import { Eye, EyeOff } from 'lucide-react';
 import { validateField } from '../utils/validation';
+import TextInput from './shared/TextInput';
+import Button from './shared/Button';
 
 interface AuthFormProps {
   title: string;
+  subtitle: string;
   buttonText: string;
   name: string;
   setName: (name: string) => void;
@@ -23,6 +25,7 @@ interface AuthFormProps {
 
 const AuthForm: FC<AuthFormProps> = ({
   title,
+  subtitle,
   buttonText,
   name,
   setName,
@@ -36,7 +39,6 @@ const AuthForm: FC<AuthFormProps> = ({
   footerLinkText,
   footerLinkTo,
 }) => {
-  const { theme } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
@@ -83,167 +85,88 @@ const AuthForm: FC<AuthFormProps> = ({
   };
 
   return (
-    <div className="max-w-md w-full space-y-8 px-4 sm:px-6 lg:px-8">
-      <div>
-        <h2
-          className={`text-center text-3xl font-extrabold ${
-            theme === 'light' ? 'text-light-text' : 'text-dark-text'
-          }`}
-        >
-          {title}
-        </h2>
-      </div>
-      <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-        <div className="rounded-md shadow-sm space-y-4">
-          <div>
-            <label htmlFor="name" className="sr-only">
-              Name
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              required
-              className={`appearance-none rounded-md relative block w-full px-3 py-2 border ${
-                theme === 'light'
-                  ? 'border-light-secondary-secondary text-light-text placeholder-light-secondary-secondary focus:ring-light-secondary-primary focus:border-light-secondary-primary'
-                  : 'border-dark-secondary-secondary text-dark-text placeholder-dark-secondary-secondary focus:ring-dark-secondary-primary focus:border-dark-secondary-primary'
-              } focus:outline-none focus:z-10 sm:text-sm`}
-              placeholder="Name"
-              value={name}
-              onChange={handleNameChange}
-            />
-            {validationErrors.username && (
-              <div
-                className={`text-sm mt-1 ${
-                  theme === 'light' ? 'text-red-600' : 'text-red-400'
-                }`}
-              >
-                {validationErrors.username}
-              </div>
-            )}
-          </div>
-          <div className="relative">
-            <label htmlFor="password" className="sr-only">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                className={`appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border ${
-                  theme === 'light'
-                    ? 'border-light-secondary-secondary text-light-text placeholder-light-secondary-secondary focus:ring-light-secondary-primary focus:border-light-secondary-primary'
-                    : 'border-dark-secondary-secondary text-dark-text placeholder-dark-secondary-secondary focus:ring-dark-secondary-primary focus:border-dark-secondary-primary'
-                } focus:outline-none  sm:text-sm`}
-                placeholder="Password"
-                value={password}
-                onChange={handlePasswordChange}
-              />
+    <div>
+      <h2 className="text-2xl font-bold mb-2">{title}</h2>
+      <p className="font-medium text-text-secondary mb-6">{subtitle}</p>
+      <form className="space-y-8" onSubmit={handleSubmit}>
+        <div className="space-y-4">
+          <TextInput
+            id="name"
+            name="name"
+            label="Name"
+            placeholder="Name"
+            required
+            value={name}
+            onChange={handleNameChange}
+            error={validationErrors.username}
+          />
+          <TextInput
+            id="password"
+            name="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            required
+            value={password}
+            onChange={handlePasswordChange}
+            error={validationErrors.password}
+            rightSection={
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className={`absolute inset-y-0 right-0 pr-3 flex items-center ${
-                  theme === 'light' ? 'text-light-text' : 'text-dark-text'
-                }`}
-                tabIndex={-1}
+                onClick={e => {
+                  e.preventDefault();
+                  setShowPassword(!showPassword);
+                }}
+                className="absolute right-3 top-9"
               >
                 {showPassword ? (
-                  <EyeOff className="h-5 w-5" />
-                ) : (
                   <Eye className="h-5 w-5" />
+                ) : (
+                  <EyeOff className="h-5 w-5" />
                 )}
               </button>
-            </div>
-            {validationErrors.password && (
-              <div
-                className={`text-sm mt-1 ${
-                  theme === 'light' ? 'text-red-600' : 'text-red-400'
-                }`}
-              >
-                {validationErrors.password}
-              </div>
-            )}
-          </div>
+            }
+          />
           {setRepeatPassword && (
-            <div className="relative">
-              <label htmlFor="repeatPassword" className="sr-only">
-                Repeat Password
-              </label>
-              <div className="relative">
-                <input
-                  id="repeatPassword"
-                  name="repeatPassword"
-                  type={showRepeatPassword ? 'text' : 'password'}
-                  required
-                  className={`appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border ${
-                    theme === 'light'
-                      ? 'border-light-secondary-secondary text-light-text placeholder-light-secondary-secondary focus:ring-light-secondary-primary focus:border-light-secondary-primary'
-                      : 'border-dark-secondary-secondary text-dark-text placeholder-dark-secondary-secondary focus:ring-dark-secondary-primary focus:border-dark-secondary-primary'
-                  } focus:outline-none  sm:text-sm`}
-                  placeholder="Repeat Password"
-                  value={repeatPassword}
-                  onChange={handleRepeatPasswordChange}
-                  onBlur={onRepeatPasswordBlur}
-                />
+            <TextInput
+              id="repeatPassword"
+              name="repeatPassword"
+              label="Confirm Password"
+              type={showRepeatPassword ? 'text' : 'password'}
+              placeholder="Confirm Password"
+              required
+              value={repeatPassword || ''}
+              onChange={handleRepeatPasswordChange}
+              onBlur={onRepeatPasswordBlur}
+              error={validationErrors.repeatPassword}
+              rightSection={
                 <button
-                  type="button"
-                  onClick={() => setShowRepeatPassword(!showRepeatPassword)}
-                  className={`absolute inset-y-0 right-0 pr-3 flex items-center ${
-                    theme === 'light' ? 'text-light-text' : 'text-dark-text'
-                  }`}
-                  tabIndex={-1}
+                  onClick={e => {
+                    e.preventDefault();
+                    setShowRepeatPassword(!showRepeatPassword);
+                  }}
+                  className="absolute right-3 top-9"
                 >
                   {showRepeatPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
                     <Eye className="h-5 w-5" />
+                  ) : (
+                    <EyeOff className="h-5 w-5" />
                   )}
                 </button>
-              </div>
-              {validationErrors.repeatPassword && (
-                <div
-                  className={`text-sm mt-1 ${
-                    theme === 'light' ? 'text-red-600' : 'text-red-400'
-                  }`}
-                >
-                  {validationErrors.repeatPassword}
-                </div>
-              )}
-            </div>
+              }
+            />
           )}
         </div>
-        <div>
-          <button
-            type="submit"
-            className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md ${
-              theme === 'light'
-                ? 'bg-light-secondary-primary text-light-bg hover:bg-light-secondary-secondary'
-                : 'bg-dark-secondary-primary text-dark-bg hover:bg-dark-secondary-secondary'
-            } focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              theme === 'light'
-                ? 'focus:ring-light-secondary-primary focus:ring-offset-light-bg'
-                : 'focus:ring-dark-secondary-primary focus:ring-offset-dark-bg'
-            }`}
-          >
-            {buttonText}
-          </button>
-        </div>
-        <div className="text-center">
-          <Link
-            to={footerLinkTo}
-            className={`${
-              theme === 'light'
-                ? 'text-light-secondary-primary hover:text-light-secondary-secondary'
-                : 'text-dark-secondary-primary hover:text-dark-secondary-secondary'
-            }`}
-          >
-            {footerText} {footerLinkText}
-          </Link>
-        </div>
+        <Button type="submit">{buttonText}</Button>
       </form>
+
+      <p className="mt-4 font-medium text-text-light text-center">
+        {footerText}{' '}
+        <span className="ml-2">
+          <Link to={footerLinkTo} className="font-medium text-primary-accent">
+            {footerLinkText}
+          </Link>
+        </span>
+      </p>
     </div>
   );
 };

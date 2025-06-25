@@ -25,6 +25,9 @@ export default {
           placeholder: '#A9B2B2',
           accent: '#003629'
         },
+        error: {
+          main: '#BA1A1A',
+        }
       },
       fontFamily: {
         sans: ['Open Sans', 'sans-serif'],

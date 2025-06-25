@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Layout from '../components/Layout';
+import AuthLayout from '../components/layout/AuthLayout';
 import AuthForm from '../components/AuthForm';
 
 const LoginPage = () => {
@@ -22,9 +22,10 @@ const LoginPage = () => {
   };
 
   return (
-    <Layout>
+    <AuthLayout>
       <AuthForm
-        title="Sign in to your account"
+        title="Sign In"
+        subtitle="Join now to access tools that power real-world AI success."
         buttonText="Sign in"
         name={name}
         setName={setName}
@@ -35,7 +36,7 @@ const LoginPage = () => {
         footerLinkText="Sign up"
         footerLinkTo="/signup"
       />
-    </Layout>
+    </AuthLayout>
   );
 };
 

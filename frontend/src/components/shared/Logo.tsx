@@ -1,12 +1,18 @@
+import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LogoIcon from '../../assets/logo.svg';
+import LogoIcon from '../../assets/icons/logo.svg';
+import AuthLogoIcon from '../../assets/icons/auth-logo.svg';
 
-const Logo = () => {
+interface LogoProps {
+  isAuth?: boolean;
+}
+
+const Logo: FC<LogoProps> = ({ isAuth }) => {
   const navigate = useNavigate();
 
   return (
-    <a onClick={() => navigate('/')} className="cursor-pointer">
-      <LogoIcon />
+    <a onClick={() => navigate('/')} className="cursor-pointer w-fit">
+      {isAuth ? <AuthLogoIcon /> : <LogoIcon />}
     </a>
   );
 };
