@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from sqlalchemy import and_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from src.models import ChatConversation, ChatMessage, User
@@ -14,6 +15,7 @@ from src.schemas.api.chat.schemas import (
     GetChatMessage,
     UpdateConversation,
 )
+from src.utils.helpers import prettify_integrity_error_details
 from src.utils.pagination import paginate
 
 
@@ -119,15 +121,26 @@ class ChatRepository(
         Title of the chat is the uuid for the time being, should be changed afterwards when
         LLM sumarization of the initial message would be inserted into the title of the conversation
         """
-        chat = ChatConversation(
-            title=initial_user_message,
-            creator_id=user_model.id,
-            session_id=session_id,
-        )
-        db.add(chat)
-        await db.commit()
-        await db.refresh(chat)
-        return chat
+        try:
+            chat = ChatConversation(
+                title=initial_user_message,
+                creator_id=user_model.id,
+                session_id=session_id,
+            )
+            db.add(chat)
+            await db.commit()
+            await db.refresh(chat)
+            return chat
+        except IntegrityError as e:
+            msg = str(e._message())
+            detail = prettify_integrity_error_details(msg=msg)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Chat with {detail.column.capitalize()} - '{detail.value}' already exists",
+            )
+
+        except ValueError as e:
+            raise e
 
     async def update_chat_by_session_id(
         self,
