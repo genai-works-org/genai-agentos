@@ -9,6 +9,15 @@
   }
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c4c4c4 transparent;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a0a0;
+}
+
 .react-flow .react-flow__edge path {
   stroke: #000;
   stroke-width: 2px;

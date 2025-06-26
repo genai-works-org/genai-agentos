@@ -39,54 +39,56 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
 
   return (
     <aside
-      className={`max-h-[calc(100vh-64px)] pt-[34px] px-2 transition-all duration-300 ease-in-out ${
-        collapsed ? 'w-[56px]' : 'w-[220px]'
+      className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out ${
+        collapsed ? 'w-[56px]' : 'w-[230px]'
       }`}
     >
-      <SidebarIcon
-        onClick={() => setCollapsed(!collapsed)}
-        className="ml-2 mb-8 cursor-pointer"
-        aria-label="Toggle sidebar"
-      />
-      <nav>
-        {pages.map(({ path, title, Icon, plusBtnNav }) => {
-          const isActive = location.pathname.includes(path);
-          return (
-            <button
-              key={path}
-              onClick={() => navigate(path)}
-              className={`w-full px-2 py-1.5 max-h-9 flex items-center rounded-xl transition-colors duration-200 ${
-                isActive
-                  ? `bg-primary-white text-primary-accent`
-                  : `hover:bg-gray-100`
-              }`}
-            >
-              <Icon
-                className={`${
-                  isActive ? 'text-primary-accent' : 'text-text-main'
-                } ${collapsed ? 'mr-0' : 'mr-2'}`}
-              />
-
-              <span
-                className={`font-medium transition-opacity duration-200 ${
-                  collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+      <div className="sticky top-0 bg-neutral-accent pt-[34px]">
+        <SidebarIcon
+          onClick={() => setCollapsed(!collapsed)}
+          className="ml-2 mb-8 cursor-pointer"
+          aria-label="Toggle sidebar"
+        />
+        <nav>
+          {pages.map(({ path, title, Icon, plusBtnNav }) => {
+            const isActive = location.pathname.includes(path);
+            return (
+              <button
+                key={path}
+                onClick={() => navigate(path)}
+                className={`w-full px-2 py-1.5 max-h-9 flex items-center rounded-xl transition-colors duration-200 ${
+                  isActive
+                    ? `bg-primary-white text-primary-accent`
+                    : `hover:bg-gray-100`
                 }`}
               >
-                {title}
-              </span>
+                <Icon
+                  className={`${
+                    isActive ? 'text-primary-accent' : 'text-text-main'
+                  } ${collapsed ? 'mr-0' : 'mr-2'}`}
+                />
 
-              {plusBtnNav && !collapsed && (
-                <Link
-                  to={plusBtnNav}
-                  className={`ml-8 p-2 rounded-md bg-[#FF5722] text-white hover:bg-[#E64A19]`}
+                <span
+                  className={`font-medium transition-opacity duration-200 ${
+                    collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                  }`}
                 >
-                  <PlusIcon className="h-2 w-2" />
-                </Link>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+                  {title}
+                </span>
+
+                {plusBtnNav && !collapsed && (
+                  <Link
+                    to={plusBtnNav}
+                    className={`ml-8 p-2 rounded-md bg-[#FF5722] text-white hover:bg-[#E64A19]`}
+                  >
+                    <PlusIcon className="h-2 w-2" />
+                  </Link>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
       {!collapsed && <ChatList />}
     </aside>
   );

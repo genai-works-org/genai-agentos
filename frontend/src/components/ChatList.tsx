@@ -96,7 +96,7 @@ const ChatList = memo(() => {
       {chats.length === 0 ? (
         <p>No chats found</p>
       ) : (
-        <ul className="p-0 max-h-[calc(100vh-395px)] overflow-y-auto">
+        <ul className="p-0">
           {sortedChats.map(chat => {
             const isEditing = editingSessionId === chat.session_id;
             const isSelected = location.pathname.includes(chat.session_id);
