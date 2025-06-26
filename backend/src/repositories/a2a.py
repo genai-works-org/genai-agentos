@@ -97,6 +97,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
         try:
             a2a_agent = A2ACard(
                 name=card_name,
+                alias=generate_alias(card_name),
                 description=card_description,
                 server_url=card_url,
                 card_content=card_content,
@@ -106,15 +107,9 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             db.add(a2a_agent)
             await db.commit()
             await db.refresh(a2a_agent)
-            return AgentDTOPayload(
-                id=a2a_agent.id,
-                name=a2a_agent.name,
-                type=AgentType.a2a,
-                agent_schema=card_content,
-                created_at=a2a_agent.created_at,
-                updated_at=a2a_agent.updated_at,
-                is_active=a2a_agent.is_active,
-            ).model_dump(mode="json", exclude_none=True)
+            return A2ACardDTO(**a2a_agent.__dict__).model_dump(
+                mode="json", exclude_none=True
+            )
 
         except IntegrityError as e:
             msg = str(e._message())
@@ -189,7 +184,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
     @staticmethod
     def _agent_card_to_json_schema(agent_card: A2AAgentCard):
         return A2AJsonSchema(
-            title=generate_alias(agent_card.name.strip()),
+            title=agent_card.name.strip(),
             description=get_agent_description_from_skills(
                 agent_card.description,
                 [s.model_dump(mode="json") for s in agent_card.skills],

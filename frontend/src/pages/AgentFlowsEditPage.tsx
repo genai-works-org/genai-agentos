@@ -32,7 +32,7 @@ import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
-import { normalizeString } from '../utils/normalizeString';
+import { normalizeString, removeUnderscore } from '../utils/normalizeString';
 import { FlowNode } from '../components/FlowNode';
 import { useAgent } from '../hooks/useAgent';
 import { FLOW_NAME_REGEX } from '../constants/regex';
@@ -198,11 +198,11 @@ export const AgentFlowsEditPage: FC = () => {
         const genAiAgents = await getAgents();
 
         if (flowData) {
-          setFlowName(normalizeString(flowData.name));
-          setFlowDescription(flowData.agent_schema.function.description || '');
+          setFlowName(removeUnderscore(flowData.name));
+          setFlowDescription(flowData.description);
 
           // Create nodes from flow data with unique IDs
-          const flowNodes: Node[] = flowData.flow.map((id, index) => {
+          const flowNodes: Node[] = flowData.flow.map(({ id }, index) => {
             const agent = agentsData.find(a => a.id === id);
             const nodeId = `${id}::${Date.now() + index}`;
 

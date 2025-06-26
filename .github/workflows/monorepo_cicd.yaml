@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  lint_and_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install linters
+        run: pip install ruff black
+
+      - name: Run linters
+        run: |
+          ruff check --exclude=master-agent/ --exclude=tests/ .
+        # black --check . --extend-exclude='(master-agent|\.venv|tests)/'
+
+      - name: Replace volume path for tests
+        run: |
+          sed -i 's|\( *- \)shared-files-volume:.*|\1./tests/test_files:/files|' docker-compose.yml
+
+      - name: Start Docker Compose
+        run: |
+          cp .env-example .env 
+          mkdir ./tests/test_files
+          chmod -R 777 ./tests/test_files
+          export COMPOSE_BAKE=true
+          docker compose up -d
+
+      - name: Run tests
+        run: |
+          cd tests
+          uv venv && uv sync
+          uv run python -m pytest -s TestAPI -vv

@@ -39,12 +39,26 @@ class BaseConversation(BaseUUIDToStrModel):
     title: str
 
 
-class CreateConversation(BaseModel):
+class BaseConversationWithTitle(BaseModel):
+    title: str
+
+    @field_validator("title")
+    def check_len(cls, v: str):
+        if len(v) > 20:
+            raise ValueError("Chat title must not be longer than 20 symbols")
+
+        if len(v) < 1:
+            raise ValueError("Chat title must not be empty")
+
+        return v
+
+
+class CreateConversation(BaseConversationWithTitle):
     session_id: UUID
 
 
-class UpdateConversation(BaseModel):
-    title: str
+class UpdateConversation(BaseConversationWithTitle):
+    pass
 
 
 class ChatHistoryFilter(CastSessionIDToStrModel):

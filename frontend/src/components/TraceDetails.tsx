@@ -13,6 +13,7 @@ import { AgentTrace } from '../types/agent';
 import { JsonField } from './JsonField';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { removeUnderscore } from '../utils/normalizeString';
 
 interface TraceDetailsProps {
   traceData: AgentTrace[];
@@ -41,7 +42,11 @@ export const TraceDetails: FC<TraceDetailsProps> = ({ traceData }) => {
         sx={{
           p: 2,
           mb: 2,
-          border: `2px solid ${trace.is_success || trace.flow?.at(-1)?.is_success ? '#4CAF50' : '#F44336'}`,
+          border: `2px solid ${
+            trace.is_success || trace.flow?.at(-1)?.is_success
+              ? '#4CAF50'
+              : '#F44336'
+          }`,
           borderRadius: '8px',
         }}
       >
@@ -57,7 +62,9 @@ export const TraceDetails: FC<TraceDetailsProps> = ({ traceData }) => {
                 overflowWrap: 'break-word',
               }}
             >
-              <Typography variant="h6">{trace.name}</Typography>
+              <Typography variant="h6" sx={{ overflowWrap: 'break-word' }}>
+                {removeUnderscore(trace.name)}
+              </Typography>
               {trace.type && (
                 <Chip
                   label={trace.type}
@@ -94,7 +101,9 @@ export const TraceDetails: FC<TraceDetailsProps> = ({ traceData }) => {
                   sx={{
                     p: 2,
                     mb: 2,
-                    border: `1px solid ${flowItem.is_success ? '#4CAF50' : '#F44336'}`,
+                    border: `1px solid ${
+                      flowItem.is_success ? '#4CAF50' : '#F44336'
+                    }`,
                     borderRadius: '8px',
                   }}
                 >

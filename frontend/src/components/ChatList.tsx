@@ -129,6 +129,9 @@ const ChatList = memo(() => {
                     autoFocus
                     fullWidth
                     variant="standard"
+                    inputProps={{
+                      maxLength: 50,
+                    }}
                     sx={{
                       '& .MuiInputBase-root::after': {
                         borderBottomColor: '#008765',
@@ -138,7 +141,9 @@ const ChatList = memo(() => {
                 ) : (
                   <ListItemText
                     primary={
-                      chat.title.length === 20 ? chat.title + '...' : chat.title
+                      chat.title.length >= 20
+                        ? chat.title.slice(0, 20) + '...'
+                        : chat.title
                     }
                   />
                 )}

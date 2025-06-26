@@ -333,6 +333,7 @@ class A2ACard(Base):
     id: Mapped[uuid_pk]
 
     name: Mapped[str] = mapped_column(nullable=True)
+    alias: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
 
     server_url: Mapped[str] = mapped_column(unique=True, nullable=False)

@@ -14,6 +14,11 @@ export const isProviderSettingsChanged = (
   newConfig: Config,
 ) => {
   const targetProvider = oldConfig.find(c => c.provider === provider);
+  const isNotEmpty = Object.values(newConfig.data).every(v => v !== '');
+
+  if (!isNotEmpty) {
+    return false;
+  }
 
   return (
     JSON.stringify({
@@ -40,4 +45,31 @@ export const getInitialConfig = (providers: ModelsConfigs[]) => {
       ...provider?.metadata,
     },
   };
+};
+
+export const getInitialMetadata = (
+  provider: string,
+): Record<string, string> => {
+  switch (provider) {
+    case AI_PROVIDERS.OPENAI:
+      return {
+        api_key: '',
+      };
+
+    case AI_PROVIDERS.AZURE_OPENAI:
+      return {
+        endpoint: '',
+        api_key: '',
+        api_version: '',
+        model: '',
+      };
+
+    case AI_PROVIDERS.OLLAMA:
+      return {
+        base_url: '',
+      };
+
+    default:
+      return {};
+  }
 };

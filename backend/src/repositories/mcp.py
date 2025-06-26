@@ -39,11 +39,16 @@ async def lookup_mcp_server(
 ) -> MCPServerData:
     """
     Function to lookup remote mcp server for tools, prompts, resources
-    base_url must have an '/sse' endpoint.
+    base_url must have publicly accessible and support 'streamable-http' protocol.
 
     Returns:
         MCPServerData model with tools, prompts, resources
     """
+    # During initial lookup of the server (during POST request to add a MCP server)
+    # `url` will be of type AnyHttpUrl, which is used here to construct a base_url for the server
+
+    # `url` will be of string type only whenever celery beat task will invoke this lookup function.
+    # In this case, trailing slash is trimmed
     try:
         async with streamablehttp_client(
             url=str(url),
@@ -199,7 +204,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
             if not mcp_server.is_active:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'sse' or 'streamable-http' protocols and is remotely accesible",  # noqa: E501
+                    detail=f"Could not access MCP server on: {data_in.server_url}. Make sure your MCP server supports 'streamable-http' protocol and is remotely accesible.",  # noqa: E501
                 )
         except* InvalidToolNameException as eg:  # noqa: F821
             res = eg.split(InvalidToolNameException)
@@ -224,9 +229,10 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
 
             tools: list[Optional[MCPTool]] = []
             for tool in mcp_server.mcp_tools:
+                aliased_name = generate_alias(tool.name)
                 tool_in = MCPTool(
                     name=tool.name,
-                    alias=generate_alias(tool.name),
+                    alias=aliased_name,
                     description=tool.description,
                     inputSchema=tool.inputSchema,
                     annotations=tool.annotations.model_dump(mode="json")

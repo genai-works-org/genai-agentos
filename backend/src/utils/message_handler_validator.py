@@ -62,13 +62,19 @@ async def message_handler_validator(
                         )
                         return  # TODO: raise invalid agent jwt
 
+                    old_name = "".join(valid_agent.alias.rsplit("_", 1)[:-1])
+                    if agent_name == old_name:
+                        alias = valid_agent.alias
+                    else:
+                        alias = generate_alias(agent_name)
+
                     agent_in = AgentUpdate(
                         id=valid_agent.id,
                         name=agent_name,
                         description=agent_description,
                         input_parameters=agent_input_schema or {},
                         is_active=True,
-                        alias=generate_alias(agent_name),
+                        alias=alias,
                     )
 
                     updated_agent = await agent_repo.update(
@@ -119,7 +125,7 @@ async def message_handler_validator(
                         db=db, id_=agent_uuid, user_id=agent.creator_id
                     )
                     if inactive_agent:
-                        logger.debug(f"Set agent as inactive: {str(inactive_agent.id)}")
+                        logger.debug(f"Set agent as inactive: {agent_uuid}")
 
             except ValidationError:
                 logger.error(

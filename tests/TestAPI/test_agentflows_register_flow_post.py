@@ -1,14 +1,16 @@
-from typing import Awaitable, Callable
-import uuid
-import pytest
 import asyncio
 import logging
+import uuid
+from typing import Awaitable, Callable
 
+import pytest
 from genai_session.session import GenAISession
-from tests.http_client.AsyncHTTPClient import AsyncHTTPClient
-from tests.conftest import DummyAgent
 
-AGENTFLOWS_REGISTER_FLOW = "/api/agentflows/register-flow"
+from tests.conftest import http_client as HTTP
+from tests.http_client.AsyncHTTPClient import AsyncHTTPClient
+from tests.schemas import AgentDTOWithJWT, AgentType
+
+AGENTFLOWS_REGISTER_FLOW = "/api/agentflows/register"
 AGENTFLOWS = "/api/agentflows/"
 AGENTFLOW_ID = "/api/agentflows/{agentflow_id}"
 
@@ -18,22 +20,19 @@ http_client = AsyncHTTPClient(timeout=10)
 @pytest.mark.asyncio
 async def test_agentflows_register_agentflows_with_two_valid_agents(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    flow_response_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
+    crud_flow_output_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
+    flow_dto_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
 ):
-    AIRFLOW_NAME = "Airflow Name"
-    AIRFLOW_DESCRIPTION = "Airflow Description"
+    AGENTFLOW_NAME = "Airflow Name"
+    AGENTFLOW_DESCRIPTION = "Airflow Description"
 
-    # AGENT_NAME_1 = "Agent Name 1"
-    # AGENT_NAME_2 = "Agent Name 2"
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    # AGENT_DESCRIPTION_1 = "Agent Description 1"
-    # AGENT_DESCRIPTION_2 = "Agent Description 2"
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
-
-    AUTH_JWT_1 = await agent_jwt_factory(user_jwt_token)
-    AUTH_JWT_2 = await agent_jwt_factory(user_jwt_token)
+    AUTH_JWT_1 = dummy_agent_1.jwt
+    AUTH_JWT_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=AUTH_JWT_1)
     session_2 = GenAISession(jwt_token=AUTH_JWT_2)
@@ -68,36 +67,36 @@ async def test_agentflows_register_agentflows_with_two_valid_agents(
         event_tasks = [event_task_1, event_task_2]
 
         json_data = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
+            "name": AGENTFLOW_NAME,
+            "description": AGENTFLOW_DESCRIPTION,
             "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
+                {"id": session_1.agent_id, "type": "genai"},
+                {"id": session_2.agent_id, "type": "genai"},
             ],
         }
 
-        await http_client.post(
+        response = await HTTP.post(
             path=AGENTFLOWS_REGISTER_FLOW,
             json=json_data,
-            expected_status_codes=[200],
+            # expected_status_codes=[200],
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
+        flow_description: str = response["description"]
+        flow_name: str = response["name"]
         agentflows = await http_client.get(
             path=AGENTFLOWS,
             expected_status_codes=[200],
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
+
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            }
+            crud_flow_output_factory(flow_name, flow_description, flow, True)
         ]
 
         assert len(agentflows) == 1
@@ -122,18 +121,22 @@ async def test_agentflows_register_agentflows_with_two_valid_agents(
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
-        expected_agentflow = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
-            "id": agentflow_id,
-        }
+        created_at = agentflows.get("created_at")
+        updated_at = agentflows.get("updated_at")
 
-        created_at = agentflows.pop("created_at")
-        updated_at = agentflows.pop("updated_at")
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
+        expected_agentflow = flow_response_factory(
+            agentflow_id,
+            AGENTFLOW_NAME,
+            AGENTFLOW_DESCRIPTION,
+            flow,
+            True,
+            created_at,
+            updated_at,
+        )
 
         assert created_at == updated_at
         assert created_at
@@ -155,14 +158,13 @@ async def test_agentflows_register_agentflows_with_two_valid_agents(
 @pytest.mark.asyncio
 async def test_agentflows_register_agentflows_with_single_agent(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
 ):
-    AIRFLOW_NAME = "Airflow Name"
-    AIRFLOW_DESCRIPTION = "Airflow Description"
+    AGENTFLOW_NAME = "Airflow Name"
+    AGENTFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent = agent_factory()
-    AUTH_JWT = await agent_jwt_factory(user_jwt_token)
+    dummy_agent = await agent_factory(user_jwt_token)
+    AUTH_JWT = dummy_agent.jwt
     session_1 = GenAISession(jwt_token=AUTH_JWT)
 
     @session_1.bind(name=dummy_agent.name, description=dummy_agent.description)
@@ -182,8 +184,8 @@ async def test_agentflows_register_agentflows_with_single_agent(
         event_tasks = [event_task_1]
 
         json_data = {
-            "agent_name": AIRFLOW_NAME,
-            "agent_description": AIRFLOW_DESCRIPTION,
+            "agent_name": AGENTFLOW_NAME,
+            "agent_description": AGENTFLOW_DESCRIPTION,
             "flow": [{"agent_id": session_1.agent_id}],
         }
 
@@ -240,21 +242,20 @@ async def test_agentflows_register_agentflows_with_single_agent(
 async def test_agentflows_register_agentflow_with_empty_name_or_description(
     json_data,
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
 ):
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    AUTH_JWT_1 = await agent_jwt_factory(user_jwt_token)
-    AUTH_JWT_2 = await agent_jwt_factory(user_jwt_token)
+    AUTH_JWT_1 = dummy_agent_1.jwt
+    AUTH_JWT_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=AUTH_JWT_1)
     session_2 = GenAISession(jwt_token=AUTH_JWT_2)
 
     json_data["flow"] = [
-        {"agent_id": session_1.agent_id},
-        {"agent_id": session_2.agent_id},
+        {"id": session_1.agent_id, "type": "genai"},
+        {"id": session_2.agent_id, "type": "genai"},
     ]
 
     @session_1.bind(name=dummy_agent_1.name, description=dummy_agent_1.description)
@@ -339,21 +340,20 @@ async def test_agentflows_register_agentflow_with_empty_name_or_description(
 async def test_agentflows_register_agentflow_with_none_name_or_description(
     json_data,
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
 ):
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    AUTH_JWT_1 = await agent_jwt_factory(user_jwt_token)
-    AUTH_JWT_2 = await agent_jwt_factory(user_jwt_token)
+    AUTH_JWT_1 = dummy_agent_1.jwt
+    AUTH_JWT_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=AUTH_JWT_1)
     session_2 = GenAISession(jwt_token=AUTH_JWT_2)
 
     json_data["flow"] = [
-        {"agent_id": session_1.agent_id},
-        {"agent_id": session_2.agent_id},
+        {"id": session_1.agent_id, "type": "genai"},
+        {"id": session_2.agent_id, "type": "genai"},
     ]
 
     @session_1.bind(name=dummy_agent_1.name, description=dummy_agent_1.description)
@@ -444,15 +444,16 @@ async def test_agentflows_register_agentflow_with_invalid_agents_ids(
 @pytest.mark.asyncio
 async def test_agentflows_register_agentflows_with_the_same_agent(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, list[dict], bool], dict],
+    flow_response_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
 ):
-    AIRFLOW_NAME = "Airflow Name"
-    AIRFLOW_DESCRIPTION = "Airflow Description"
+    AGENTFLOW_NAME = "Airflow Name"
+    AGENTFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent = agent_factory()
+    dummy_agent = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN = dummy_agent.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN)
 
@@ -473,11 +474,11 @@ async def test_agentflows_register_agentflows_with_the_same_agent(
         event_tasks = [event_task_1]
 
         json_data = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
+            "name": AGENTFLOW_NAME,
+            "description": AGENTFLOW_DESCRIPTION,
             "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_1.agent_id},
+                {"id": session_1.agent_id, "type": "genai"},
+                {"id": session_1.agent_id, "type": "genai"},
             ],
         }
 
@@ -493,16 +494,12 @@ async def test_agentflows_register_agentflows_with_the_same_agent(
             expected_status_codes=[200],
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
-
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_1.agent_id, "type": "genai"},
+        ]
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_1.agent_id},
-                ],
-            }
+            crud_flow_output_factory(AGENTFLOW_NAME, AGENTFLOW_DESCRIPTION, flow, True)
         ]
 
         assert len(agentflows) == 1
@@ -525,19 +522,21 @@ async def test_agentflows_register_agentflows_with_the_same_agent(
             path=AGENTFLOW_ID.format(agentflow_id=agentflow_id),
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
-
-        expected_agentflow = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_1.agent_id},
-            ],
-            "id": agentflow_id,
-        }
-
-        created_at = agentflows.pop("created_at")
-        updated_at = agentflows.pop("updated_at")
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_1.agent_id, "type": "genai"},
+        ]
+        created_at = agentflows.get("created_at")
+        updated_at = agentflows.get("updated_at")
+        expected_agentflow = flow_response_factory(
+            agentflow_id,
+            AGENTFLOW_NAME,
+            AGENTFLOW_DESCRIPTION,
+            flow,
+            True,
+            created_at,
+            updated_at,
+        )
 
         assert created_at
         assert updated_at
@@ -579,17 +578,18 @@ async def test_agentflows_register_agentflow_with_none_as_agents_ids(
 @pytest.mark.asyncio
 async def test_agentflows_register_agentflows_with_same_valid_agents(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, list[dict], bool], dict],
+    flow_response_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
 ):
-    AIRFLOW_NAME = "Airflow Name"
-    AIRFLOW_DESCRIPTION = "Airflow Description"
+    AGENTFLOW_NAME = "Airflow Name"
+    AGENTFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN_1 = await agent_jwt_factory(user_jwt_token)
-    JWT_TOKEN_2 = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN_1 = dummy_agent_1.jwt
+    JWT_TOKEN_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN_1)
     session_2 = GenAISession(jwt_token=JWT_TOKEN_2)
@@ -622,14 +622,14 @@ async def test_agentflows_register_agentflows_with_same_valid_agents(
         await asyncio.sleep(0.1)
 
         event_tasks = [event_task_1, event_task_2]
-
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
         json_data = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
+            "name": AGENTFLOW_NAME,
+            "description": AGENTFLOW_DESCRIPTION,
+            "flow": flow,
         }
 
         await http_client.post(
@@ -655,22 +655,8 @@ async def test_agentflows_register_agentflows_with_same_valid_agents(
         )
 
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            },
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            },
+            crud_flow_output_factory(AGENTFLOW_NAME, AGENTFLOW_DESCRIPTION, flow, True),
+            crud_flow_output_factory(AGENTFLOW_NAME, AGENTFLOW_DESCRIPTION, flow, True),
         ]
 
         assert len(agentflows) == 2
@@ -704,18 +690,17 @@ async def test_agentflows_register_agentflows_with_same_valid_agents(
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
-        expected_agentflow = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
-            "id": agentflow_id_1,
-        }
-
-        created_at = agentflows.pop("created_at")
-        updated_at = agentflows.pop("updated_at")
+        created_at = agentflows.get("created_at")
+        updated_at = agentflows.get("updated_at")
+        expected_agentflow = flow_response_factory(
+            agentflow_id_1,
+            AGENTFLOW_NAME,
+            AGENTFLOW_DESCRIPTION,
+            flow,
+            True,
+            created_at,
+            updated_at,
+        )
 
         assert created_at
         assert updated_at
@@ -727,18 +712,17 @@ async def test_agentflows_register_agentflows_with_same_valid_agents(
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
-        expected_agentflow = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
-            "id": agentflow_id_2,
-        }
-
-        created_at = agentflows.pop("created_at")
-        updated_at = agentflows.pop("updated_at")
+        created_at = agentflows.get("created_at")
+        updated_at = agentflows.get("updated_at")
+        expected_agentflow = flow_response_factory(
+            agentflow_id_2,
+            AGENTFLOW_NAME,
+            AGENTFLOW_DESCRIPTION,
+            flow,
+            True,
+            created_at,
+            updated_at,
+        )
 
         assert created_at
         assert updated_at
@@ -759,17 +743,18 @@ async def test_agentflows_register_agentflows_with_same_valid_agents(
 @pytest.mark.asyncio
 async def test_agentflows_register_agentflows_with_another_agentflow_id_as_agent_id(
     user_jwt_token: str,
-    agent_jwt_factory: Callable[[str], Awaitable[str]],
-    agent_factory: Callable[[], DummyAgent],
+    agent_factory: Callable[[str], Awaitable[AgentDTOWithJWT]],
+    crud_flow_output_factory: Callable[[str, str, list[dict], bool], dict],
+    flow_response_factory: Callable[[str, AgentType, str, list[dict], bool], dict],
 ):
-    AIRFLOW_NAME = "Airflow Name"
-    AIRFLOW_DESCRIPTION = "Airflow Description"
+    AGENTFLOW_NAME = "Airflow Name"
+    AGENTFLOW_DESCRIPTION = "Airflow Description"
 
-    dummy_agent_1 = agent_factory()
-    dummy_agent_2 = agent_factory()
+    dummy_agent_1 = await agent_factory(user_jwt_token)
+    dummy_agent_2 = await agent_factory(user_jwt_token)
 
-    JWT_TOKEN_1 = await agent_jwt_factory(user_jwt_token)
-    JWT_TOKEN_2 = await agent_jwt_factory(user_jwt_token)
+    JWT_TOKEN_1 = dummy_agent_1.jwt
+    JWT_TOKEN_2 = dummy_agent_2.jwt
 
     session_1 = GenAISession(jwt_token=JWT_TOKEN_1)
     session_2 = GenAISession(jwt_token=JWT_TOKEN_2)
@@ -803,13 +788,14 @@ async def test_agentflows_register_agentflows_with_another_agentflow_id_as_agent
 
         event_tasks = [event_task_1, event_task_2]
 
+        flow = [
+            {"id": session_1.agent_id, "type": "genai"},
+            {"id": session_2.agent_id, "type": "genai"},
+        ]
         json_data = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
+            "name": AGENTFLOW_NAME,
+            "description": AGENTFLOW_DESCRIPTION,
+            "flow": flow,
         }
 
         await http_client.post(
@@ -826,14 +812,7 @@ async def test_agentflows_register_agentflows_with_another_agentflow_id_as_agent
         )
 
         expected_agentflows = [
-            {
-                "name": AIRFLOW_NAME,
-                "description": AIRFLOW_DESCRIPTION,
-                "flow": [
-                    {"agent_id": session_1.agent_id},
-                    {"agent_id": session_2.agent_id},
-                ],
-            }
+            crud_flow_output_factory(AGENTFLOW_NAME, AGENTFLOW_DESCRIPTION, flow, True)
         ]
 
         assert len(agentflows) == 1
@@ -857,18 +836,17 @@ async def test_agentflows_register_agentflows_with_another_agentflow_id_as_agent
             headers={"Authorization": f"Bearer {user_jwt_token}"},
         )
 
-        expected_agentflow = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
-            "flow": [
-                {"agent_id": session_1.agent_id},
-                {"agent_id": session_2.agent_id},
-            ],
-            "id": agentflow_id,
-        }
-
-        created_at = agentflows.pop("created_at")
-        updated_at = agentflows.pop("updated_at")
+        created_at = agentflows.get("created_at")
+        updated_at = agentflows.get("updated_at")
+        expected_agentflow = flow_response_factory(
+            agentflow_id,
+            AGENTFLOW_NAME,
+            AGENTFLOW_DESCRIPTION,
+            flow,
+            True,
+            created_at,
+            updated_at,
+        )
 
         assert created_at
         assert updated_at
@@ -876,8 +854,8 @@ async def test_agentflows_register_agentflows_with_another_agentflow_id_as_agent
         assert agentflows == expected_agentflow
 
         json_data = {
-            "name": AIRFLOW_NAME,
-            "description": AIRFLOW_DESCRIPTION,
+            "name": AGENTFLOW_NAME,
+            "description": AGENTFLOW_DESCRIPTION,
             "flow": [{"agent_id": agentflow_id}, {"agent_id": agentflow_id}],
         }
 

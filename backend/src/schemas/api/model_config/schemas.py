@@ -64,6 +64,8 @@ class ProviderCRUDUpdate(BaseModel):
 
     @field_validator("api_key")
     def encrypt_key(cls, v: str):
+        if len(v) < 1:
+            raise ValueError("'api_key' param cannot be empty")
         if isinstance(v, str):
             return encrypt_secret(v)
         return v
