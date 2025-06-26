@@ -32,7 +32,7 @@ import { agentService } from '../services/agentService';
 import { FlowChain } from '../components/FlowChain';
 import { SaveFlowModal } from '../components/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
-import { normalizeString } from '../utils/normalizeString';
+import { normalizeString, removeUnderscore } from '../utils/normalizeString';
 import { FlowNode } from '../components/FlowNode';
 import { useAgent } from '../hooks/useAgent';
 import { FLOW_NAME_REGEX } from '../constants/regex';
@@ -198,7 +198,7 @@ export const AgentFlowsEditPage: FC = () => {
         const genAiAgents = await getAgents();
 
         if (flowData) {
-          setFlowName(normalizeString(flowData.name));
+          setFlowName(removeUnderscore(flowData.name));
           setFlowDescription(flowData.description);
 
           // Create nodes from flow data with unique IDs
