@@ -25,14 +25,25 @@ export interface AgentDTO {
   updated_at: string;
   agent_schema: AgentSchema;
   is_active?: boolean;
+  agent_jwt?: string;
 }
 
 export interface AgentCreate {
-  id: string;
+  id?: string;
   name: string;
   description: string;
   input_parameters: string | Record<string, any>;
   output_parameters?: string | Record<string, any>;
+}
+
+export interface AgentCreateResponse {
+  name: string;
+  description: string;
+  id: string;
+  created_at: string;
+  updated_at: string;
+  alias: string;
+  jwt: string;
 }
 
 export interface AgentFlowDTO {

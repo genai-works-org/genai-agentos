@@ -14,7 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
 import { AgentDTO } from '../types/agent';
-import { normalizeString } from '../utils/normalizeString';
+import { removeUnderscore } from '../utils/normalizeString';
 
 const ExpandMore = styled((props: { expanded: boolean } & any) => {
   const { expanded, ...other } = props;
@@ -53,7 +53,7 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
   };
 
   const renderParameters = () => {
-    if (!agent.agent_schema.function?.parameters?.properties) return null;
+    if (!agent.agent_schema?.function?.parameters?.properties) return null;
 
     return (
       <Box sx={{ mt: 2 }}>
@@ -124,7 +124,7 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
             component="div"
             sx={{ width: '280px', wordBreak: 'break-all' }}
           >
-            {normalizeString(agent.agent_name)}
+            {removeUnderscore(agent.agent_name)}
           </Typography>
           <IconButton onClick={handleDelete} color="error" size="small">
             <DeleteIcon />

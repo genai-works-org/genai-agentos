@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Card, CardContent, Chip, Stack, Typography, Box } from '@mui/material';
 import { A2AAgent, AgentType } from '../../types/agent';
-import { normalizeString } from '../../utils/normalizeString';
+import { removeUnderscore } from '../../utils/normalizeString';
 
 interface AgentCardProps {
   agent: A2AAgent;
@@ -40,7 +40,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
             color="text.primary"
             sx={{ maxWidth: '250px', wordBreak: 'break-all' }}
           >
-            {normalizeString(agent.name || '')}
+            {removeUnderscore(agent.name || '')}
           </Typography>
           <Chip
             label={AgentType.A2A}
@@ -68,7 +68,7 @@ const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
           {agent.card_content.skills.map(skill => (
             <Chip
               key={skill.id}
-              label={normalizeString(skill.id)}
+              label={removeUnderscore(skill.id)}
               size="small"
               sx={{
                 fontSize: '0.75rem',

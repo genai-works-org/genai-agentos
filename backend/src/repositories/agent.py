@@ -339,6 +339,24 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
         )
         return q.scalars().all()
 
+    async def filter_out_empty_agents(
+        self, db: AsyncSession, user_model: User, limit: int, offset: int
+    ):
+        q = await db.scalars(
+            select(self.model)
+            .where(
+                and_(
+                    self.model.name != "",
+                    self.model.description != "",
+                    self.model.creator_id == user_model.id,
+                )
+            )
+            .order_by(self.model.created_at)
+            .limit(limit=limit)
+            .offset(offset=offset)
+        )
+        return q.all()
+
     async def query_by_filter(
         self,
         db: AsyncSession,
@@ -367,7 +385,7 @@ class AgentRepository(CRUDBase[Agent, AgentCreate, AgentUpdate]):
             )
             return agents
 
-        return await self.get_multiple_by_user(
+        return await self.filter_out_empty_agents(
             db=db, user_model=user_model, limit=limit, offset=offset
         )
 
