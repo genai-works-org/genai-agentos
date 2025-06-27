@@ -1,10 +1,10 @@
 import type { FC, FormEvent, ChangeEvent } from 'react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
-import { validateField } from '../utils/validation';
-import TextInput from './shared/TextInput';
-import Button from './shared/Button';
+
+import { validateField } from '../../utils/validation';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface AuthFormProps {
   title: string;
@@ -81,6 +81,14 @@ const AuthForm: FC<AuthFormProps> = ({
       return;
     }
 
+    if (setRepeatPassword && repeatPassword !== password) {
+      setValidationErrors(prev => ({
+        ...prev,
+        repeatPassword: 'Passwords do not match',
+      }));
+      return;
+    }
+
     onSubmit(e);
   };
 
@@ -88,85 +96,57 @@ const AuthForm: FC<AuthFormProps> = ({
     <div>
       <h2 className="text-2xl font-bold mb-2">{title}</h2>
       <p className="font-medium text-text-secondary mb-6">{subtitle}</p>
+
       <form className="space-y-8" onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <TextInput
+          <Input
             id="name"
             name="name"
             label="Name"
             placeholder="Name"
-            required
             value={name}
             onChange={handleNameChange}
             error={validationErrors.username}
           />
-          <TextInput
+          <Input
             id="password"
             name="password"
             label="Password"
             type={showPassword ? 'text' : 'password'}
             placeholder="Password"
-            required
+            secure
             value={password}
             onChange={handlePasswordChange}
             error={validationErrors.password}
-            rightSection={
-              <button
-                onClick={e => {
-                  e.preventDefault();
-                  setShowPassword(!showPassword);
-                }}
-                className="absolute right-3 top-9"
-              >
-                {showPassword ? (
-                  <Eye className="h-5 w-5" />
-                ) : (
-                  <EyeOff className="h-5 w-5" />
-                )}
-              </button>
-            }
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
           />
           {setRepeatPassword && (
-            <TextInput
+            <Input
               id="repeatPassword"
               name="repeatPassword"
               label="Confirm Password"
               type={showRepeatPassword ? 'text' : 'password'}
               placeholder="Confirm Password"
-              required
+              secure
               value={repeatPassword || ''}
               onChange={handleRepeatPasswordChange}
               onBlur={onRepeatPasswordBlur}
               error={validationErrors.repeatPassword}
-              rightSection={
-                <button
-                  onClick={e => {
-                    e.preventDefault();
-                    setShowRepeatPassword(!showRepeatPassword);
-                  }}
-                  className="absolute right-3 top-9"
-                >
-                  {showRepeatPassword ? (
-                    <Eye className="h-5 w-5" />
-                  ) : (
-                    <EyeOff className="h-5 w-5" />
-                  )}
-                </button>
-              }
+              showPassword={showRepeatPassword}
+              setShowPassword={setShowRepeatPassword}
             />
           )}
         </div>
         <Button type="submit">{buttonText}</Button>
       </form>
 
-      <p className="mt-4 font-medium text-text-light text-center">
-        {footerText}{' '}
-        <span className="ml-2">
-          <Link to={footerLinkTo} className="font-medium text-primary-accent">
-            {footerLinkText}
-          </Link>
-        </span>
-      </p>
+      <div className="mt-4 flex justify-center gap-2">
+        <p className="font-medium text-text-light">{footerText}</p>
+        <Button variant="link" size="link" asChild>
+          <Link to={footerLinkTo}>{footerLinkText}</Link>
+        </Button>
+      </div>
     </div>
   );
 };

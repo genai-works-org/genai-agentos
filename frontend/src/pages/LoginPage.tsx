@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AuthLayout from '../components/layout/AuthLayout';
-import AuthForm from '../components/AuthForm';
+import AuthForm from '../components/auth/AuthForm';
 
 const LoginPage = () => {
   const [name, setName] = useState('');
