@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { useChat } from '../hooks/useChat';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
-import ConfirmModal from './ConfirmModal';
+import ConfirmModal from './modals/ConfirmModal';
 
 const ChatList = memo(() => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -217,7 +217,7 @@ const ChatList = memo(() => {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        text={'Are you sure you want to delete this chat?'}
+        description={'Are you sure you want to delete this chat?'}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDelete}
       />

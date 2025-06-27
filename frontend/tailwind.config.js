@@ -27,6 +27,28 @@ export default {
         },
         error: {
           main: '#BA1A1A',
+        },
+        badge: {
+          pink: {
+            light: '#FFDAD6',
+            dark: '#410002',
+          },
+          blue: {
+            light: '#007AFF1A',
+            dark: '#001A36'
+          },
+          brown: {
+            light: '#FFECD6',
+            dark: '#40280D'
+          },
+          cyan: {
+            light: '#D6FFFF',
+            dark: '#003436'
+          },
+          green: {
+            light: '#D7E3E0',
+            dark: '#3D5E56'
+          },
         }
       },
       fontFamily: {

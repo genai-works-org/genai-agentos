@@ -13,7 +13,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/layout/MainLayout';
 import { AgentFlowCard } from '../components/AgentFlowCard';
 import { useAgent } from '../hooks/useAgent';
-import ConfirmModal from '../components/ConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 export const AgentFlowsPage: FC = () => {
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
@@ -127,7 +127,9 @@ export const AgentFlowsPage: FC = () => {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Delete Agent Flow"
-        text={`Are you sure you want to delete "${selectedFlow?.name || ''}"?`}
+        description={`Are you sure you want to delete "${
+          selectedFlow?.name || ''
+        }"?`}
         onClose={handleClose}
         onConfirm={handleDeleteConfirmed}
       />

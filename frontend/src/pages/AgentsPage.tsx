@@ -16,7 +16,7 @@ import { AgentDTO } from '../types/agent';
 import { useAgent } from '../hooks/useAgent';
 import { useToast } from '../hooks/useToast';
 import { AgentCard } from '../components/AgentCard';
-import ConfirmModal from '../components/ConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 import { Modal as GenerateTokenModal } from '../components/Modal';
 
 export const AgentsPage: FC = () => {
@@ -141,7 +141,7 @@ export const AgentsPage: FC = () => {
       <ConfirmModal
         isOpen={isConfirmOpen}
         title="Delete Agent"
-        text={`Are you sure you want to delete ${
+        description={`Are you sure you want to delete ${
           selectedAgent?.agent_name || ''
         }?`}
         onClose={() => setIsConfirmOpen(false)}

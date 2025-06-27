@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { AIModelCard } from './AIModelCard';
-import { AIModelCreateCard } from './AIModelCreateCard';
 import { ModelConfig } from '../types/model';
 import { useSettings } from '../contexts/SettingsContext';
+
+import CreateCard from '@/components/shared/CreateCard';
 
 interface AIModelGridProps {
   models: ModelConfig[];
@@ -43,10 +44,10 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <AIModelCreateCard
-          onClick={onModelCreate}
+        <CreateCard
+          buttonText="Add Models"
           disabled={disabledModelCreate}
-          tooltipMessage={tooltipMessage}
+          onClick={onModelCreate}
         />
         {displayedModels.length > 0 &&
           displayedModels.map(model => (

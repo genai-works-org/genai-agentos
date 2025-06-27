@@ -23,7 +23,7 @@ import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
 import { OllamaSettings } from '../components/settings/OllamaSettings';
 import { ModelForm } from '../components/ModelForm';
-import ConfirmModal from '../components/ConfirmModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 import {
   AI_PROVIDERS,
   Config,
@@ -251,7 +251,7 @@ export const SettingsPage = () => {
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Model"
-        text={`Are you sure you want to delete the model "${selectedModel?.name}"?`}
+        description={`Are you sure you want to delete the model "${selectedModel?.name}"?`}
       />
 
       {showForm && (

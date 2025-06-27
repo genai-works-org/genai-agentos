@@ -11,14 +11,14 @@ const buttonVariants = cva(
       variant: {
         default: 'bg-primary-accent text-primary-white hover:opacity-90',
         destructive: 'bg-error-main text-primary-white hover:opacity-90',
-        outline: 'bg-primary-white text-primary-accent hover:opacity-90',
-        remove: 'bg-primary-white text-error-main hover:opacity-90',
+        outline: 'bg-transparent text-primary-accent hover:opacity-90',
+        remove: 'bg-transparent text-error-main hover:opacity-90',
         secondary:
           'bg-primary-white text-primary-accent border border-neutral-border hover:opacity-90',
         link: 'text-primary-accent hover:opacity-90',
       },
       size: {
-        default: 'w-full h-10 px-4 py-2',
+        default: 'w-full h-10 px-6 py-2',
         sm: 'h-8 rounded-md px-3 text-xs',
         lg: 'h-10 rounded-md px-8',
         icon: 'h-6 w-6 p-0',
