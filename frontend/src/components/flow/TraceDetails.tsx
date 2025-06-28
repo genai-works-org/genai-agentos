@@ -9,11 +9,11 @@ import {
   IconButton,
   Chip,
 } from '@mui/material';
-import { AgentTrace } from '../types/agent';
+import { AgentTrace } from '../../types/agent';
 import { JsonField } from './JsonField';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import { removeUnderscore } from '../utils/normalizeString';
+import { removeUnderscore } from '../../utils/normalizeString';
 
 interface TraceDetailsProps {
   traceData: AgentTrace[];

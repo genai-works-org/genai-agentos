@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { FC, ReactNode } from 'react';
-import localStorage from '../../services/localStorageService';
-import { SIDEBAR_COLLAPSED } from '../../constants/localStorage';
-import Header from './Header';
-import Sidebar from './Sidebar';
+
+import localStorage from '@/services/localStorageService';
+import { SIDEBAR_COLLAPSED } from '@/constants/localStorage';
+import Header from '@/components/layout/Header';
+import Sidebar from '@/components/layout/Sidebar';
 
 interface MainLayoutProps {
   children: ReactNode;

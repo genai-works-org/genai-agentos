@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { AgentFlowDTO } from '../types/agent';
+import { AgentFlowDTO } from '@/types/agent';
 import {
   Card,
   CardContent,
@@ -12,7 +12,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { styled } from '@mui/material/styles';
-import { removeUnderscore } from '../utils/normalizeString';
+import { removeUnderscore } from '@/utils/normalizeString';
 
 const StyledCard = styled(Card)({
   height: '100%',
@@ -138,8 +138,8 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
             {expanded
               ? flow.description
               : flow.description.length > 100
-                ? `${flow.description.substring(0, 100)}...`
-                : flow.description}
+              ? `${flow.description.substring(0, 100)}...`
+              : flow.description}
           </Typography>
         </DescriptionBox>
         <Box sx={{ mt: 'auto' }}>

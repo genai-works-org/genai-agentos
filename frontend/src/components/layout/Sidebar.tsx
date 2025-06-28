@@ -1,12 +1,15 @@
 import { FC, memo, SVGProps } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { PlusIcon } from 'lucide-react';
-import ChatList from '../ChatList';
-import AgentIcon from '../../assets/icons/agent.svg';
-import NoteIcon from '../../assets/icons/note.svg';
-// import SearchIcon from '../../assets/icons/search.svg';
-import TreeIcon from '../../assets/icons/tree.svg';
-import SidebarIcon from '../../assets/icons/sidebar.svg';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+import ChatList from '@/components/chat/ChatList';
+import SidebarToggleIcon from '@/assets/icons/sidebar.svg';
+import NewChatIcon from '@/assets/icons/note.svg';
+// import SearchChatsIcon from '@/assets/icons/search.svg';
+import AgentsIcon from '@/assets/icons/agent.svg';
+import A2AAgentsIcon from '@/assets/icons/a2a.svg';
+import MCPAgentsIcon from '@/assets/icons/mcp.svg';
+import FlowsIcon from '@/assets/icons/tree.svg';
+import NewFlowIcon from '@/assets/icons/new-flow.svg';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -17,20 +20,24 @@ interface PageLink {
   path: string;
   title: string;
   Icon: FC<SVGProps<SVGSVGElement>>;
-  plusBtnNav?: string;
 }
 
 const pages: PageLink[] = [
-  { path: '/chat/new', title: 'New Chat', Icon: NoteIcon },
-  { path: '/agents', title: 'Agents', Icon: AgentIcon },
+  { path: '/chat/new', title: 'New Chat', Icon: NewChatIcon },
+  // { path: '', title: 'Search Chats', Icon: SearchChatsIcon },
+  { path: '/agents', title: 'Agents', Icon: AgentsIcon },
+  { path: '/a2a-agents', title: 'A2A Agents', Icon: A2AAgentsIcon },
+  { path: '/mcp-agents', title: 'MCP Agents', Icon: MCPAgentsIcon },
   {
     path: '/agent-flows',
     title: 'Agent Flows',
-    Icon: TreeIcon,
-    plusBtnNav: '/agent-flows/new',
+    Icon: FlowsIcon,
   },
-  { path: '/a2a-agents', title: 'A2A Agents', Icon: AgentIcon },
-  { path: '/mcp-agents', title: 'MCP Agents', Icon: AgentIcon },
+  {
+    path: '/agent-flows/new',
+    title: 'New Agent Flow',
+    Icon: NewFlowIcon,
+  },
 ];
 
 const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
@@ -40,18 +47,18 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
   return (
     <aside
       className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out ${
-        collapsed ? 'w-[56px]' : 'w-[230px]'
+        collapsed ? 'w-[56px]' : 'w-[200px]'
       }`}
     >
       <div className="sticky top-0 bg-neutral-accent pt-[34px]">
-        <SidebarIcon
+        <SidebarToggleIcon
           onClick={() => setCollapsed(!collapsed)}
           className="ml-2 mb-8 cursor-pointer"
           aria-label="Toggle sidebar"
         />
         <nav>
-          {pages.map(({ path, title, Icon, plusBtnNav }) => {
-            const isActive = location.pathname.includes(path);
+          {pages.map(({ path, title, Icon }) => {
+            const isActive = location.pathname === path;
             return (
               <button
                 key={path}
@@ -75,15 +82,6 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
                 >
                   {title}
                 </span>
-
-                {plusBtnNav && !collapsed && (
-                  <Link
-                    to={plusBtnNav}
-                    className={`ml-8 p-2 rounded-md bg-[#FF5722] text-white hover:bg-[#E64A19]`}
-                  >
-                    <PlusIcon className="h-2 w-2" />
-                  </Link>
-                )}
               </button>
             );
           })}

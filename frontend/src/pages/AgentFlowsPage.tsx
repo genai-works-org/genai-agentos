@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { MainLayout } from '../components/layout/MainLayout';
-import { AgentFlowCard } from '../components/AgentFlowCard';
+import { AgentFlowCard } from '@/components/flow/AgentFlowCard';
 import { useAgent } from '../hooks/useAgent';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 

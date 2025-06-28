@@ -6,7 +6,7 @@ import { FileData, fileService } from '../services/fileService';
 import { useChatHistory } from '../contexts/ChatHistoryContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../hooks/useChat';
-import ChatArea from '../components/ChatArea';
+import ChatArea from '@/components/chat/ChatArea';
 import { MainLayout } from '../components/layout/MainLayout';
 import { ChatHistory } from '../types/chat';
 

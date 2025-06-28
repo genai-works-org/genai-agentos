@@ -29,11 +29,11 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { MainLayout } from '../components/layout/MainLayout';
 import { agentService } from '../services/agentService';
-import { FlowChain } from '../components/FlowChain';
-import { SaveFlowModal } from '../components/SaveFlowModal';
+import { FlowChain } from '../components/flow/FlowChain';
+import { SaveFlowModal } from '../components/flow/SaveFlowModal';
 import { AgentType, ActiveConnection } from '../types/agent';
 import { normalizeString, removeUnderscore } from '../utils/normalizeString';
-import { FlowNode } from '../components/FlowNode';
+import { FlowNode } from '../components/flow/FlowNode';
 import { useAgent } from '../hooks/useAgent';
 import { FLOW_NAME_REGEX } from '../constants/regex';
 

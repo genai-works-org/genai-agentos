@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { FC, MouseEvent, SyntheticEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Box, Typography, Tabs, Tab, Collapse } from '@mui/material';
 import ReactFlow, {
   Background,
@@ -13,10 +13,10 @@ import 'reactflow/dist/style.css';
 import { MainLayout } from '../components/layout/MainLayout';
 import { useLogs } from '../hooks/useLogs';
 import { useFlowNodes } from '../hooks/useFlowNodes';
-import { FlowNode } from '../components/FlowNode';
+import { FlowNode } from '../components/flow/FlowNode';
 import { AgentTrace } from '../types/agent';
-import { TraceDetails } from '../components/TraceDetails';
-import { ResponseLog } from '../components/ResponseLog';
+import { TraceDetails } from '../components/flow/TraceDetails';
+import { ResponseLog } from '../components/flow/ResponseLog';
 import { jsonTreeTheme } from '../constants/jsonTreeTheme';
 
 const nodeTypes = {
@@ -25,7 +25,6 @@ const nodeTypes = {
 
 const AgentsTracePage: FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [traceData, setTraceData] = useState<AgentTrace[] | null>(null);
   const { logs, isLoading, error, fetchLogs } = useLogs();
   const { nodes, edges, onNodesChange, onEdgesChange } =
@@ -139,12 +138,7 @@ const AgentsTracePage: FC = () => {
   }, [handleClickOutside]);
 
   return (
-    <MainLayout
-      currentPage="Agent Trace"
-      handleReturn={() => {
-        navigate('/chat');
-      }}
-    >
+    <MainLayout currentPage="Agent Trace">
       <Box display="flex" height="calc(100vh - 64px)">
         {/* React Flow Area */}
         <Box

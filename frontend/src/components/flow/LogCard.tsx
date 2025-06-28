@@ -1,6 +1,6 @@
 import type { FC } from 'react';
 import { Box, Typography, Paper, ListItem } from '@mui/material';
-import { LogEntry, LogLevel } from '../types/log';
+import { LogEntry, LogLevel } from '@/types/log';
 import { JSONTree } from 'react-json-tree';
 
 interface LogCardProps {

@@ -1,7 +1,7 @@
 import { ChangeEvent, FC, useState } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { AIModelGrid } from '../AIModelGrid';
+import { AIModelGrid } from './AIModelGrid';
 import { ModelConfig, AI_PROVIDERS, Config } from '../../types/model';
 
 interface AzureOpenAISettingsProps {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { AIModelCard } from './AIModelCard';
-import { ModelConfig } from '../types/model';
-import { useSettings } from '../contexts/SettingsContext';
+import { ModelConfig } from '../../types/model';
+import { useSettings } from '../../contexts/SettingsContext';
 
 import CreateCard from '@/components/shared/CreateCard';
 

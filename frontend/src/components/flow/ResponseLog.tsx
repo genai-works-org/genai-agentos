@@ -9,8 +9,8 @@ import {
   Alert,
 } from '@mui/material';
 import { LogCard } from './LogCard';
-import { AgentTrace } from '../types/agent';
-import { Log } from '../types/log';
+import { AgentTrace } from '../../types/agent';
+import { Log } from '../../types/log';
 
 interface ResponseLogProps {
   logs: Log[];
@@ -44,14 +44,12 @@ export const ResponseLog: FC<ResponseLogProps> = ({
           </Typography>
         ) : (
           <List>
-            {logs.map((log) => {
-              const agentName = traceData?.find(trace => trace.id === log.agent_id)?.name || 'Unknown Agent';
+            {logs.map(log => {
+              const agentName =
+                traceData?.find(trace => trace.id === log.agent_id)?.name ||
+                'Unknown Agent';
               return (
-                <LogCard 
-                  key={log.created_at}
-                  log={log} 
-                  agentName={agentName} 
-                />
+                <LogCard key={log.created_at} log={log} agentName={agentName} />
               );
             })}
           </List>
@@ -59,4 +57,4 @@ export const ResponseLog: FC<ResponseLogProps> = ({
       </Paper>
     </>
   );
-}; 
+};

@@ -1,5 +1,5 @@
 import type { FC, ReactNode } from 'react';
-import Logo from '../shared/Logo';
+import Logo from '@/components/shared/Logo';
 
 interface AuthLayoutProps {
   children: ReactNode;

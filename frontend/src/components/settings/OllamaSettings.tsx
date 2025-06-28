@@ -1,6 +1,6 @@
 import type { ChangeEvent, FC } from 'react';
 import { Box, TextField } from '@mui/material';
-import { AIModelGrid } from '../AIModelGrid';
+import { AIModelGrid } from './AIModelGrid';
 import { AI_PROVIDERS, ModelConfig, Config } from '../../types/model';
 
 interface OllamaSettingsProps {

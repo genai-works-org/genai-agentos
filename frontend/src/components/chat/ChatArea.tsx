@@ -1,16 +1,16 @@
 import { useState, useEffect, useRef, FC, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChatInput from './ChatInput';
-import { websocketService, AgentResponse } from '../services/websocketService';
+import { websocketService, AgentResponse } from '@/services/websocketService';
 import {
   ChatMessage as IChatMessage,
   useChatHistory,
-} from '../contexts/ChatHistoryContext';
-import { FileData, fileService } from '../services/fileService';
-import { useSettings } from '../contexts/SettingsContext';
+} from '@/contexts/ChatHistoryContext';
+import { FileData, fileService } from '@/services/fileService';
+import { useSettings } from '@/contexts/SettingsContext';
 import ChatMessage from './ChatMessage';
-import { DotsSpinner } from './DotsSpinner/DotsSpinner';
-import { ChatHistory } from '../types/chat';
+import { DotsSpinner } from '../DotsSpinner/DotsSpinner';
+import { ChatHistory } from '@/types/chat';
 
 // Interface matching the one added in ChatInput
 interface AttachedFile {
@@ -27,7 +27,9 @@ interface ChatAreaProps {
 const formatExecutionTime = (seconds: string): string => {
   const minutes = Math.floor(parseInt(seconds) / 60);
   const remainingSeconds = Math.floor(parseInt(seconds) % 60);
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
+    .toString()
+    .padStart(2, '0')}`;
 };
 
 const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
@@ -216,7 +218,9 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
     <div className="flex flex-col h-full relative">
       {/* Chat messages area */}
       <div
-        className={`flex-1 overflow-y-auto p-4 space-y-2 ${messages.length === 0 ? 'flex items-center justify-center' : ''}`}
+        className={`flex-1 overflow-y-auto p-4 space-y-2 ${
+          messages.length === 0 ? 'flex items-center justify-center' : ''
+        }`}
         style={{
           height: 'calc(100vh - 30vh)', // 100vh - input area height
           overflowY: 'auto',
@@ -251,7 +255,11 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
       </div>
       {/* Chat input area */}
       <div
-        className={`flex-none ${messages.length === 0 ? 'w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' : ''}`}
+        className={`flex-none ${
+          messages.length === 0
+            ? 'w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+            : ''
+        }`}
       >
         {messages.length === 0 && (
           <div className="text-center text-gray-500 text-2xl">

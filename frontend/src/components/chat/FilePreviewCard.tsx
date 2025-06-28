@@ -1,17 +1,17 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { XIcon, FileIcon, DownloadIcon } from 'lucide-react';
-import Spinner from './Spinner'; // Import the spinner
-import { fileService } from '../services/fileService';
-import { extractFileName } from '../utils/extractFileName';
+import Spinner from '../Spinner';
+import { fileService } from '@/services/fileService';
+import { extractFileName } from '@/utils/extractFileName';
 
 // Interface matching the one in ChatInput
 export interface FileData {
   clientId: string;
   id?: string; // Server ID, optional initially
   name: string;
-  type: string; 
-  size: number; 
+  type: string;
+  size: number;
   loading: boolean;
   fromAgent?: boolean;
   previewUrl?: string;
@@ -22,10 +22,10 @@ interface FilePreviewCardProps {
   isUploading?: boolean; // To disable remove button during final send
 }
 
-const FilePreviewCard: FC<FilePreviewCardProps> = ({ 
+const FilePreviewCard: FC<FilePreviewCardProps> = ({
   fileData,
   onRemove,
-  isUploading = false
+  isUploading = false,
 }) => {
   const { clientId, id, name, type, loading, fromAgent } = fileData;
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -76,7 +76,9 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
         const { url } = await fileService.downloadFile(id);
         const a = document.createElement('a');
         a.href = url;
-        a.download = extractFileName(metaData?.original_name || metaData?.internal_name);
+        a.download = extractFileName(
+          metaData?.original_name || metaData?.internal_name,
+        );
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
@@ -97,13 +99,13 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
       );
     }
 
-    if (type.startsWith('image/') && (fileUrl)) {
+    if (type.startsWith('image/') && fileUrl) {
       return (
-        <img 
-          src={fileUrl || ''} 
-          alt={name} 
+        <img
+          src={fileUrl || ''}
+          alt={name}
           className="absolute inset-0 w-full h-full object-cover"
-          onError={(e) => {
+          onError={e => {
             // Remove line 109: console.error('Failed to load image:', e);
             // Fallback to file icon if image fails to load
             e.currentTarget.style.display = 'none';
@@ -112,14 +114,14 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
       );
     }
 
-    if (type.startsWith('video/') && (fileUrl)) {
+    if (type.startsWith('video/') && fileUrl) {
       return (
-        <video 
-          src={fileUrl || ''} 
-          className="absolute inset-0 w-full h-full object-cover" 
-          muted 
+        <video
+          src={fileUrl || ''}
+          className="absolute inset-0 w-full h-full object-cover"
+          muted
           playsInline
-          onError={(e) => {
+          onError={e => {
             // Fallback to file icon if video fails to load
             e.currentTarget.style.display = 'none';
           }}
@@ -129,8 +131,10 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
 
     return (
       <>
-        <FileIcon size={32} className="mb-1 text-gray-500 flex-shrink-0" /> 
-        <span className="w-full text-xs font-medium truncate px-1">{extractFileName(metaData?.original_name || metaData?.internal_name)}</span>
+        <FileIcon size={32} className="mb-1 text-gray-500 flex-shrink-0" />
+        <span className="w-full text-xs font-medium truncate px-1">
+          {extractFileName(metaData?.original_name || metaData?.internal_name)}
+        </span>
       </>
     );
   }, [fileUrl, loading, isLoading, name, metaData]);
@@ -145,7 +149,7 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
 
   const getTooltipContent = () => {
     if (!metaData) return name;
-    
+
     return `
       Name: ${extractFileName(metaData.original_name || metaData.internal_name)}
       Type: ${metaData.mimetype}
@@ -155,8 +159,12 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
   };
 
   return (
-    <div 
-      className={`relative w-24 h-24 bg-gray-100 rounded-md overflow-hidden shadow-sm border-2 border-white/20 ${loading ? '' : 'p-2 flex flex-col items-center justify-center text-center'}`}
+    <div
+      className={`relative w-24 h-24 bg-gray-100 rounded-md overflow-hidden shadow-sm border-2 border-white/20 ${
+        loading
+          ? ''
+          : 'p-2 flex flex-col items-center justify-center text-center'
+      }`}
       title={getTooltipContent()}
     >
       <div className="absolute inset-0 flex flex-col items-center justify-center border-4 border-gray-400/10">
@@ -165,7 +173,7 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
 
       {/* Download button for agent files */}
       {id && (
-        <button 
+        <button
           onClick={handleDownload}
           className="absolute top-1 left-1 p-0.5 bg-gray-600 bg-opacity-50 hover:bg-opacity-75 rounded-full text-white disabled:opacity-50 z-10"
         >
@@ -175,7 +183,7 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
 
       {/* Remove button - only for user files */}
       {!isUploading && onRemove && !fromAgent && (
-        <button 
+        <button
           onClick={() => onRemove(clientId)}
           className="absolute top-1 right-1 p-0.5 bg-gray-600 bg-opacity-50 hover:bg-opacity-75 rounded-full text-white disabled:opacity-50 z-10"
         >
@@ -186,4 +194,4 @@ const FilePreviewCard: FC<FilePreviewCardProps> = ({
   );
 };
 
-export default FilePreviewCard; 
+export default FilePreviewCard;

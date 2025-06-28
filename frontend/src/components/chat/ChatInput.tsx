@@ -1,8 +1,8 @@
 import type { FormEvent, ChangeEvent } from 'react';
 import { useState, useRef, useEffect } from 'react';
-import Toolbar from './chat/Toolbar';
-import FilePreviewSection from './chat/FilePreviewSection';
-import MessageInput from './chat/MessageInput';
+import Toolbar from './Toolbar';
+import FilePreviewSection from './FilePreviewSection';
+import MessageInput from './MessageInput';
 import { FileData } from './FilePreviewCard';
 
 interface UploadResult {
@@ -16,7 +16,11 @@ interface ChatInputProps {
   onFileUpload?: (file: File) => Promise<UploadResult>;
 }
 
-const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInputProps) => {
+const ChatInput = ({
+  onSendMessage,
+  isUploading = false,
+  onFileUpload,
+}: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<FileData[]>([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -38,11 +42,13 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
     const fileIds = attachedFiles
       .filter(file => !file.loading && file.id)
       .map(file => file.id!);
-      
+
     if (message.trim() || fileIds.length > 0) {
       onSendMessage(message, fileIds);
       setMessage('');
-      const filesToRemove = attachedFiles.filter(file => !file.loading && file.id);
+      const filesToRemove = attachedFiles.filter(
+        file => !file.loading && file.id,
+      );
       filesToRemove.forEach(file => {
         if (file.previewUrl) {
           URL.revokeObjectURL(file.previewUrl);
@@ -65,8 +71,11 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
     if (selectedFile && onFileUpload) {
       const clientId = `${Date.now()}-${selectedFile.name}`;
       let previewUrl: string | undefined = undefined;
-      
-      if (selectedFile.type.startsWith('image/') || selectedFile.type.startsWith('video/')) {
+
+      if (
+        selectedFile.type.startsWith('image/') ||
+        selectedFile.type.startsWith('video/')
+      ) {
         previewUrl = URL.createObjectURL(selectedFile);
       }
 
@@ -82,15 +91,17 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
 
       try {
         const uploadResult = await onFileUpload(selectedFile);
-        setAttachedFiles(prev => 
-          prev.map(file => 
-            file.clientId === clientId 
-              ? { ...file, id: uploadResult.id, loading: false } 
-              : file
-          )
+        setAttachedFiles(prev =>
+          prev.map(file =>
+            file.clientId === clientId
+              ? { ...file, id: uploadResult.id, loading: false }
+              : file,
+          ),
         );
       } catch (error) {
-        setAttachedFiles(prev => prev.filter(file => file.clientId !== clientId));
+        setAttachedFiles(prev =>
+          prev.filter(file => file.clientId !== clientId),
+        );
         if (previewUrl) {
           URL.revokeObjectURL(previewUrl);
         }
@@ -102,11 +113,15 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
   };
 
   const handleRemoveFile = (clientIdToRemove: string) => {
-    const fileToRemove = attachedFiles.find(file => file.clientId === clientIdToRemove);
+    const fileToRemove = attachedFiles.find(
+      file => file.clientId === clientIdToRemove,
+    );
     if (fileToRemove?.previewUrl) {
       URL.revokeObjectURL(fileToRemove.previewUrl);
     }
-    setAttachedFiles(prev => prev.filter(file => file.clientId !== clientIdToRemove));
+    setAttachedFiles(prev =>
+      prev.filter(file => file.clientId !== clientIdToRemove),
+    );
   };
 
   const insertMarkdown = (type: 'bold' | 'italic' | 'code') => {
@@ -130,17 +145,22 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
         break;
     }
 
-    const newMessage = message.substring(0, start) + newText + message.substring(end);
+    const newMessage =
+      message.substring(0, start) + newText + message.substring(end);
     setMessage(newMessage);
 
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + newText.length, start + newText.length);
+      textarea.setSelectionRange(
+        start + newText.length,
+        start + newText.length,
+      );
     }, 0);
   };
 
   const isAnyFileUploading = attachedFiles.some(file => file.loading);
-  const hasContent = message.trim() || attachedFiles.some(f => !f.loading && f.id);
+  const hasContent =
+    message.trim() || attachedFiles.some(f => !f.loading && f.id);
 
   return (
     <div className="p-4 relative z-1000">
@@ -154,7 +174,7 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
             isAnyFileUploading={isAnyFileUploading}
             onSubmit={handleSubmit}
           />
-          
+
           <div className="border-t border-gray-200">
             <Toolbar
               onAttachClick={handleAttachClick}
@@ -164,9 +184,11 @@ const ChatInput = ({ onSendMessage, isUploading = false, onFileUpload }: ChatInp
               isUploading={isUploading}
               isAnyFileUploading={isAnyFileUploading}
               hasContent={Boolean(hasContent)}
-              onSubmit={() => handleSubmit({ preventDefault: () => {} } as FormEvent)}
+              onSubmit={() =>
+                handleSubmit({ preventDefault: () => {} } as FormEvent)
+              }
             />
-            
+
             <FilePreviewSection
               attachedFiles={attachedFiles}
               onRemoveFile={handleRemoveFile}

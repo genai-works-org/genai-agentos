@@ -13,8 +13,8 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { styled } from '@mui/material/styles';
-import { AgentDTO } from '../types/agent';
-import { removeUnderscore } from '../utils/normalizeString';
+import { AgentDTO } from '@/types/agent';
+import { removeUnderscore } from '@/utils/normalizeString';
 
 const ExpandMore = styled((props: { expanded: boolean } & any) => {
   const { expanded, ...other } = props;
@@ -134,8 +134,8 @@ export const AgentCard: FC<AgentCardProps> = ({ agent, onDelete }) => {
           {expanded
             ? description
             : description && description?.length > 100
-              ? `${description.substring(0, 100)}...`
-              : description}
+            ? `${description.substring(0, 100)}...`
+            : description}
         </Typography>
         {expanded && <>{renderParameters()}</>}
       </CardContent>

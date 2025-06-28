@@ -1,9 +1,9 @@
 import type { FC } from 'react';
 import { UserIcon, GitBranch, ClipboardIcon } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useNavigate } from 'react-router-dom';
-import { ChatMessage as IChatMessage } from '../contexts/ChatHistoryContext';
-import { getThemeColors } from '../utils/themeUtils';
+import { ChatMessage as IChatMessage } from '../../contexts/ChatHistoryContext';
+import { getThemeColors } from '../../utils/themeUtils';
 import FilePreviewCard from './FilePreviewCard';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -12,8 +12,8 @@ import rehypeKatex from 'rehype-katex';
 import remarkMath from 'remark-math';
 import 'katex/dist/katex.min.css';
 import { JSONTree } from 'react-json-tree';
-import { jsonTreeTheme } from '../constants/jsonTreeTheme';
-import { extractFileName } from '../utils/extractFileName';
+import { jsonTreeTheme } from '../../constants/jsonTreeTheme';
+import { extractFileName } from '../../utils/extractFileName';
 
 type ChatMessageProps = IChatMessage;
 
@@ -97,8 +97,8 @@ const ChatMessage: FC<ChatMessageProps> = ({
                 ? 'ml-4 bg-light-secondary-primary text-light-bg'
                 : 'ml-4 bg-dark-secondary-primary text-dark-bg'
               : theme === 'light'
-                ? 'mr-4 bg-light-secondary-secondary text-light-text'
-                : 'mr-4 bg-dark-secondary-secondary text-dark-text'
+              ? 'mr-4 bg-light-secondary-secondary text-light-text'
+              : 'mr-4 bg-dark-secondary-secondary text-dark-text'
           }`}
         >
           {isUser ? (
@@ -142,8 +142,8 @@ const ChatMessage: FC<ChatMessageProps> = ({
                   ? 'bg-red-100 text-red-800'
                   : 'bg-light-bg text-light-text'
                 : isError
-                  ? 'bg-red-900 text-red-100'
-                  : 'bg-dark-bg text-dark-text'
+                ? 'bg-red-900 text-red-100'
+                : 'bg-dark-bg text-dark-text'
             } rounded-lg px-4 py-2 shadow-sm`}
           >
             {renderContent()}

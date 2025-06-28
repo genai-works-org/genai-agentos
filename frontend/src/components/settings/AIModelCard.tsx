@@ -2,7 +2,7 @@ import type { FC } from 'react';
 import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { ModelConfig } from '../types/model';
+import { ModelConfig } from '@/types/model';
 
 interface AIModelCardProps {
   modelData: ModelConfig;

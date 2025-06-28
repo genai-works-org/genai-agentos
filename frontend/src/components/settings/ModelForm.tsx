@@ -20,7 +20,7 @@ import {
   ModelConfig,
   Config,
   CreateModelBody,
-} from '../types/model';
+} from '@/types/model';
 
 interface ModelFormProps {
   settings: Config;

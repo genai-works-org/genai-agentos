@@ -7,9 +7,9 @@ import {
   Divider,
   CircularProgress,
 } from '@mui/material';
-import { Modal } from './Modal';
+import { Modal } from '../Modal';
 import { FlowChain } from './FlowChain';
-import { FLOW_NAME_REGEX } from '../constants/regex';
+import { FLOW_NAME_REGEX } from '../../constants/regex';
 
 interface SaveFlowModalProps {
   isOpen: boolean;

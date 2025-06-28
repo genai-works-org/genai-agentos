@@ -15,7 +15,7 @@ import { MainLayout } from '../components/layout/MainLayout';
 import { AgentDTO } from '../types/agent';
 import { useAgent } from '../hooks/useAgent';
 import { useToast } from '../hooks/useToast';
-import { AgentCard } from '../components/AgentCard';
+import { AgentCard } from '@/components/genai/AgentCard';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import { Modal as GenerateTokenModal } from '../components/Modal';
 

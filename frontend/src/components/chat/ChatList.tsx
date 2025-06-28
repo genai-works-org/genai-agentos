@@ -8,9 +8,9 @@ import {
   MenuItem,
   TextField,
 } from '@mui/material';
-import { useChat } from '../hooks/useChat';
-import { useChatHistory } from '../contexts/ChatHistoryContext';
-import ConfirmModal from './modals/ConfirmModal';
+import { useChat } from '@/hooks/useChat';
+import { useChatHistory } from '@/contexts/ChatHistoryContext';
+import ConfirmModal from '@/components/modals/ConfirmModal';
 
 const ChatList = memo(() => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);

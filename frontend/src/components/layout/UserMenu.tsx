@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useChatHistory } from '../../contexts/ChatHistoryContext';
-import { useAuth } from '../../contexts/AuthContext';
-import UserAvatar from './UserAvatar';
+
+import { useChatHistory } from '@/contexts/ChatHistoryContext';
+import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/layout/UserAvatar';
 
 const UserMenu = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);

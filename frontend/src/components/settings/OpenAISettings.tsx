@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ChangeEvent, FC } from 'react';
 import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { AIModelGrid } from '../AIModelGrid';
+import { AIModelGrid } from './AIModelGrid';
 import { AI_PROVIDERS, ModelConfig, Config } from '../../types/model';
 
 interface OpenAISettingsProps {
