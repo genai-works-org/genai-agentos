@@ -1,10 +1,10 @@
-import { useState } from 'react';
+// import { useState } from 'react';
 import type { FC } from 'react';
-import { AIModelCard } from './AIModelCard';
-import { ModelConfig } from '../../types/model';
-import { useSettings } from '../../contexts/SettingsContext';
-
+import { ModelConfig } from '@/types/model';
+import { useSettings } from '@/contexts/SettingsContext';
 import CreateCard from '@/components/shared/CreateCard';
+import Tooltip from '@/components/shared/Tooltip';
+import { AIModelCard } from './AIModelCard';
 
 interface AIModelGridProps {
   models: ModelConfig[];
@@ -25,10 +25,10 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
   onModelEdit,
   onModelDelete,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // const [isExpanded, setIsExpanded] = useState(false);
   const { activeModel } = useSettings();
 
-  const modelsPerRow = 4; // Number of models to show in the first row
+  // const modelsPerRow = 4;
 
   // Sort models: selected model first, then alphabetically
   const sortedModels = [...models].sort((a, b) => {
@@ -37,31 +37,34 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
     return a.name.localeCompare(b.name);
   });
 
-  const displayedModels = isExpanded
-    ? sortedModels
-    : sortedModels.slice(0, modelsPerRow);
+  // const displayedModels = isExpanded
+  //   ? sortedModels
+  //   : sortedModels.slice(0, modelsPerRow);
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <CreateCard
-          buttonText="Add Models"
-          disabled={disabledModelCreate}
-          onClick={onModelCreate}
-        />
-        {displayedModels.length > 0 &&
-          displayedModels.map(model => (
-            <AIModelCard
-              key={model.id}
-              modelData={model}
-              isSelected={model.id === activeModel?.id}
-              onEdit={() => onModelEdit(model as ModelConfig)}
-              onDelete={() => onModelDelete(model as ModelConfig)}
-              provider={provider}
-            />
-          ))}
+      <Tooltip message={tooltipMessage}>
+        <span className="inline-block" tabIndex={0}>
+          <CreateCard
+            buttonText="Add Models"
+            disabled={disabledModelCreate}
+            onClick={onModelCreate}
+          />
+        </span>
+      </Tooltip>
+      <div className="flex flex-wrap gap-4">
+        {sortedModels.map(model => (
+          <AIModelCard
+            key={model.id}
+            modelData={model}
+            isSelected={model.id === activeModel?.id}
+            onEdit={() => onModelEdit(model as ModelConfig)}
+            onDelete={() => onModelDelete(model as ModelConfig)}
+            provider={provider}
+          />
+        ))}
       </div>
-      {sortedModels.length > modelsPerRow && (
+      {/* {sortedModels.length > modelsPerRow && (
         <div className="text-center">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
@@ -72,7 +75,7 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
               : `Show More (${sortedModels.length - modelsPerRow} more)`}
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

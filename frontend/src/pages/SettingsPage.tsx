@@ -1,36 +1,33 @@
 import { useState } from 'react';
 import { toast } from 'react-toastify';
-import {
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Box,
-  SelectChangeEvent,
-  Button,
-} from '@mui/material';
-import { useSettings } from '../contexts/SettingsContext';
-import { useModels } from '../hooks/useModels';
+
+import { useSettings } from '@/contexts/SettingsContext';
+import { useModels } from '@/hooks/useModels';
 import {
   getInitialConfig,
   getProviderModels,
   isProviderSettingsChanged,
   isProviderSettingsSet,
   getInitialMetadata,
-} from '../utils/settings';
-import { MainLayout } from '../components/layout/MainLayout';
-import { OpenAISettings } from '../components/settings/OpenAISettings';
-import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
-import { OllamaSettings } from '../components/settings/OllamaSettings';
-import { ModelForm } from '@/components/settings/ModelForm';
-import ConfirmModal from '@/components/modals/ConfirmModal';
+} from '@/utils/settings';
 import {
   AI_PROVIDERS,
   Config,
   CreateModelBody,
   ModelConfig,
   TOOLTIP_MESSAGES,
-} from '../types/model';
+  PROVIDERS_OPTIONS,
+} from '@/types/model';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { OpenAISettings } from '@/components/settings/OpenAISettings';
+import { AzureOpenAISettings } from '@/components/settings/AzureOpenAISettings';
+import { OllamaSettings } from '@/components/settings/OllamaSettings';
+import ModelForm from '@/components/settings/ModelForm';
+import { AIModelGrid } from '@/components/settings/AIModelGrid';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import Select from '@/components/shared/Select';
+import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
 
 export const SettingsPage = () => {
   const [showForm, setShowForm] = useState(false);
@@ -55,8 +52,8 @@ export const SettingsPage = () => {
     loading,
   } = useModels();
 
-  const handleProviderChange = (e: SelectChangeEvent<string>) => {
-    const currentProvider = providers.find(p => p.provider === e.target.value);
+  const handleProviderChange = (value: string) => {
+    const currentProvider = providers.find(p => p.provider === value);
 
     if (currentProvider) {
       const { provider, metadata, api_key } = currentProvider;
@@ -65,8 +62,8 @@ export const SettingsPage = () => {
     }
 
     setConfig({
-      provider: e.target.value,
-      data: getInitialMetadata(e.target.value),
+      provider: value,
+      data: getInitialMetadata(value),
     });
   };
 
@@ -142,107 +139,76 @@ export const SettingsPage = () => {
 
   return (
     <MainLayout currentPage="Settings">
-      <div className="h-full p-16">
-        <div className="bg-primary-white rounded-xl p-4">
-          <Box>
-            <FormControl fullWidth>
-              <InputLabel id="ai-provider-label">AI Provider</InputLabel>
+      <div className="h-full p-16 max-h-[calc(100vh-64px)] overflow-y-auto">
+        <div className="bg-primary-white rounded-xl min-h-full">
+          <div className="p-4">
+            <h2 className="font-bold text-text-secondary">API Information</h2>
+            <p className="text-sm text-text-light">Providers, Keys, Models</p>
+          </div>
+          <Separator />
+
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <Select
-                labelId="ai-provider-label"
-                id="ai-provider"
-                name="aiProvider"
                 value={config.provider}
                 label="AI Provider"
+                options={PROVIDERS_OPTIONS}
                 onChange={handleProviderChange}
+              />
+
+              {config.provider === AI_PROVIDERS.OPENAI && (
+                <OpenAISettings
+                  settings={config}
+                  onSettingsChange={setConfig}
+                />
+              )}
+
+              {config.provider === AI_PROVIDERS.AZURE_OPENAI && (
+                <AzureOpenAISettings
+                  settings={config}
+                  onSettingsChange={setConfig}
+                />
+              )}
+
+              {config.provider === AI_PROVIDERS.OLLAMA && (
+                <OllamaSettings
+                  settings={config}
+                  onSettingsChange={setConfig}
+                />
+              )}
+            </div>
+
+            <div className="flex justify-end mb-6">
+              <Button
+                onClick={handleSaveProvider}
+                disabled={
+                  !isProviderSettingsChanged(config.provider, providers, config)
+                }
+                className="w-[181px]"
               >
-                <MenuItem value={AI_PROVIDERS.OPENAI}>OpenAI</MenuItem>
-                <MenuItem value={AI_PROVIDERS.AZURE_OPENAI}>
-                  Azure OpenAI
-                </MenuItem>
-                <MenuItem value={AI_PROVIDERS.OLLAMA}>Ollama</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
+                Save API changes
+              </Button>
+            </div>
 
-          {config.provider === AI_PROVIDERS.OPENAI && (
-            <OpenAISettings
-              settings={config}
-              onSettingsChange={setConfig}
-              availableModels={getProviderModels(
-                providers,
-                AI_PROVIDERS.OPENAI,
-              )}
+            <p className="text-xs text-text-secondary mb-2">Models</p>
+            <AIModelGrid
+              models={getProviderModels(providers, config.provider)}
               onModelCreate={() => setShowForm(true)}
               onModelEdit={handleEditModel}
               onModelDelete={handleDeleteModel}
               disabledModelCreate={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.OPENAI)
+                !isProviderSettingsSet(providers, config.provider)
               }
               tooltipMessage={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.OPENAI)
-                  ? TOOLTIP_MESSAGES.OPENAI
+                !isProviderSettingsSet(providers, config.provider)
+                  ? TOOLTIP_MESSAGES[
+                      config.provider as keyof typeof TOOLTIP_MESSAGES
+                    ]
                   : ''
               }
+              provider={config.provider}
             />
-          )}
-
-          {config.provider === AI_PROVIDERS.AZURE_OPENAI && (
-            <AzureOpenAISettings
-              settings={config}
-              onSettingsChange={setConfig}
-              availableModels={getProviderModels(
-                providers,
-                AI_PROVIDERS.AZURE_OPENAI,
-              )}
-              onModelCreate={() => setShowForm(true)}
-              onModelEdit={handleEditModel}
-              onModelDelete={handleDeleteModel}
-              disabledModelCreate={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.AZURE_OPENAI)
-              }
-              tooltipMessage={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.AZURE_OPENAI)
-                  ? TOOLTIP_MESSAGES.AZURE_OPENAI
-                  : ''
-              }
-            />
-          )}
-
-          {config.provider === AI_PROVIDERS.OLLAMA && (
-            <OllamaSettings
-              settings={config}
-              onSettingsChange={setConfig}
-              availableModels={getProviderModels(
-                providers,
-                AI_PROVIDERS.OLLAMA,
-              )}
-              onModelCreate={() => setShowForm(true)}
-              onModelEdit={handleEditModel}
-              onModelDelete={handleDeleteModel}
-              disabledModelCreate={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
-              }
-              tooltipMessage={
-                !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
-                  ? TOOLTIP_MESSAGES.OLLAMA
-                  : ''
-              }
-            />
-          )}
-
-          <Box>
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleSaveProvider}
-              disabled={
-                !isProviderSettingsChanged(config.provider, providers, config)
-              }
-            >
-              Save Settings
-            </Button>
-          </Box>
+          </div>
         </div>
       </div>
 
@@ -250,7 +216,6 @@ export const SettingsPage = () => {
         isOpen={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Model"
         description={`Are you sure you want to delete the model "${selectedModel?.name}"?`}
       />
 
@@ -259,7 +224,7 @@ export const SettingsPage = () => {
           settings={config}
           initialData={selectedModel}
           onSave={handleSaveModel}
-          onCancel={() => {
+          onClose={() => {
             setSelectedModel(null);
             setShowForm(false);
           }}

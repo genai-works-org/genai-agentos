@@ -28,6 +28,9 @@ export default {
         error: {
           main: '#BA1A1A',
         },
+        disabled: {
+          main: '#B8C2C2',
+        },
         badge: {
           pink: {
             light: '#FFDAD6',

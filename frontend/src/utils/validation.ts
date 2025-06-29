@@ -88,3 +88,31 @@ export const validateUrl = (url: string) => {
     return false;
   }
 };
+
+export const validateModelsField = (name: string, value: string) => {
+  if (!value) {
+    return 'Field is required';
+  }
+
+  if (name === 'temperature') {
+    if (!Number(value) && value !== '0') {
+      return 'Temperature must be a valid number';
+    }
+
+    if (Number(value) < 0 || Number(value) > 2) {
+      return 'Temperature must be between 0 and 2';
+    }
+  }
+
+  if (name === 'max_last_messages') {
+    if (!Number(value) && value !== '0') {
+      return 'Max last messages must be a valid number';
+    }
+
+    if (Number(value) < 1 || Number(value) > 20) {
+      return 'Max last messages must be between 1 and 20';
+    }
+  }
+
+  return null;
+};

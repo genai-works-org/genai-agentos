@@ -1,41 +1,41 @@
 import type { FC, FormEvent, ChangeEvent } from 'react';
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import {
-  Box,
-  Dialog,
-  DialogTitle,
-  IconButton,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Stack,
-  Slider,
-  Input,
-  DialogContent,
-} from '@mui/material';
+import { useMemo, useState } from 'react';
+
 import {
   AI_PROVIDERS,
   ModelConfig,
   Config,
   CreateModelBody,
+  PROVIDERS_OPTIONS,
 } from '@/types/model';
+import { validateModelsField } from '@/utils/validation';
+import Select from '@/components/shared/Select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ModelFormProps {
   settings: Config;
   initialData: ModelConfig | null;
   onSave: (data: CreateModelBody) => void;
-  onCancel: () => void;
+  onClose: () => void;
   systemPrompt: string;
   isLoading?: boolean;
 }
 
-export const ModelForm: FC<ModelFormProps> = ({
+const ModelForm: FC<ModelFormProps> = ({
   settings,
   initialData,
   onSave,
-  onCancel,
+  onClose,
   isLoading,
   systemPrompt,
 }) => {
@@ -53,10 +53,28 @@ export const ModelForm: FC<ModelFormProps> = ({
     max_last_messages: initialData?.max_last_messages ?? 5,
   });
 
-  const [error, setError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<{
+    [key: string]: string;
+  }>({});
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const isSubmitDisabled = useMemo(() => {
+    return (
+      isLoading ||
+      Object.keys(validationErrors).length > 0 ||
+      !formData.name ||
+      !formData.model
+    );
+  }, [isLoading, validationErrors, formData]);
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
+
+    const error = validateModelsField(name, value);
+    if (error) {
+      setValidationErrors(prev => ({ ...prev, [name]: error }));
+    }
 
     setFormData(prev => ({
       ...prev,
@@ -64,24 +82,8 @@ export const ModelForm: FC<ModelFormProps> = ({
     }));
   };
 
-  const validateRequiredFields = () => {
-    if (!formData.name || !formData.model || !formData.provider) {
-      return 'Please fill in all required fields';
-    }
-
-    return null;
-  };
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
-
-    const validationError = validateRequiredFields();
-
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
 
     onSave({
       name: formData.name.trim(),
@@ -97,147 +99,114 @@ export const ModelForm: FC<ModelFormProps> = ({
   };
 
   return (
-    <Dialog open={true} onClose={onCancel} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Box
-          sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Typography variant="h6">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-[800px] max-h-[800px] px-9 py-12 overflow-y-scroll"
+      >
+        <DialogHeader>
+          <DialogTitle>
             {initialData ? 'Edit Model' : 'Add New Model'}
-          </Typography>
-          <IconButton onClick={onCancel} size="small">
-            <X className="h-5 w-5" />
-          </IconButton>
-        </Box>
-      </DialogTitle>
+          </DialogTitle>
+        </DialogHeader>
 
-      <DialogContent>
-        <form onSubmit={handleSubmit}>
-          <Stack spacing={3} sx={{ mt: 2 }}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-
-            <TextField
-              label="Name"
-              name="name"
-              value={formData.name}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <Input
+            id="name"
+            name="name"
+            label="Name"
+            placeholder="Model Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            maxLength={10}
+            withAsterisk
+            error={validationErrors.name}
+          />
+          <Select
+            value={formData.provider}
+            label="Provider"
+            options={PROVIDERS_OPTIONS}
+            disabled
+            withAsterisk
+          />
+          <Input
+            id="model"
+            name="model"
+            label="Model"
+            placeholder="Model Identification"
+            value={formData.model}
+            onChange={handleChange}
+            required
+            withAsterisk
+            error={validationErrors.model}
+          />
+          <Textarea
+            id="system_prompt"
+            name="system_prompt"
+            label="System Prompt"
+            placeholder="System Prompt"
+            value={formData.system_prompt}
+            onChange={handleChange}
+            required
+            withAsterisk
+            error={validationErrors.system_prompt}
+          />
+          <div>
+            <Input
+              id="temperature"
+              name="temperature"
+              label="Temperature (0 - 2,0)"
+              placeholder="Temperature"
+              value={formData.temperature}
               onChange={handleChange}
               required
-              fullWidth
-              inputProps={{
-                maxLength: 10,
-              }}
+              min={0}
+              max={2}
+              withAsterisk
+              error={validationErrors.temperature}
             />
-
-            <TextField
-              label="Provider"
-              value={formData.provider}
-              disabled
-              fullWidth
-            />
-
-            <TextField
-              label="Model"
-              name="model"
-              value={formData.model}
-              onChange={handleChange}
-              required
-              fullWidth
-            />
-
-            <TextField
-              label="System Prompt"
-              name="system_prompt"
-              value={formData.system_prompt}
-              onChange={handleChange}
-              multiline
-              rows={15}
-              fullWidth
-            />
-
-            <Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  mb: 1,
-                }}
-              >
-                <Typography>Temperature</Typography>
-                <Input
-                  value={formData.temperature}
-                  size="small"
-                  onChange={e => {
-                    const value = parseFloat(e.target.value);
-                    if (!isNaN(value) && value >= 0 && value <= 2) {
-                      handleChange({
-                        target: { name: 'temperature', value },
-                      } as any);
-                    }
-                  }}
-                  inputProps={{
-                    step: 0.1,
-                    min: 0,
-                    max: 2,
-                    type: 'number',
-                    'aria-labelledby': 'temperature-slider',
-                  }}
-                  sx={{ width: '70px' }}
-                />
-              </Box>
-              <Slider
-                name="temperature"
-                value={formData.temperature}
-                onChange={(_, value) =>
-                  handleChange({
-                    target: { name: 'temperature', value },
-                  } as any)
-                }
-                min={0}
-                max={2}
-                step={0.1}
-                marks={[
-                  { value: 0, label: '0' },
-                  { value: 2, label: '2' },
-                ]}
-              />
-            </Box>
-
-            <TextField
-              fullWidth
-              type="number"
+            <p className="text-xs text-text-secondary mt-2">
+              Enter the value between 0 - 2,0. Numeric value only
+            </p>
+          </div>
+          <div>
+            <Input
+              id="max_last_messages"
               name="max_last_messages"
-              label="Message context window"
+              label="Message context window (1 - 20)"
+              placeholder="Enter message deepness"
               value={formData.max_last_messages}
               onChange={handleChange}
-              placeholder="Enter message deepness"
-              slotProps={{ htmlInput: { min: 1, max: 20 } }}
+              required
+              min={1}
+              max={20}
+              withAsterisk
+              error={validationErrors.max_last_messages}
             />
+            <p className="text-xs text-text-secondary mt-2">
+              Enter the value between 1 - 20. Numeric value only
+            </p>
+          </div>
 
-            <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
-              <Button variant="outlined" onClick={onCancel} fullWidth>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" onClick={onClose} className="w-[99px]">
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading || !formData.name || !formData.model}
-                fullWidth
-              >
-                {isLoading ? 'Saving...' : 'Save'}
-              </Button>
-            </Box>
-          </Stack>
+            </DialogClose>
+            <Button
+              type="submit"
+              disabled={isSubmitDisabled}
+              className="w-[84px]"
+            >
+              {isLoading ? 'Saving...' : 'Save'}
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
 };
+
+export default ModelForm;

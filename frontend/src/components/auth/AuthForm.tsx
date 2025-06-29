@@ -141,6 +141,12 @@ const AuthForm: FC<AuthFormProps> = ({
         <Button type="submit">{buttonText}</Button>
       </form>
 
+      <p className="flex items-center gap-6 mt-4 font-medium text-center text-text-light">
+        <span className="w-full h-px bg-neutral-border" />
+        <span>or</span>
+        <span className="w-full h-px bg-neutral-border" />
+      </p>
+
       <div className="mt-4 flex justify-center gap-2">
         <p className="font-medium text-text-light">{footerText}</p>
         <Button variant="link" size="link" asChild>

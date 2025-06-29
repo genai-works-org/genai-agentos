@@ -10,7 +10,7 @@ interface CreateCardProps {
 
 const CreateCard: FC<CreateCardProps> = ({ buttonText, onClick, disabled }) => {
   return (
-    <div className="flex items-center justify-center w-[280px] h-auto p-3 bg-neutral-light rounded-lg border border-dashed border-primary-accent">
+    <div className="flex items-center justify-center w-[280px] h-auto p-4 bg-neutral-light rounded-lg border border-dashed border-primary-accent">
       <Button
         variant="secondary"
         onClick={onClick}

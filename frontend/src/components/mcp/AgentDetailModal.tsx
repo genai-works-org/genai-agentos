@@ -30,7 +30,10 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[800px] px-8 py-12 gap-4">
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-[800px] px-8 py-12 gap-4"
+      >
         <DialogHeader>
           <DialogTitle className="text-left">{agent.server_url}</DialogTitle>
         </DialogHeader>

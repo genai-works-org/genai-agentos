@@ -40,7 +40,10 @@ const CreateAgentModal: FC<CreateAgentModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[420px] px-9 py-12">
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-[420px] px-9 py-12"
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>

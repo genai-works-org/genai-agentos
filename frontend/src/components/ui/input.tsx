@@ -11,6 +11,7 @@ interface InputWithIconProps extends React.ComponentProps<'input'> {
   showPassword?: boolean;
   setShowPassword?: React.Dispatch<React.SetStateAction<boolean>>;
   secure?: boolean;
+  withAsterisk?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
@@ -23,6 +24,7 @@ const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
       showPassword,
       setShowPassword,
       secure,
+      withAsterisk,
       ...props
     },
     ref,
@@ -31,7 +33,11 @@ const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
       <div className="relative w-full">
         {label && (
           <Label
-            className="mb-2 block text-xs text-text-secondary"
+            className={`mb-2 block text-xs text-text-secondary ${
+              withAsterisk
+                ? 'after:content-["*"] after:text-error-main after:ml-1'
+                : ''
+            }`}
             htmlFor={props.id}
           >
             {label}
@@ -41,7 +47,9 @@ const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
         <input
           type={type}
           className={cn(
-            'flex h-12 w-full rounded-xl border border-input bg-transparent px-3 py-1 pr-10 shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 focus:ring-[1.5px] focus:ring-primary-accent',
+            `flex h-12 w-full rounded-xl border border-input bg-primary-white px-3 py-1 ${
+              secure ? 'pr-10' : ''
+            } shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 focus:ring-[1.5px] focus:ring-primary-accent`,
             className,
           )}
           ref={ref}
