@@ -1,23 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FC } from 'react';
-import { Copy } from 'lucide-react';
-import {
-  Container,
-  IconButton,
-  Typography,
-  CircularProgress,
-  Box,
-  Button,
-  TextField,
-} from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { MainLayout } from '../components/layout/MainLayout';
-import { AgentDTO } from '../types/agent';
-import { useAgent } from '../hooks/useAgent';
-import { useToast } from '../hooks/useToast';
-import { AgentCard } from '@/components/genai/AgentCard';
+import { RefreshCw } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
+
+import { AgentDTO } from '@/types/agent';
+import { useAgent } from '@/hooks/useAgent';
+import { useToast } from '@/hooks/useToast';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
 import ConfirmModal from '@/components/modals/ConfirmModal';
-import { Modal as GenerateTokenModal } from '../components/Modal';
+import { AgentCard } from '@/components/genai/AgentCard';
+import AgentDetailsModal from '@/components/genai/AgentDetailsModal';
+import GenerateTokenModal from '@/components/genai/GenerateTokenModal';
 
 export const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
@@ -28,7 +22,10 @@ export const AgentsPage: FC = () => {
   const { isLoading, getAgents, deleteAgent, createAgent } = useAgent();
   const toast = useToast();
 
-  const activeAgents = agents.filter(agent => agent.is_active);
+  const activeAgents = useMemo(
+    () => agents.filter(agent => agent.is_active),
+    [agents],
+  );
 
   useEffect(() => {
     loadAgents();
@@ -37,11 +34,6 @@ export const AgentsPage: FC = () => {
   const loadAgents = async () => {
     const response = await getAgents();
     setAgents(response);
-  };
-
-  const openConfirm = (agent: AgentDTO) => {
-    setSelectedAgent(agent);
-    setIsConfirmOpen(true);
   };
 
   const handleDeleteAgent = async () => {
@@ -80,94 +72,67 @@ export const AgentsPage: FC = () => {
 
   return (
     <MainLayout currentPage="Agents">
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Box display="flex" alignItems="center" mb={3}>
-          {!isLoading && (
-            <Box>
-              <Typography variant="h5" component="h3">
-                {agents.length} agents ({activeAgents.length} active)
-              </Typography>
-            </Box>
-          )}
-          <Button
-            variant="contained"
-            onClick={createNewAgent}
-            sx={{ ml: 'auto', mr: 2 }}
-          >
-            Generate Token
-          </Button>
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={loadAgents}
-              disabled={isLoading}
-              sx={{ mr: 2 }}
+      <div className="p-16">
+        <div className="flex justify-between items-center mb-12 p-4 bg-primary-white rounded-2xl border border-neutral-border">
+          <p className="font-bold">{activeAgents.length} Active Agents</p>
+          <div>
+            <Button
+              variant="outline"
+              onClick={createNewAgent}
+              className="w-[150px]"
             >
-              <RefreshIcon />
-            </IconButton>
-          </Box>
-        </Box>
+              Generate Token
+            </Button>
+            <Button
+              variant="outline"
+              onClick={loadAgents}
+              className="w-[131px]"
+            >
+              <RefreshCw size={15} />
+              Refresh
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
+          <div className="flex items-center justify-center min-h-[200px]">
             <CircularProgress />
-          </Box>
-        ) : agents.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <Typography variant="h6" color="text.secondary">
-              No agents found
-            </Typography>
-          </Box>
+          </div>
         ) : (
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <div className="flex flex-wrap gap-4">
             {agents.map(agent => (
-              <Box key={agent.agent_id} sx={{ width: '350px' }}>
-                <AgentCard agent={agent} onDelete={() => openConfirm(agent)} />
-              </Box>
+              <AgentCard
+                key={agent.agent_id}
+                agent={agent}
+                setSelectedAgent={setSelectedAgent}
+              />
             ))}
-          </Box>
+          </div>
         )}
-      </Container>
+      </div>
+
+      <AgentDetailsModal
+        open={!!selectedAgent}
+        agent={selectedAgent}
+        onClose={() => setSelectedAgent(null)}
+        onDelete={() => setIsConfirmOpen(true)}
+      />
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Agent"
-        description={`Are you sure you want to delete ${
+        description={`Are you sure you want to delete "${
           selectedAgent?.agent_name || ''
-        }?`}
+        }"?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />
 
       <GenerateTokenModal
-        isOpen={isGenerateOpen}
+        open={isGenerateOpen}
         onClose={closeTokenModal}
-        title="Generated Token"
-        className="relative"
-      >
-        <TextField
-          multiline
-          maxRows={6}
-          value={token}
-          fullWidth
-          disabled
-          sx={{ '& .MuiInputBase-root': { pr: 5 } }}
-        />
-        <Copy
-          size={20}
-          className="absolute top-[84px] right-[30px] cursor-pointer"
-          onClick={copyToken}
-        />
-      </GenerateTokenModal>
+        token={token}
+        copyToken={copyToken}
+      />
     </MainLayout>
   );
 };

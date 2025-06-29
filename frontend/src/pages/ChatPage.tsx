@@ -58,7 +58,7 @@ const ChatPage = () => {
   }, [user, clearMessages, id]);
 
   return (
-    <MainLayout currentPage="Chat">
+    <MainLayout currentPage="AgentOS Chat">
       <Container
         maxWidth="xl"
         sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 2 }}

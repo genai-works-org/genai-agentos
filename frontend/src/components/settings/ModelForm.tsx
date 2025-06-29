@@ -102,7 +102,7 @@ const ModelForm: FC<ModelFormProps> = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-[800px] max-h-[800px] px-9 py-12 overflow-y-scroll"
+        className="max-w-[800px] max-h-[800px] px-9 py-12 overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle>

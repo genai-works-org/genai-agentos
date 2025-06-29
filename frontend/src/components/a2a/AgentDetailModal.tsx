@@ -31,10 +31,7 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent
-        aria-describedby={undefined}
-        className="max-w-[800px] px-8 py-12 gap-4"
-      >
+      <DialogContent className="max-w-[800px] px-8 py-12 gap-4">
         <DialogHeader>
           <DialogTitle className="text-left mb-4">
             {removeUnderscore(agent.name || '')}
