@@ -76,12 +76,8 @@ export const AgentsPage: FC = () => {
         <div className="flex justify-between items-center mb-12 p-4 bg-primary-white rounded-2xl border border-neutral-border">
           <p className="font-bold">{activeAgents.length} Active Agents</p>
           <div>
-            <Button
-              variant="outline"
-              onClick={createNewAgent}
-              className="w-[150px]"
-            >
-              Generate Token
+            <Button onClick={createNewAgent} className="w-[168px] mr-2">
+              Generate token
             </Button>
             <Button
               variant="outline"

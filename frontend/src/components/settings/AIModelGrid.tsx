@@ -49,6 +49,7 @@ export const AIModelGrid: FC<AIModelGridProps> = ({
             buttonText="Add Models"
             disabled={disabledModelCreate}
             onClick={onModelCreate}
+            className="w-[264px]"
           />
         </span>
       </Tooltip>

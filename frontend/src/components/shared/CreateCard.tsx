@@ -6,11 +6,19 @@ interface CreateCardProps {
   buttonText: string;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }
 
-const CreateCard: FC<CreateCardProps> = ({ buttonText, onClick, disabled }) => {
+const CreateCard: FC<CreateCardProps> = ({
+  buttonText,
+  onClick,
+  disabled,
+  className,
+}) => {
   return (
-    <div className="flex items-center justify-center w-[280px] h-auto p-4 bg-neutral-light rounded-lg border border-dashed border-primary-accent">
+    <div
+      className={`flex items-center justify-center w-[280px] h-auto p-4 bg-neutral-light rounded-lg border border-dashed border-primary-accent ${className}`}
+    >
       <Button
         variant="secondary"
         onClick={onClick}

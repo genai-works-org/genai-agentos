@@ -23,34 +23,9 @@ export const AIModelCard: FC<AIModelCardProps> = ({
   const { name, model, temperature, max_last_messages } = modelData;
 
   return (
-    <Card active={isSelected}>
-      <div className="mb-4 flex justify-between items-center">
-        <h3 className="font-bold truncate">{name}</h3>
-        <div>
-          <Button
-            variant="link"
-            size="icon"
-            onClick={e => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Pencil size={20} />
-          </Button>
-          <Button
-            variant="remove"
-            size="icon"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 size={20} />
-          </Button>
-        </div>
-      </div>
+    <Card active={isSelected} className="w-[412px]">
+      <h3 className="font-bold mb-4 truncate">{name}</h3>
 
-      <h4 className="font-bold mb-2">Parameters</h4>
       <div className="mb-2">
         <h5 className="text-sm font-bold text-text-secondary mb-1">Model</h5>
         <p className="text-sm text-text-secondary">{model}</p>
@@ -68,11 +43,35 @@ export const AIModelCard: FC<AIModelCardProps> = ({
         <p className="text-sm text-text-secondary">{temperature}</p>
       </div>
 
-      <div>
+      <div className="mb-4">
         <h5 className="text-sm font-bold text-text-secondary mb-1">
           LLM context length
         </h5>
         <p className="text-sm text-text-secondary">{max_last_messages}</p>
+      </div>
+
+      <div className="flex gap-4">
+        <Button
+          variant="secondary"
+          onClick={e => {
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <Pencil size={16} />
+          Edit
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={e => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          className="text-error-main"
+        >
+          <Trash2 size={16} />
+          Delete
+        </Button>
       </div>
     </Card>
   );
