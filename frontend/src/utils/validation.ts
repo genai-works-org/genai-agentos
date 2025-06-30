@@ -95,22 +95,34 @@ export const validateModelsField = (name: string, value: string) => {
   }
 
   if (name === 'temperature') {
-    if (!Number(value) && value !== '0') {
+    const num = Number(value);
+
+    if (isNaN(num)) {
       return 'Temperature must be a valid number';
     }
 
-    if (Number(value) < 0 || Number(value) > 2) {
+    if (num < 0 || num > 2) {
       return 'Temperature must be between 0 and 2';
+    }
+
+    if (Math.round(num * 10) !== num * 10) {
+      return 'Temperature must be a multiple of 0.1';
     }
   }
 
   if (name === 'max_last_messages') {
-    if (!Number(value) && value !== '0') {
+    const num = Number(value);
+
+    if (isNaN(num)) {
       return 'Max last messages must be a valid number';
     }
 
-    if (Number(value) < 1 || Number(value) > 20) {
+    if (num < 1 || num > 20) {
       return 'Max last messages must be between 1 and 20';
+    }
+
+    if (num % 1 !== 0) {
+      return 'Max last messages must be an integer';
     }
   }
 

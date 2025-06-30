@@ -60,7 +60,7 @@ const ModelForm: FC<ModelFormProps> = ({
   const isSubmitDisabled = useMemo(() => {
     return (
       isLoading ||
-      Object.keys(validationErrors).length > 0 ||
+      Object.values(validationErrors).some(error => Boolean(error)) ||
       !formData.name ||
       !formData.model
     );
@@ -72,9 +72,7 @@ const ModelForm: FC<ModelFormProps> = ({
     const { name, value } = e.target;
 
     const error = validateModelsField(name, value);
-    if (error) {
-      setValidationErrors(prev => ({ ...prev, [name]: error }));
-    }
+    setValidationErrors(prev => ({ ...prev, [name]: error || '' }));
 
     setFormData(prev => ({
       ...prev,
@@ -156,7 +154,7 @@ const ModelForm: FC<ModelFormProps> = ({
             <Input
               id="temperature"
               name="temperature"
-              label="Temperature (0 - 2,0)"
+              label="Temperature (0 - 2.0)"
               placeholder="Temperature"
               value={formData.temperature}
               onChange={handleChange}
@@ -167,7 +165,7 @@ const ModelForm: FC<ModelFormProps> = ({
               error={validationErrors.temperature}
             />
             <p className="text-xs text-text-secondary mt-2">
-              Enter the value between 0 - 2,0. Numeric value only
+              Enter the value between 0 - 2.0. Numeric value only
             </p>
           </div>
           <div>
