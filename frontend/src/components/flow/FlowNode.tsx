@@ -1,8 +1,12 @@
 import type { FC } from 'react';
 import { useRef, useEffect } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
 import { NodeProps, Handle, Position } from 'reactflow';
 import { ShieldX, Trash2 } from 'lucide-react';
+import { Box } from '@mui/material';
+
+import { getBatchVariant } from '@/utils/getNodeStyles';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 interface FlowNodeData {
   label: string;
@@ -19,6 +23,12 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const isActive = data.isActive === true || data.isActive === undefined;
 
+  const handleDelete = () => {
+    if (data.onDelete) {
+      data.onDelete(id);
+    }
+  };
+
   useEffect(() => {
     if (nodeRef.current) {
       const height = nodeRef.current.offsetHeight;
@@ -31,89 +41,37 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
   }, [id, data.flow]);
 
   return (
-    <Box
-      ref={nodeRef}
-      sx={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        position: 'relative',
-      }}
-    >
-      {data.isDeletable && (
-        <IconButton
-          size="small"
-          onClick={e => {
-            e.stopPropagation();
-            if (data.onDelete) {
-              data.onDelete(id);
-            }
-          }}
-          sx={{
-            position: 'absolute',
-            top: -10,
-            right: -10,
-            color: '#c1121f',
-            p: 0.5,
-          }}
-        >
-          <Trash2 size={12} />
-        </IconButton>
+    <div ref={nodeRef} className="relative">
+      <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Bottom} />
+
+      <div className="flex items-center justify-between">
+        <p className="font-bold break-words capitalize">
+          {isActive ? (
+            data.label.toLowerCase()
+          ) : (
+            <span className="flex items-center gap-1 text-error-main">
+              <ShieldX /> {data.label.toLowerCase()}
+            </span>
+          )}
+        </p>
+
+        <div className="flex items-center gap-4">
+          {data?.type && (
+            <Badge variant={getBatchVariant(data.type)}>{data.type}</Badge>
+          )}
+
+          {data.isDeletable && (
+            <Button variant="remove" size="icon" onClick={handleDelete}>
+              <Trash2 />
+            </Button>
+          )}
+        </div>
+      </div>
+      {data.description && (
+        <p className="text-sm text-text-secondary mt-4">{data.description}</p>
       )}
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{
-          top: -13,
-        }}
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{
-          bottom: -13,
-        }}
-      />
-      <Typography
-        variant="subtitle1"
-        sx={{
-          mb: data.flow ? 0.5 : 0,
-          maxWidth: '100%',
-          overflowWrap: 'break-word',
-          textAlign: 'center',
-        }}
-      >
-        {isActive ? (
-          data.label
-        ) : (
-          <Typography
-            component="span"
-            sx={{ display: 'flex', gap: 0.5, color: '#c1121f' }}
-          >
-            <ShieldX /> {data.label}
-          </Typography>
-        )}
-      </Typography>
-      {data?.type && (
-        <Typography
-          variant="caption"
-          sx={{
-            position: 'absolute',
-            top: -8,
-            left: -8,
-            padding: '0 4px',
-            fontSize: 8,
-            border: '1px solid #E65100',
-            color: '#E65100',
-            borderRadius: 2,
-          }}
-        >
-          {data.type}
-        </Typography>
-      )}
+
       {data.flow && (
         <Box
           sx={{
@@ -155,20 +113,11 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
                 },
               }}
             >
-              <Typography
-                variant="caption"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {step.name}
-              </Typography>
+              <p className="text-center">{step.name}</p>
             </Box>
           ))}
         </Box>
       )}
-    </Box>
+    </div>
   );
 };

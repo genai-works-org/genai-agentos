@@ -19,22 +19,37 @@
 }
 
 .react-flow .react-flow__edge path {
-  stroke: #000;
+  stroke: #008765;
   stroke-width: 2px;
 }
 
 .react-flow .react-flow__edge.selected path {
-  stroke: #f4511e;
+  stroke: #008765;
+  stroke-width: 3px;
 }
 
 .react-flow__node {
-  width: 200px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid;
-  background-color: #fff;
+  width: 505px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid;
 }
 
 .react-flow__node.selected {
-  background-color: #fdedef;
+  border-width: 2px;
+}
+
+.react-flow__node .react-flow__handle {
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border: 1px solid #008765;
+}
+
+.react-flow__node .react-flow__handle-top {
+  top: -32px;
+}
+
+.react-flow__node .react-flow__handle-bottom {
+  bottom: -32px;
 }

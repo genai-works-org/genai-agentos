@@ -1,74 +1,12 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { AgentFlowDTO } from '@/types/agent';
-import {
-  Card,
-  CardContent,
-  Typography,
-  IconButton,
-  Box,
-  CircularProgress,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import { styled } from '@mui/material/styles';
+import { Trash2 } from 'lucide-react';
+
+import { AgentFlowDTO, AgentType } from '@/types/agent';
 import { removeUnderscore } from '@/utils/normalizeString';
-
-const StyledCard = styled(Card)({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-  },
-  '&.deleting': {
-    opacity: 0.5,
-    transform: 'scale(0.95)',
-  },
-});
-
-const StyledCardContent = styled(CardContent)({
-  flexGrow: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  overflow: 'hidden',
-});
-
-const TitleBox = styled(Box)({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginBottom: '8px',
-});
-
-const TitleTypography = styled(Typography)({
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  maxWidth: 'calc(100% - 100px)', // Leave space for buttons
-});
-
-const DescriptionBox = styled(Box)({
-  flexGrow: 1,
-  overflow: 'auto',
-  marginBottom: '8px',
-  '&::-webkit-scrollbar': {
-    width: '6px',
-  },
-  '&::-webkit-scrollbar-track': {
-    background: '#f1f1f1',
-    borderRadius: '3px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: '#888',
-    borderRadius: '3px',
-    '&:hover': {
-      background: '#555',
-    },
-  },
-});
+import Card from '@/components/shared/Card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface AgentFlowCardProps {
   flow: AgentFlowDTO;
@@ -81,7 +19,6 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   onEdit,
   onDelete,
 }) => {
-  const [expanded, setExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -94,63 +31,37 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
   };
 
   return (
-    <StyledCard
-      sx={{
-        mb: 3,
-        borderRadius: '0.5rem',
-        boxShadow:
-          '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-        border: `2px solid ${flow.is_active ? '#0c7c59' : '#c1121f'}`,
-        maxHeight: expanded ? '400px' : '200px',
-        transition: 'max-height 0.3s ease-in-out',
-      }}
-      className={isDeleting ? 'deleting' : ''}
+    <Card
+      className={flow.is_active ? 'border-primary-accent' : 'border-error-main'}
     >
-      <StyledCardContent>
-        <TitleBox>
-          <TitleTypography variant="h6">
+      <div className="h-full flex flex-col justify-between">
+        <div>
+          <Badge variant="brown" className="mb-4">
+            {AgentType.FLOW}
+          </Badge>
+          <h3 className="font-bold mb-1 truncate">
             {removeUnderscore(flow.name)}
-          </TitleTypography>
-          <Box>
-            <IconButton onClick={() => onEdit(flow.id)} disabled={isDeleting}>
-              <EditIcon />
-            </IconButton>
-            <IconButton
-              onClick={handleDelete}
-              color="error"
-              disabled={isDeleting}
-            >
-              {isDeleting ? (
-                <CircularProgress size={24} color="error" />
-              ) : (
-                <DeleteIcon />
-              )}
-            </IconButton>
-          </Box>
-        </TitleBox>
-        <DescriptionBox>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            onClick={() => setExpanded(!expanded)}
-            sx={{ cursor: 'pointer' }}
-          >
-            {expanded
-              ? flow.description
-              : flow.description.length > 100
-              ? `${flow.description.substring(0, 100)}...`
-              : flow.description}
-          </Typography>
-        </DescriptionBox>
-        <Box sx={{ mt: 'auto' }}>
-          <Typography variant="body2" color="text.secondary">
-            Agents: {flow.flow.length}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" display="block">
-            Created: {new Date(flow.created_at).toLocaleDateString()}
-          </Typography>
-        </Box>
-      </StyledCardContent>
-    </StyledCard>
+          </h3>
+          <p className="text-sm mb-4 text-text-secondary break-words">
+            {flow.description}
+          </p>
+          <h4 className="text-sm font-bold text-text-secondary mb-2">
+            Created
+          </h4>
+          <Badge variant="blue" className="mb-4">
+            {new Date(flow.created_at).toLocaleDateString()}
+          </Badge>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => onEdit(flow.id)} disabled={isDeleting}>
+            Open Flow
+          </Button>
+          <Button variant="remove" onClick={handleDelete} disabled={isDeleting}>
+            <Trash2 size={16} />
+            Delete
+          </Button>
+        </div>
+      </div>
+    </Card>
   );
 };

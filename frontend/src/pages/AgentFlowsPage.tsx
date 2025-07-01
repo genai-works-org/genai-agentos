@@ -1,19 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AgentFlowDTO } from '../types/agent';
-import {
-  Container,
-  IconButton,
-  Typography,
-  CircularProgress,
-  Box,
-} from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { MainLayout } from '../components/layout/MainLayout';
+import { CircularProgress } from '@mui/material';
+
+import { AgentFlowDTO } from '@/types/agent';
+import { useAgent } from '@/hooks/useAgent';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { AgentFlowCard } from '@/components/flow/AgentFlowCard';
-import { useAgent } from '../hooks/useAgent';
 import ConfirmModal from '@/components/modals/ConfirmModal';
+import CreateCard from '@/components/shared/CreateCard';
 
 export const AgentFlowsPage: FC = () => {
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
@@ -63,55 +58,13 @@ export const AgentFlowsPage: FC = () => {
 
   return (
     <MainLayout currentPage="Agent Flows">
-      <Container
-        maxWidth="xl"
-        sx={{
-          mb: 4,
-          justifyContent: 'align-item',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="flex-end"
-          mb={3}
-        >
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={loadFlows}
-              disabled={isLoading}
-              sx={{ mr: 2 }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
+      <div className="p-16">
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
+          <div className="flex justify-center items-center min-h-[200px]">
             <CircularProgress />
-          </Box>
-        ) : flows.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <Typography variant="h6" color="text.secondary">
-              No agent flows found
-            </Typography>
-          </Box>
+          </div>
         ) : (
-          <Box>
+          <div className="flex flex-wrap gap-4 min-h-[280px]">
             {flows.map(flow => (
               <AgentFlowCard
                 key={flow.id}
@@ -120,13 +73,17 @@ export const AgentFlowsPage: FC = () => {
                 onDelete={() => handleDelete(flow)}
               />
             ))}
-          </Box>
+
+            <CreateCard
+              buttonText="Add Agent Flow"
+              onClick={() => navigate('/agent-flows/new')}
+            />
+          </div>
         )}
-      </Container>
+      </div>
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Agent Flow"
         description={`Are you sure you want to delete "${
           selectedFlow?.name || ''
         }"?`}

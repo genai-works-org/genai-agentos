@@ -9,9 +9,14 @@ import Sidebar from '@/components/layout/Sidebar';
 interface MainLayoutProps {
   children: ReactNode;
   currentPage: string;
+  actionItems?: ReactNode;
 }
 
-export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage }) => {
+export const MainLayout: FC<MainLayoutProps> = ({
+  children,
+  currentPage,
+  actionItems,
+}) => {
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.get(SIDEBAR_COLLAPSED);
     return saved === 'true';
@@ -23,7 +28,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage }) => {
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-accent">
-      <Header currentPage={currentPage} />
+      <Header currentPage={currentPage} actionItems={actionItems} />
       <div className="flex flex-1">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
         <main className="flex-1 bg-neutral-light rounded-tl-[36px] max-h-[calc(100vh-64px)] overflow-y-scroll">

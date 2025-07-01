@@ -1,15 +1,19 @@
 import { useEffect, useState, type FC } from 'react';
+
+import { FLOW_NAME_REGEX } from '@/constants/regex';
+import { FlowChainNode } from '@/types/flow';
 import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Divider,
-  CircularProgress,
-} from '@mui/material';
-import { Modal } from '../Modal';
-import { FlowChain } from './FlowChain';
-import { FLOW_NAME_REGEX } from '../../constants/regex';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import FlowChain from './FlowChain';
 
 interface SaveFlowModalProps {
   isOpen: boolean;
@@ -18,14 +22,12 @@ interface SaveFlowModalProps {
   onFlowNameChange: (value: string) => void;
   flowDescription: string;
   onFlowDescriptionChange: (value: string) => void;
-  links: any[];
-  saveError: string | null;
+  links: FlowChainNode[];
   saving: boolean;
   onSave: () => void;
-  setError: (error: boolean) => void;
 }
 
-export const SaveFlowModal: FC<SaveFlowModalProps> = ({
+const SaveFlowModal: FC<SaveFlowModalProps> = ({
   isOpen,
   onClose,
   flowName,
@@ -33,10 +35,8 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
   flowDescription,
   onFlowDescriptionChange,
   links,
-  saveError,
   saving,
   onSave,
-  setError,
 }) => {
   const [flowNameError, setFlowNameError] = useState<string | null>(null);
 
@@ -50,55 +50,57 @@ export const SaveFlowModal: FC<SaveFlowModalProps> = ({
   useEffect(() => {
     if (!FLOW_NAME_REGEX.test(flowName)) {
       setFlowNameError('Only letters, numbers and hyphens are allowed');
-      setError(true);
     } else {
       setFlowNameError(null);
-      setError(false);
     }
   }, [flowName]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Save Agent Flow">
-      <Box display="flex" flexDirection="column" gap={2}>
-        <TextField
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-[800px] px-9 py-12 gap-6"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-center">Save Agent Flow</DialogTitle>
+        </DialogHeader>
+
+        <Input
+          id="flowName"
+          name="flowName"
           label="Flow Name"
           value={flowName}
           onChange={e => onFlowNameChange(e.target.value.slice(0, 55))}
-          fullWidth
-          error={!!flowNameError}
-          helperText={flowNameError}
+          error={flowNameError || ''}
         />
-        <TextField
-          label="Description"
+        <Textarea
+          id="description"
+          name="description"
+          label="Flow Description"
           value={flowDescription}
           onChange={e => onFlowDescriptionChange(e.target.value)}
-          fullWidth
-          multiline
-          minRows={2}
-          maxRows={4}
-          sx={{
-            '& .MuiInputBase-root': {
-              overflow: 'auto',
-            },
-          }}
+          className="min-h-[100px]"
         />
+
         <FlowChain links={links} />
-        <Divider />
-        {saveError && <Typography color="error">{saveError}</Typography>}
-        <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
-          <Button onClick={onClose} disabled={saving}>
-            Cancel
-          </Button>
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" onClick={onClose} className="w-[99px]">
+              Cancel
+            </Button>
+          </DialogClose>
           <Button
-            variant="contained"
-            color="primary"
             onClick={onSave}
             disabled={isReadyToSave}
+            className="w-[84px]"
           >
-            {saving ? <CircularProgress size={20} /> : 'Save'}
+            {saving ? 'Saving...' : 'Save'}
           </Button>
-        </Box>
-      </Box>
-    </Modal>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
+
+export default SaveFlowModal;

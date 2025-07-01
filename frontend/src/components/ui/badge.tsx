@@ -18,10 +18,10 @@ const badgeVariants = cva(
         pink: 'border-neutral-border bg-badge-pink-light text-badge-pink-dark',
         brown:
           'border-neutral-border bg-badge-brown-light text-badge-brown-dark',
-        blue: 'border-neutral-border bg-badge-blue-light text-badge-blue-dark capitalize',
-        cyan: 'border-neutral-border bg-badge-cyan-light text-badge-cyan-dark capitalize',
+        blue: 'border-neutral-border bg-badge-blue-light text-badge-blue-dark',
+        cyan: 'border-neutral-border bg-badge-cyan-light text-badge-cyan-dark',
         green:
-          'border-neutral-border bg-badge-green-light text-badge-green-dark capitalize',
+          'border-neutral-border bg-badge-green-light text-badge-green-dark',
       },
     },
     defaultVariants: {
