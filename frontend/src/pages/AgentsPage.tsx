@@ -71,7 +71,7 @@ export const AgentsPage: FC = () => {
   };
 
   return (
-    <MainLayout currentPage="Agents">
+    <MainLayout currentPage="GenAI Agents">
       <div className="p-16">
         <div className="flex justify-between items-center mb-12 p-4 bg-primary-white rounded-2xl border border-neutral-border">
           <p className="font-bold">{activeAgents.length} Active Agents</p>

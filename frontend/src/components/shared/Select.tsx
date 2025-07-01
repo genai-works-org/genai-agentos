@@ -11,7 +11,7 @@ import {
 
 interface SelectProps {
   value: string;
-  label: string;
+  label?: string;
   options: { value: string; label: string }[];
   onChange?: (value: string) => void;
   disabled?: boolean;
@@ -27,19 +27,21 @@ const Select: FC<SelectProps> = ({
   withAsterisk,
 }) => {
   return (
-    <div className="w-full">
+    <div className="w-full min-w-[160px]">
       <SelectWrapper value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectGroup>
-          <SelectLabel
-            className={`${
-              withAsterisk
-                ? 'after:content-["*"] after:text-error-main after:ml-1'
-                : ''
-            }`}
-          >
-            {label}
-          </SelectLabel>
-        </SelectGroup>
+        {label && (
+          <SelectGroup>
+            <SelectLabel
+              className={`${
+                withAsterisk
+                  ? 'after:content-["*"] after:text-error-main after:ml-1'
+                  : ''
+              }`}
+            >
+              {label}
+            </SelectLabel>
+          </SelectGroup>
+        )}
         <SelectTrigger>
           <SelectValue />
         </SelectTrigger>

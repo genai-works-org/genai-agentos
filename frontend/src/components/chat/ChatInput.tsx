@@ -1,5 +1,6 @@
 import type { FormEvent, ChangeEvent } from 'react';
 import { useState, useRef, useEffect } from 'react';
+
 import Toolbar from './Toolbar';
 import FilePreviewSection from './FilePreviewSection';
 import MessageInput from './MessageInput';
@@ -124,79 +125,34 @@ const ChatInput = ({
     );
   };
 
-  const insertMarkdown = (type: 'bold' | 'italic' | 'code') => {
-    const textarea = fileInputRef.current?.form?.querySelector('textarea');
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = message.substring(start, end);
-    let newText = '';
-
-    switch (type) {
-      case 'bold':
-        newText = `**${selectedText}**`;
-        break;
-      case 'italic':
-        newText = `*${selectedText}*`;
-        break;
-      case 'code':
-        newText = `\`${selectedText}\``;
-        break;
-    }
-
-    const newMessage =
-      message.substring(0, start) + newText + message.substring(end);
-    setMessage(newMessage);
-
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + newText.length,
-        start + newText.length,
-      );
-    }, 0);
-  };
-
   const isAnyFileUploading = attachedFiles.some(file => file.loading);
   const hasContent =
     message.trim() || attachedFiles.some(f => !f.loading && f.id);
 
   return (
-    <div className="p-4 relative z-1000">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-          <MessageInput
-            message={message}
-            onMessageChange={handleTextareaChange}
-            showPreview={showPreview}
-            isUploading={isUploading}
-            isAnyFileUploading={isAnyFileUploading}
-            onSubmit={handleSubmit}
-          />
+    <div className="min-h-[132px] bg-primary-white rounded-2xl overflow-hidden">
+      <MessageInput
+        message={message}
+        onMessageChange={handleTextareaChange}
+        showPreview={showPreview}
+        isUploading={isUploading}
+        isAnyFileUploading={isAnyFileUploading}
+        onSubmit={handleSubmit}
+      />
 
-          <div className="border-t border-gray-200">
-            <Toolbar
-              onAttachClick={handleAttachClick}
-              onInsertMarkdown={insertMarkdown}
-              onTogglePreview={() => setShowPreview(!showPreview)}
-              showPreview={showPreview}
-              isUploading={isUploading}
-              isAnyFileUploading={isAnyFileUploading}
-              hasContent={Boolean(hasContent)}
-              onSubmit={() =>
-                handleSubmit({ preventDefault: () => {} } as FormEvent)
-              }
-            />
+      <Toolbar
+        onAttachClick={handleAttachClick}
+        isUploading={isUploading}
+        isAnyFileUploading={isAnyFileUploading}
+        hasContent={Boolean(hasContent)}
+        onSubmit={() => handleSubmit({ preventDefault: () => {} } as FormEvent)}
+      />
 
-            <FilePreviewSection
-              attachedFiles={attachedFiles}
-              onRemoveFile={handleRemoveFile}
-              isUploading={isUploading}
-            />
-          </div>
-        </div>
-      </div>
+      <FilePreviewSection
+        attachedFiles={attachedFiles}
+        onRemoveFile={handleRemoveFile}
+        isUploading={isUploading}
+      />
 
       <input
         type="file"

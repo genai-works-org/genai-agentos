@@ -26,7 +26,7 @@ export const MainLayout: FC<MainLayoutProps> = ({ children, currentPage }) => {
       <Header currentPage={currentPage} />
       <div className="flex flex-1">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-        <main className="flex-1 bg-neutral-light rounded-tl-[36px]">
+        <main className="flex-1 bg-neutral-light rounded-tl-[36px] max-h-[calc(100vh-64px)] overflow-y-scroll">
           {children}
         </main>
       </div>

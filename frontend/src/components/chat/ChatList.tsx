@@ -96,7 +96,7 @@ const ChatList = memo(() => {
       {chats.length === 0 ? (
         <p>No chats found</p>
       ) : (
-        <ul className="p-0">
+        <ul className="p-0 pb-3">
           {sortedChats.map(chat => {
             const isEditing = editingSessionId === chat.session_id;
             const isSelected = location.pathname.includes(chat.session_id);
@@ -130,7 +130,7 @@ const ChatList = memo(() => {
                     fullWidth
                     variant="standard"
                     inputProps={{
-                      maxLength: 50,
+                      maxLength: 20,
                     }}
                     sx={{
                       '& .MuiInputBase-root::after': {
@@ -142,9 +142,10 @@ const ChatList = memo(() => {
                   <ListItemText
                     primary={
                       chat.title.length >= 20
-                        ? chat.title.slice(0, 20) + '...'
+                        ? chat.title.slice(0, 17) + '...'
                         : chat.title
                     }
+                    className="truncate"
                   />
                 )}
                 <ListItemIcon

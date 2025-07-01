@@ -15,7 +15,7 @@ const buttonVariants = cva(
         remove: 'bg-transparent text-error-main hover:opacity-90',
         secondary:
           'bg-primary-white text-primary-accent border border-neutral-border hover:opacity-90',
-        link: 'text-primary-accent hover:opacity-90',
+        link: 'text-primary-accent hover:opacity-90 disabled:bg-transparent',
       },
       size: {
         default: 'w-full h-10 px-6 py-2',

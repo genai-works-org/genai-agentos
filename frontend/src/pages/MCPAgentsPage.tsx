@@ -37,7 +37,7 @@ const MCPServersPage = () => {
   }, [getServers]);
 
   return (
-    <MainLayout currentPage="MCP Agents">
+    <MainLayout currentPage="MCP Servers">
       <div className="p-16">
         {isLoading ? (
           <div className="flex justify-center items-center min-h-[400px]">

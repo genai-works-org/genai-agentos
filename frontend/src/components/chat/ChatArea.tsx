@@ -1,36 +1,25 @@
 import { useState, useEffect, useRef, FC, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ChatInput from './ChatInput';
+import { useNavigate, Link } from 'react-router-dom';
+import { Info, ExternalLink } from 'lucide-react';
+
 import { websocketService, AgentResponse } from '@/services/websocketService';
+import { FileData, fileService } from '@/services/fileService';
 import {
   ChatMessage as IChatMessage,
   useChatHistory,
 } from '@/contexts/ChatHistoryContext';
-import { FileData, fileService } from '@/services/fileService';
 import { useSettings } from '@/contexts/SettingsContext';
+import { AttachedFile, ChatHistory } from '@/types/chat';
 import ChatMessage from './ChatMessage';
+import ChatInput from './ChatInput';
 import { DotsSpinner } from '../DotsSpinner/DotsSpinner';
-import { ChatHistory } from '@/types/chat';
-
-// Interface matching the one added in ChatInput
-interface AttachedFile {
-  id: string;
-  name: string;
-}
+import { Button } from '../ui/button';
 
 interface ChatAreaProps {
   content: ChatHistory['items'];
   id?: string;
   files: FileData[];
 }
-
-const formatExecutionTime = (seconds: string): string => {
-  const minutes = Math.floor(parseInt(seconds) / 60);
-  const remainingSeconds = Math.floor(parseInt(seconds) % 60);
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
-    .toString()
-    .padStart(2, '0')}`;
-};
 
 const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,11 +28,15 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
   const [sessionId, setSessionId] = useState<string>('');
   const [requestId, setRequestId] = useState<string>('');
   const { messages, addMessage, setMessages } = useChatHistory();
-  const { activeModel } = useSettings();
+  const { activeModel, isModelAvailable, isModelSelected } = useSettings();
   const [uploadedFiles, setUploadedFiles] = useState<
     Record<string, { name: string; type: string; size: number }>
   >({});
   const navigate = useNavigate();
+
+  const isChatAvailable = useMemo(() => {
+    return isModelSelected && isModelAvailable;
+  }, [isModelSelected, isModelAvailable]);
 
   const sortedMessages = useMemo(
     () =>
@@ -217,15 +210,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
   return (
     <div className="flex flex-col h-full relative">
       {/* Chat messages area */}
-      <div
-        className={`flex-1 overflow-y-auto p-4 space-y-2 ${
-          messages.length === 0 ? 'flex items-center justify-center' : ''
-        }`}
-        style={{
-          height: 'calc(100vh - 30vh)', // 100vh - input area height
-          overflowY: 'auto',
-        }}
-      >
+      <div className="flex-1 space-y-12">
         {messages.length !== 0 &&
           sortedMessages.map(message => (
             <ChatMessage
@@ -236,12 +221,6 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
               timestamp={message.timestamp}
               sessionId={message.sessionId}
               requestId={message.requestId}
-              executionTime={
-                message.executionTime
-                  ? formatExecutionTime(message.executionTime)
-                  : undefined
-              }
-              isError={message.isError}
               agents_trace={message.agents_trace}
               files={message.files}
             />
@@ -254,18 +233,36 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
         <div ref={messagesEndRef} />
       </div>
       {/* Chat input area */}
-      <div
-        className={`flex-none ${
-          messages.length === 0
-            ? 'w-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
-            : ''
-        }`}
-      >
-        {messages.length === 0 && (
-          <div className="text-center text-gray-500 text-2xl">
-            What can I do for you today?
+      {!isChatAvailable && (
+        <div className="h-full flex justify-center items-center">
+          <div className="w-[318px] py-6 px-4 rounded-xl bg-primary-white text-center">
+            <span className="flex items-center justify-center w-10 h-10 mx-auto mb-4 rounded bg-badge-brown-light">
+              <Info
+                size={20}
+                className="rotate-180 fill-badge-brown-dark stroke-badge-brown-light"
+              />
+            </span>
+            <p className="mb-2 text-lg font-bold">Action Required</p>
+            <p className="mb-4 font-medium text-text-secondary">
+              Add settings and models in Settings page in order to use AgentOS
+            </p>
+            <Button variant="outline" className="w-[180px]" asChild>
+              <Link to="/settings">
+                Go to Settings
+                <ExternalLink size={16} />
+              </Link>
+            </Button>
           </div>
-        )}
+        </div>
+      )}
+      <div className="sticky bottom-0 pb-16 bg-neutral-light">
+        <div
+          className={`text-lg font-bold text-center py-6 ${
+            !isChatAvailable ? 'opacity-40' : ''
+          }`}
+        >
+          What can I do for you today?
+        </div>
         <ChatInput
           onSendMessage={handleSendMessage}
           isUploading={isUploading}

@@ -25,9 +25,9 @@ interface PageLink {
 const pages: PageLink[] = [
   { path: '/chat/new', title: 'New Chat', Icon: NewChatIcon },
   // { path: '', title: 'Search Chats', Icon: SearchChatsIcon },
-  { path: '/agents', title: 'Agents', Icon: AgentsIcon },
+  { path: '/agents', title: 'GenAI Agents', Icon: AgentsIcon },
   { path: '/a2a-agents', title: 'A2A Agents', Icon: A2AAgentsIcon },
-  { path: '/mcp-agents', title: 'MCP Agents', Icon: MCPAgentsIcon },
+  { path: '/mcp-agents', title: 'MCP Servers', Icon: MCPAgentsIcon },
   {
     path: '/agent-flows',
     title: 'Agent Flows',
@@ -46,7 +46,7 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
 
   return (
     <aside
-      className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out ${
+      className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out overflow-y-auto ${
         collapsed ? 'w-[56px]' : 'w-[200px]'
       }`}
     >
