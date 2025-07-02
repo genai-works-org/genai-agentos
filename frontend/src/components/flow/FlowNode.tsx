@@ -45,13 +45,17 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
       <Handle type="target" position={Position.Top} />
       <Handle type="source" position={Position.Bottom} />
 
-      <div className="flex items-center justify-between">
+      <div
+        className={`flex items-center ${
+          data.isDeletable ? 'justify-between' : 'justify-center'
+        }`}
+      >
         <p className="font-bold break-words capitalize">
           {isActive ? (
             data.label.toLowerCase()
           ) : (
             <span className="flex items-center gap-1 text-error-main">
-              <ShieldX /> {data.label.toLowerCase()}
+              <ShieldX /> {data.label.toLowerCase() || 'Inactive'}
             </span>
           )}
         </p>

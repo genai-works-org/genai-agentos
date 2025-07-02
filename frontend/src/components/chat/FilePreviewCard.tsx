@@ -1,7 +1,7 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { XIcon, FileIcon, DownloadIcon } from 'lucide-react';
-import Spinner from '../Spinner';
+import Spinner from '../shared/Spinner';
 import { fileService } from '@/services/fileService';
 import { extractFileName } from '@/utils/extractFileName';
 
