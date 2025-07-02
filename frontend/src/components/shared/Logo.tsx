@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LogoIcon from '../../assets/icons/logo.svg';
-import AuthLogoIcon from '../../assets/icons/auth-logo.svg';
+import LogoIcon from '@/assets/icons/logo.svg';
+import AuthLogoIcon from '@/assets/icons/auth-logo.svg';
 
 interface LogoProps {
   isAuth?: boolean;
