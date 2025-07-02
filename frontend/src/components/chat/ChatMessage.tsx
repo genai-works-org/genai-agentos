@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Copy, Network } from 'lucide-react';
 
 import { ChatMessage as IChatMessage } from '@/contexts/ChatHistoryContext';
@@ -25,10 +25,11 @@ const ChatMessage: FC<ChatMessageProps> = ({
   files,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleViewFlow = () => {
     navigate(`/agents-trace?requestId=${requestId}`, {
-      state: { traceData: agents_trace },
+      state: { traceData: agents_trace, location },
     });
   };
 

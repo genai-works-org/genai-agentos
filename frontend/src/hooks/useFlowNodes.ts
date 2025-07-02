@@ -6,7 +6,8 @@ import {
   useEdgesState,
   MarkerType,
 } from 'reactflow';
-import { AgentTrace } from '../types/agent';
+import { AgentTrace } from '@/types/agent';
+import { getNodeStyles } from '@/utils/getNodeStyles';
 
 export const useFlowNodes = (traceData: AgentTrace[] | null) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -55,12 +56,10 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
           flow: trace.flow,
           type: trace?.type,
         },
-        style: {
-          borderColor:
-            trace.is_success || trace.flow?.at(-1)?.is_success
-              ? '#4CAF50'
-              : '#F44336',
-        },
+        style: getNodeStyles(
+          trace?.type || '',
+          trace.is_success || trace.flow?.at(-1)?.is_success,
+        ),
       }));
 
       // Create edges for main flow

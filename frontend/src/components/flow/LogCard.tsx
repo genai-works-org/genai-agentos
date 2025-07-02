@@ -1,7 +1,8 @@
 import type { FC } from 'react';
-import { Box, Typography, Paper, ListItem } from '@mui/material';
-import { LogEntry, LogLevel } from '@/types/log';
 import { JSONTree } from 'react-json-tree';
+import { Box, Typography } from '@mui/material';
+import { LogEntry, LogLevel } from '@/types/log';
+import Card from '../shared/Card';
 
 interface LogCardProps {
   log: LogEntry;
@@ -77,92 +78,51 @@ export const LogCard: FC<LogCardProps> = ({ log, agentName }) => {
   })();
 
   return (
-    <ListItem
-      sx={{
-        flexDirection: 'column',
-        alignItems: 'flex-start',
-        mb: 2,
-        p: 0,
-      }}
-    >
-      <Paper
-        elevation={1}
-        sx={{
-          width: '100%',
-          p: 2,
-          border: `1px solid`,
-          borderColor: colors.border,
-          backgroundColor: colors.bg,
-          overflow: 'hidden',
-        }}
+    <Card className="w-full">
+      <div className="flex justify-between items-center mb-2">
+        <Typography
+          variant="subtitle1"
+          sx={{ color: colors.text, fontWeight: 'bold' }}
+        >
+          {log.log_level.toUpperCase()}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {new Date(log.created_at).toLocaleString()}
+        </Typography>
+      </div>
+
+      <Box sx={{ mb: 1 }}>
+        <Box>
+          {typeof parsedMessage === 'string' ? (
+            <Typography
+              variant="body2"
+              sx={{ whiteSpace: 'pre-wrap', minWidth: 'min-content' }}
+            >
+              {parsedMessage}
+            </Typography>
+          ) : (
+            <JSONTree
+              data={parsedMessage}
+              theme={jsonTheme}
+              invertTheme={false}
+            />
+          )}
+        </Box>
+      </Box>
+
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mt={1}
       >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={1}
-        >
-          <Typography
-            variant="subtitle1"
-            sx={{ color: colors.text, fontWeight: 'bold' }}
-          >
-            {log.log_level.toUpperCase()}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {new Date(log.created_at).toLocaleString()}
-          </Typography>
-        </Box>
-
-        <Box sx={{ mb: 1 }}>
-          <Box
-            sx={{
-              overflowX: 'auto',
-              '&::-webkit-scrollbar': {
-                height: '8px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'transparent',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: colors.border,
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-thumb:hover': {
-                background: colors.text,
-              },
-            }}
-          >
-            {typeof parsedMessage === 'string' ? (
-              <Typography
-                variant="body2"
-                sx={{ whiteSpace: 'pre-wrap', minWidth: 'min-content' }}
-              >
-                {parsedMessage}
-              </Typography>
-            ) : (
-              <JSONTree
-                data={parsedMessage}
-                theme={jsonTheme}
-                invertTheme={false}
-              />
-            )}
-          </Box>
-        </Box>
-
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={1}
-        >
-          <Typography variant="caption" color="text.secondary">
-            Agent: {agentName}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            ID: {log.agent_id}
-          </Typography>
-        </Box>
-      </Paper>
-    </ListItem>
+        <Typography variant="caption" color="text.secondary">
+          Agent: {agentName}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          ID: {log.agent_id}
+        </Typography>
+      </Box>
+    </Card>
   );
 };

@@ -1,49 +1,44 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { FC, MouseEvent, SyntheticEvent } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Box, Typography, Tabs, Tab, Collapse } from '@mui/material';
+import type { FC, MouseEvent } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { MoveLeft } from 'lucide-react';
+import { JSONTree } from 'react-json-tree';
+import { Box, Typography, Collapse } from '@mui/material';
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   Node as ReactFlowNode,
 } from 'reactflow';
-import { JSONTree } from 'react-json-tree';
 import 'reactflow/dist/style.css';
-import { MainLayout } from '../components/layout/MainLayout';
-import { useLogs } from '../hooks/useLogs';
-import { useFlowNodes } from '../hooks/useFlowNodes';
-import { FlowNode } from '../components/flow/FlowNode';
-import { AgentTrace } from '../types/agent';
-import { TraceDetails } from '../components/flow/TraceDetails';
-import { ResponseLog } from '../components/flow/ResponseLog';
-import { jsonTreeTheme } from '../constants/jsonTreeTheme';
+
+import { useLogs } from '@/hooks/useLogs';
+import { useFlowNodes } from '@/hooks/useFlowNodes';
+import { AgentTrace } from '@/types/agent';
+import { jsonTreeTheme } from '@/constants/jsonTreeTheme';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { FlowNode } from '@/components/flow/FlowNode';
+import { TraceDetails } from '@/components/flow/TraceDetails';
+import { ResponseLog } from '@/components/flow/ResponseLog';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const nodeTypes = {
   custom: FlowNode,
 };
 
 const AgentsTracePage: FC = () => {
-  const location = useLocation();
   const [traceData, setTraceData] = useState<AgentTrace[] | null>(null);
-  const { logs, isLoading, error, fetchLogs } = useLogs();
-  const { nodes, edges, onNodesChange, onEdgesChange } =
-    useFlowNodes(traceData);
   const [selectedNode, setSelectedNode] = useState<ReactFlowNode | null>(null);
   const [selectedStep, setSelectedStep] = useState<any>(null);
-  const [logAreaWidth, setLogAreaWidth] = useState(400);
+  const [logAreaWidth, setLogAreaWidth] = useState(450);
   const [isResizing, setIsResizing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState(0);
   const [showTracePanel, setShowTracePanel] = useState(false);
   const tracePanelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const requestId = searchParams.get('requestId');
-    if (requestId) {
-      fetchLogs(requestId);
-    }
-  }, [location.search, fetchLogs]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logs, error, fetchLogs } = useLogs();
+  const { nodes, edges, onNodesChange, onEdgesChange } =
+    useFlowNodes(traceData);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
     setIsResizing(true);
@@ -65,6 +60,35 @@ const AgentsTracePage: FC = () => {
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
   }, []);
+
+  const onNodeClick = useCallback((event: MouseEvent, node: ReactFlowNode) => {
+    event.stopPropagation();
+    if (!node.data.flow) {
+      setSelectedNode(node);
+      setSelectedStep(null);
+      setShowTracePanel(true);
+    }
+  }, []);
+
+  const handleClickOutside = useCallback(
+    (event: WindowEventMap['mousemove']) => {
+      if (
+        tracePanelRef.current &&
+        !tracePanelRef.current.contains(event.target as HTMLElement)
+      ) {
+        setShowTracePanel(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const requestId = searchParams.get('requestId');
+    if (requestId) {
+      fetchLogs(requestId);
+    }
+  }, [location.search, fetchLogs]);
 
   useEffect(() => {
     if (isResizing) {
@@ -105,31 +129,6 @@ const AgentsTracePage: FC = () => {
     };
   }, []);
 
-  const onNodeClick = useCallback((event: MouseEvent, node: ReactFlowNode) => {
-    event.stopPropagation();
-    if (!node.data.flow) {
-      setSelectedNode(node);
-      setSelectedStep(null);
-      setShowTracePanel(true);
-    }
-  }, []);
-
-  const handleTabChange = (_: SyntheticEvent, newValue: number) => {
-    setSelectedTab(newValue);
-  };
-
-  const handleClickOutside = useCallback(
-    (event: WindowEventMap['mousemove']) => {
-      if (
-        tracePanelRef.current &&
-        !tracePanelRef.current.contains(event.target as HTMLElement)
-      ) {
-        setShowTracePanel(false);
-      }
-    },
-    [],
-  );
-
   useEffect(() => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
@@ -139,14 +138,11 @@ const AgentsTracePage: FC = () => {
 
   return (
     <MainLayout currentPage="Agent Trace">
-      <Box display="flex" height="calc(100vh - 64px)">
+      <div className="flex h-[calc(100vh-64px)]">
         {/* React Flow Area */}
-        <Box
-          flex={1}
-          position="relative"
-          borderRight={1}
-          borderColor="grey.300"
+        <div
           onClick={() => showTracePanel && setShowTracePanel(false)}
+          className="flex-1 relative"
         >
           <ReactFlow
             nodes={nodes}
@@ -156,53 +152,55 @@ const AgentsTracePage: FC = () => {
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
             fitView
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+            panOnDrag={false}
           >
             <Background />
             <Controls />
-            <MiniMap />
           </ReactFlow>
-        </Box>
+
+          <Button
+            variant="secondary"
+            onClick={() => navigate(location.state?.location)}
+            className="absolute top-6 left-6 w-[166px]"
+          >
+            <MoveLeft size={16} />
+            Back to Chat
+          </Button>
+        </div>
 
         {/* Log Area */}
         <Box
           width={logAreaWidth}
-          p={2}
+          p={'24px'}
           overflow="auto"
           position="relative"
           sx={{
             transition: isResizing ? 'none' : 'width 0.2s ease-in-out',
+            backgroundColor: '#fff',
           }}
         >
-          <Box
-            position="absolute"
-            left={0}
-            top={0}
-            bottom={0}
-            width="4px"
+          <div
+            className={`absolute top-0 bottom-0 left-0 w-0.5 cursor-col-resize hover:bg-primary-accent ${
+              isResizing ? 'bg-primary-accent' : 'bg-transparent'
+            }`}
             onMouseDown={handleMouseDown}
-            sx={{
-              cursor: 'col-resize',
-              '&:hover': {
-                backgroundColor: 'primary.main',
-              },
-              backgroundColor: isResizing ? 'primary.main' : 'transparent',
-            }}
           />
-          <Tabs value={selectedTab} onChange={handleTabChange} sx={{ mb: 2 }}>
-            <Tab label="Logs" />
-            <Tab label="Trace Details" />
-          </Tabs>
 
-          {selectedTab === 0 ? (
-            <ResponseLog
-              logs={logs}
-              traceData={traceData}
-              isLoading={isLoading}
-              error={error}
-            />
-          ) : (
-            <TraceDetails traceData={traceData || []} />
-          )}
+          <Tabs defaultValue="logs">
+            <TabsList>
+              <TabsTrigger value="logs">Logs</TabsTrigger>
+              <TabsTrigger value="trace">Trace Details</TabsTrigger>
+            </TabsList>
+            <TabsContent value="logs">
+              <ResponseLog logs={logs} traceData={traceData} error={error} />
+            </TabsContent>
+            <TabsContent value="trace">
+              <TraceDetails traceData={traceData || []} />
+            </TabsContent>
+          </Tabs>
         </Box>
 
         {/* Bottom Trace Panel */}
@@ -335,7 +333,7 @@ const AgentsTracePage: FC = () => {
             </Box>
           </Box>
         </Collapse>
-      </Box>
+      </div>
     </MainLayout>
   );
 };

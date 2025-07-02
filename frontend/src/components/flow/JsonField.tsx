@@ -1,8 +1,10 @@
 import type { FC } from 'react';
 import { useState } from 'react';
-import { Box, Typography, Paper, TextField, IconButton } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+
+import { Textarea } from '../ui/textarea';
 
 interface JsonFieldProps {
   label: string;
@@ -12,6 +14,7 @@ interface JsonFieldProps {
 
 export const JsonField: FC<JsonFieldProps> = ({ label, value }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
   const isObject = typeof value === 'object' && value !== null;
   const stringValue = isObject ? JSON.stringify(value, null, 2) : value;
   const preview =
@@ -20,11 +23,9 @@ export const JsonField: FC<JsonFieldProps> = ({ label, value }) => {
       : stringValue;
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <div className="mt-4">
       <Box display="flex" alignItems="center" justifyContent="space-between">
-        <Typography variant="subtitle2" gutterBottom>
-          {label}:
-        </Typography>
+        <p className="text-sm font-bold mb-3">{label}:</p>
         {stringValue?.length > 100 && (
           <IconButton size="small" onClick={() => setIsExpanded(!isExpanded)}>
             {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -33,34 +34,27 @@ export const JsonField: FC<JsonFieldProps> = ({ label, value }) => {
       </Box>
       {isExpanded ? (
         isObject ? (
-          <Paper variant="outlined" sx={{ p: 2 }}>
+          <div className="space-y-3">
             {Object.entries(value).map(([key, val]) => (
-              <TextField
+              <Textarea
                 key={key}
+                id={key}
+                name={key}
                 label={key}
                 value={
                   typeof val === 'object' ? JSON.stringify(val) : String(val)
                 }
-                fullWidth
-                margin="dense"
-                InputProps={{ readOnly: true }}
-                multiline
+                className="min-h-[80px]"
+                readOnly
               />
             ))}
-          </Paper>
+          </div>
         ) : (
-          <TextField
-            value={stringValue}
-            fullWidth
-            multiline
-            InputProps={{ readOnly: true }}
-          />
+          <Textarea value={stringValue} className="min-h-[80px]" readOnly />
         )
       ) : (
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          {preview}
-        </Typography>
+        <p>{preview}</p>
       )}
-    </Box>
+    </div>
   );
 };
