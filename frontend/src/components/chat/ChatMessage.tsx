@@ -1,9 +1,16 @@
 import type { FC } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Copy, Network } from 'lucide-react';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
+import { JSONTree } from 'react-json-tree';
 
 import { ChatMessage as IChatMessage } from '@/contexts/ChatHistoryContext';
 import { extractFileName } from '@/utils/extractFileName';
+import { jsonTreeTheme } from '@/constants/jsonTreeTheme';
 import { Button } from '@/components/ui/button';
 import FilePreviewCard from './FilePreviewCard';
 
@@ -39,6 +46,36 @@ const ChatMessage: FC<ChatMessageProps> = ({
     }
   };
 
+  const renderContent = () => {
+    if (!content && content !== '') return <span>Something went wrong!</span>;
+
+    try {
+      // Try to parse as JSON
+      const jsonContent = JSON.parse(content);
+      return (
+        <div className="overflow-x-auto">
+          <JSONTree
+            data={jsonContent}
+            theme={jsonTreeTheme}
+            invertTheme={false}
+          />
+        </div>
+      );
+    } catch {
+      // If not JSON, render as Markdown
+      return (
+        <div className="prose prose-sm max-w-none dark:prose-invert">
+          <Markdown
+            remarkPlugins={[remarkMath, remarkGfm]}
+            rehypePlugins={[rehypeKatex, rehypeRaw]}
+          >
+            {sanitize(content)}
+          </Markdown>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div>
@@ -49,7 +86,7 @@ const ChatMessage: FC<ChatMessageProps> = ({
               : ''
           }`}
         >
-          {sanitize(content)}
+          {renderContent()}
           {files && files.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
               {files

@@ -62,7 +62,9 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
 
         <div className="flex items-center gap-4">
           {data?.type && (
-            <Badge variant={getBatchVariant(data.type)}>{data.type}</Badge>
+            <Badge variant={getBatchVariant(data.type)} className="ml-4">
+              {data.type}
+            </Badge>
           )}
 
           {data.isDeletable && (

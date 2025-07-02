@@ -98,11 +98,25 @@ export const SettingsPage = () => {
       };
 
       if (isProviderSettingsSet(providers, config.provider)) {
-        await updateProvider(config.provider, body);
+        const res = await updateProvider(config.provider, body);
+        setConfig({
+          ...config,
+          data: {
+            ...config.data,
+            api_key: res.api_key,
+          },
+        });
       } else {
-        await createProvider({
+        const res = await createProvider({
           ...body,
           name: config.provider,
+        });
+        setConfig({
+          ...config,
+          data: {
+            ...config.data,
+            api_key: res.api_key,
+          },
         });
       }
 

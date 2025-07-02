@@ -40,7 +40,7 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
         const nodeId = `node-${index}`;
         const height = nodeHeights[nodeId] || 100; // Default height if not measured yet
         const position = { x: 100, y: currentY };
-        currentY += height + 50; // Add 50px spacing between nodes
+        currentY += height + 100; // Add 50px spacing between nodes
         return position;
       });
 
