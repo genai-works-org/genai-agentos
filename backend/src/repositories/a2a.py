@@ -23,7 +23,6 @@ from src.utils.enums import AgentType
 from src.utils.helpers import (
     generate_alias,
     get_agent_description_from_skills,
-    prettify_integrity_error_details,
     strip_endpoints_from_url,
 )
 
@@ -79,6 +78,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
     async def add_url(
         self, db: AsyncSession, user_model: User, data_in: A2ACreateAgentSchema
     ):
+        user_id = str(user_model.id)
         a2a_card_dto = await lookup_agent_well_known(url=data_in.server_url)
         if not a2a_card_dto.is_active:
             raise HTTPException(
@@ -101,7 +101,7 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
                 description=card_description,
                 server_url=card_url,
                 card_content=card_content,
-                creator_id=user_model.id,
+                creator_id=user_id,
                 is_active=a2a_card_dto.is_active,
             )
             db.add(a2a_agent)
@@ -111,13 +111,27 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
                 mode="json", exclude_none=True
             )
 
-        except IntegrityError as e:
-            msg = str(e._message())
-            detail = prettify_integrity_error_details(msg=msg)
-            raise HTTPException(
-                status_code=400,
-                detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
+        except IntegrityError:
+            await db.rollback()
+            return await self.update_server_is_active_state(
+                db=db, user_id=user_id, agent_dto=a2a_card_dto
             )
+
+    async def update_server_is_active_state(
+        self, db: AsyncSession, user_id: str, agent_dto: A2AAgentCardSchema
+    ):
+        agent = await db.scalar(
+            select(self.model).where(
+                and_(
+                    self.model.creator_id == user_id,
+                    self.model.server_url == agent_dto.card.url,
+                )
+            )
+        )
+        agent.is_active = agent_dto.is_active
+        await db.commit()
+        await db.refresh(agent)
+        return A2ACardDTO(**agent.__dict__).model_dump(mode="json", exclude_none=True)
 
     async def _orm_card_to_dto(self, card: A2ACardDTO) -> dict:
         return a2a_repo.agent_card_to_dto(

@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     REDIS_BROKER_URI: str = Field(default="redis://genai-redis:6379/0")
     REDIS_BACKEND_URI: str = Field(default="redis://genai-redis:6379/0")
 
-    CELERY_BEAT_INTERVAL_MINUTES: int = Field(default=10)
+    CELERY_BEAT_INTERVAL_MINUTES: int = Field(default=1)
 
     @model_validator(mode="after")
     def build_database_uri(self) -> Self:

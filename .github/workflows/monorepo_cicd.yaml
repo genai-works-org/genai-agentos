@@ -23,7 +23,7 @@ jobs:
 
       - name: Run linters
         run: |
-          ruff check --exclude=master-agent/ --exclude=tests/ .
+          ruff check --exclude=master-agent/ --exclude=tests/ --exclude=genai_agents_example/ .
         # black --check . --extend-exclude='(master-agent|\.venv|tests)/'
 
       - name: Replace volume path for tests

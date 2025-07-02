@@ -22,11 +22,7 @@ from src.schemas.mcp.dto import MCPServerDTO, MCPToolDTO
 from src.schemas.mcp.schemas import MCPCreateServer, MCPServerData, MCPToolSchema
 from src.utils.enums import AgentType
 from src.utils.exceptions import InvalidToolNameException
-from src.utils.helpers import (
-    generate_alias,
-    mcp_tool_to_json_schema,
-    prettify_integrity_error_details,
-)
+from src.utils.helpers import generate_alias, mcp_tool_to_json_schema
 
 logger = logging.getLogger(__name__)
 
@@ -198,6 +194,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
     async def add_url(
         self, db: AsyncSession, data_in: MCPCreateServer, user_model: User
     ):
+        user_id = str(user_model.id)
         try:
             mcp_server = await lookup_mcp_server(url=data_in.server_url)
 
@@ -220,7 +217,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         try:
             mcp_in = MCPServer(
                 server_url=server_url,
-                creator_id=user_model.id,
+                creator_id=user_id,
                 is_active=mcp_server.is_active,
             )
             db.add(mcp_in)
@@ -259,13 +256,39 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
                 updated_at=mcp_in.updated_at,
             )
 
-        except IntegrityError as e:
-            msg = str(e._message())
-            detail = prettify_integrity_error_details(msg=msg)
-            raise HTTPException(
-                status_code=400,
-                detail=f"{detail.column.capitalize()} - '{detail.value}' already exists",
+        except IntegrityError:
+            await db.rollback()
+            return await self.update_server_is_active_state(
+                db=db, user_model=user_model, mcp_server_data=mcp_server
             )
+
+    async def update_server_is_active_state(
+        self, db: AsyncSession, user_id: str, mcp_server_data: MCPServerData
+    ):
+        server = await db.scalar(
+            select(self.model)
+            .options(selectinload(self.model.mcp_tools))
+            .where(
+                and_(
+                    self.model.creator_id == user_id,
+                    self.model.server_url == mcp_server_data.server_url,
+                )
+            )
+        )
+        server.is_active = mcp_server_data.is_active
+        await db.commit()
+        await db.refresh(server)
+        tools_to_dto = [MCPToolDTO(**t.__dict__) for t in server.mcp_tools]
+        tools_json_schema_dto = [
+            mcp_tool_to_json_schema(t, aliased_title=t.alias) for t in tools_to_dto
+        ]
+        return MCPServerDTO(
+            server_url=mcp_server_data.server_url,
+            mcp_tools=tools_json_schema_dto,
+            is_active=mcp_server_data.is_active,
+            created_at=server.created_at,
+            updated_at=server.updated_at,
+        )
 
     async def get_all_mcp_tools_of_all_servers(
         self, db: AsyncSession, user_model: User, limit: int, offset: int
