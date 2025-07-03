@@ -61,7 +61,7 @@ export const AI_PROVIDERS = {
 export type AIProvider = (typeof AI_PROVIDERS)[keyof typeof AI_PROVIDERS];
 
 export const TOOLTIP_MESSAGES = {
-  open: 'Provide OpenAI API key for adding a model',
+  openai: 'Provide OpenAI API key for adding a model',
   'azure openai':
     'Provide Azure OpenAI endpoint, API key, API version and Deployment name for adding a model',
   ollama: 'Provide Ollama Base URL for adding a model',

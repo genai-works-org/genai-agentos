@@ -45,7 +45,6 @@ const ChatList = memo(() => {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setActiveSessionId(null);
   };
 
   const handleRename = () => {
@@ -56,6 +55,7 @@ const ChatList = memo(() => {
       setEditedTitle(currentChat?.title || '');
     }
     handleMenuClose();
+    setActiveSessionId(null);
   };
 
   const handleRenameChange = async () => {
@@ -79,7 +79,7 @@ const ChatList = memo(() => {
     if (id === activeSessionId) {
       navigate('/chat/new');
     }
-    handleMenuClose();
+    setActiveSessionId(null);
   };
 
   useEffect(() => {
@@ -206,7 +206,10 @@ const ChatList = memo(() => {
               Rename
             </MenuItem>
             <MenuItem
-              onClick={() => setIsConfirmOpen(true)}
+              onClick={() => {
+                handleMenuClose();
+                setIsConfirmOpen(true);
+              }}
               style={{ color: '#BA1A1A' }}
             >
               <Trash2 />

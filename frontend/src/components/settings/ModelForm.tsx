@@ -59,10 +59,7 @@ const ModelForm: FC<ModelFormProps> = ({
 
   const isSubmitDisabled = useMemo(() => {
     return (
-      isLoading ||
-      Object.values(validationErrors).some(error => Boolean(error)) ||
-      !formData.name ||
-      !formData.model
+      isLoading || Object.values(validationErrors).some(error => Boolean(error))
     );
   }, [isLoading, validationErrors, formData]);
 
@@ -83,6 +80,13 @@ const ModelForm: FC<ModelFormProps> = ({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
+    const error = validateModelsField('name', formData.name);
+    setValidationErrors(prev => ({ ...prev, name: error || '' }));
+
+    if (error) {
+      return;
+    }
+
     onSave({
       name: formData.name.trim(),
       model: formData.model.trim(),
@@ -100,7 +104,7 @@ const ModelForm: FC<ModelFormProps> = ({
     <Dialog open={true} onOpenChange={onClose}>
       <DialogContent
         aria-describedby={undefined}
-        className="max-w-[800px] max-h-[800px] px-9 py-12 overflow-y-auto"
+        className="max-w-[800px] h-full max-h-[800px] px-9 py-12 overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle>
@@ -116,7 +120,6 @@ const ModelForm: FC<ModelFormProps> = ({
             placeholder="Model Name"
             value={formData.name}
             onChange={handleChange}
-            required
             maxLength={10}
             withAsterisk
             error={validationErrors.name}
