@@ -172,8 +172,8 @@ export const AgentFlowsEditPage: FC = () => {
       };
 
       // Ensure the node stays within the viewport bounds
-      const nodeWidth = 200; // Approximate node width
-      const nodeHeight = 100; // Approximate node height
+      const nodeWidth = 505; // Approximate node width
+      const nodeHeight = 350; // Approximate node height
       const boundedPosition = {
         x: Math.max(
           0,
@@ -350,7 +350,7 @@ export const AgentFlowsEditPage: FC = () => {
 
   if (isLoading) {
     return (
-      <MainLayout currentPage={layoutTitle}>
+      <MainLayout currentPage="">
         <div className="flex justify-center items-center min-h-[calc(100vh-64px)]">
           <CircularProgress />
         </div>
