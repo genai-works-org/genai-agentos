@@ -242,7 +242,7 @@ class File(Base):
 class ModelProvider(Base):
     id: Mapped[uuid_pk]
     name: Mapped[str]
-    api_key: Mapped[str]  # encrypted in pydantic models
+    api_key: Mapped[str] = mapped_column(nullable=True)  # encrypted in pydantic models
 
     provider_metadata: Mapped[not_null_json_column]
     configs: Mapped[List["ModelConfig"]] = relationship(  # noqa: F821

@@ -11,6 +11,7 @@ from mcp.types import Tool
 from pydantic import AnyHttpUrl
 from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.auth.encrypt import encrypt_secret
 from src.auth.jwt import TokenLifespanType, validate_token
 from src.db.session import async_session
 from src.models import A2ACard, Agent, AgentWorkflow, MCPServer, MCPTool
@@ -393,3 +394,13 @@ class FlowValidator:
             flow.is_active = False
 
         return flow
+
+
+def validate_and_encrypt_provider_api_key(api_key: str) -> str:
+    if not api_key:
+        raise ValueError("'api_key' must be specified for this provider")
+    if len(api_key) < 1:
+        raise ValueError("'api_key' param cannot be empty")
+    if isinstance(api_key, str):
+        return encrypt_secret(api_key)
+    return api_key

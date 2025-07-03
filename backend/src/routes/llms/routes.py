@@ -67,7 +67,8 @@ async def add_model_provider(
             api_key=p.api_key,
             created_at=p.created_at,
             updated_at=p.updated_at,
-        )
+        ).model_dump(exclude_none=True, mode="json")
+
     except IntegrityError as e:
         msg = str(e._message())
         detail = prettify_integrity_error_details(msg=msg)

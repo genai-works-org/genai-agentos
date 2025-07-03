@@ -1,13 +1,13 @@
 from typing import Optional, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from src.auth.encrypt import encrypt_secret
 from src.schemas.base import BaseUUIDToStrModel
 from src.utils.constants import DEFAULT_SYSTEM_PROMPT
+from src.utils.helpers import validate_and_encrypt_provider_api_key
 
 
 class ModelProviderBase(BaseModel):
-    api_key: str
+    api_key: Optional[str] = None
 
 
 class ModelConfigBase(BaseModel):
@@ -62,23 +62,21 @@ class ProviderCRUDUpdate(BaseModel):
     api_key: Optional[str] = None
     metadata: Optional[dict] = Field(default={})
 
-    @field_validator("api_key")
-    def encrypt_key(cls, v: str):
-        if len(v) < 1:
-            raise ValueError("'api_key' param cannot be empty")
-        if isinstance(v, str):
-            return encrypt_secret(v)
-        return v
-
     def dump(self):
         r = {**self.model_dump(mode="json"), "provider_metadata": self.metadata}
-        if not self.api_key:
-            # prevent update with None as api_key
-            r.pop("api_key")
-
         return r
 
 
 class ProviderCRUDCreate(ProviderCRUDUpdate):
-    api_key: str
+    api_key: Optional[str] = None
     name: str
+
+    @model_validator(mode="after")
+    def encrypt_key(self) -> Self:
+        if self.name.lower().strip() == "ollama":
+            self.api_key = None
+
+        else:
+            self.api_key = validate_and_encrypt_provider_api_key(self.api_key)
+
+        return self

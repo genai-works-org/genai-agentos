@@ -14,6 +14,7 @@ from src.schemas.api.model_config.schemas import (
     ProviderCRUDCreate,
     ProviderCRUDUpdate,
 )
+from src.utils.helpers import validate_and_encrypt_provider_api_key
 
 
 class ModelConfigRepository(
@@ -283,6 +284,13 @@ class ModelConfigRepository(
         provider_obj: ModelProvider,
         upd_in: ProviderCRUDUpdate,
     ) -> ModelProvider:
+        # if provider == ollama, do not validate api_key
+        if provider_obj.name.lower().strip() == "ollama":
+            upd_in.api_key = None
+            return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in.dump())
+
+        api_key = validate_and_encrypt_provider_api_key(api_key=upd_in.api_key)
+        upd_in.api_key = api_key
         return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in.dump())
 
     async def create_provider(
