@@ -45,7 +45,7 @@ export const AIModelCard: FC<AIModelCardProps> = ({
 
       <div className="mb-4">
         <h5 className="text-sm font-bold text-text-secondary mb-1">
-          LLM context length
+          LLM Message context window
         </h5>
         <p className="text-sm text-text-secondary">{max_last_messages}</p>
       </div>

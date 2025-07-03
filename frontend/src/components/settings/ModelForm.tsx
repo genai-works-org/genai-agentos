@@ -175,7 +175,7 @@ const ModelForm: FC<ModelFormProps> = ({
             <Input
               id="max_last_messages"
               name="max_last_messages"
-              label="Message context window (1 - 20)"
+              label="LLM Message context window (1 - 20)"
               placeholder="Enter message deepness"
               value={formData.max_last_messages}
               onChange={handleChange}

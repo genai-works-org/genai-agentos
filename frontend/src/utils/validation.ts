@@ -114,15 +114,15 @@ export const validateModelsField = (name: string, value: string) => {
     const num = Number(value);
 
     if (isNaN(num)) {
-      return 'Max last messages must be a valid number';
+      return 'LLM Message context window must be a valid number';
     }
 
     if (num < 1 || num > 20) {
-      return 'Max last messages must be between 1 and 20';
+      return 'LLM Message context window must be between 1 and 20';
     }
 
     if (num % 1 !== 0) {
-      return 'Max last messages must be an integer';
+      return 'LLM Message context window must be an integer';
     }
   }
 

@@ -84,7 +84,7 @@ export const AgentFlowsPage: FC = () => {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        description={`Are you sure you want to delete "${
+        description={`Are you sure you want to delete this Agent Flow "${
           selectedFlow?.name || ''
         }"?`}
         onClose={handleClose}
