@@ -55,8 +55,8 @@ export const TraceDetails: FC<TraceDetailsProps> = ({
           const isSelected = selectedNode?.id === `node-${index}`;
 
           return (
-            <div ref={isSelected ? selectedRef : null}>
-              <Card key={traceId} active={isSelected} className="w-full">
+            <div key={traceId} ref={isSelected ? selectedRef : null}>
+              <Card active={isSelected} className="w-full">
                 <div>
                   <div className="flex items-center justify-between">
                     <p className="font-bold truncate">

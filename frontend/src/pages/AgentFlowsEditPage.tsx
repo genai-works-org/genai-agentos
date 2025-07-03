@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { FC, DragEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CircularProgress } from '@mui/material';
@@ -107,6 +107,11 @@ export const AgentFlowsEditPage: FC = () => {
     Record<string, string>
   >({});
   const [links, setLinks] = useState<FlowChainNode[]>([]);
+  const [nodeHeights, setNodeHeights] = useState<Record<string, number>>({});
+  const [positions, setPositions] = useState<
+    Record<string, { x: number; y: number }>
+  >({});
+  const positionsSet = useRef(false);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
 
@@ -347,6 +352,57 @@ export const AgentFlowsEditPage: FC = () => {
 
     setLinks(nodes);
   }, [edges]);
+
+  // Calculate node positions
+  useEffect(() => {
+    const handleNodeHeight = (e: CustomEvent) => {
+      const { nodeId, height } = e.detail;
+      const id = nodeId.split('::')[0];
+      setNodeHeights(prev => {
+        return { ...prev, [id]: height };
+      });
+    };
+    window.addEventListener('nodeHeight', handleNodeHeight as EventListener);
+    return () =>
+      window.removeEventListener(
+        'nodeHeight',
+        handleNodeHeight as EventListener,
+      );
+  }, []);
+
+  useEffect(() => {
+    if (
+      nodes.length === 0 ||
+      Object.keys(nodeHeights).length < nodes.length ||
+      positionsSet.current
+    )
+      return;
+
+    const gap = 100;
+    let accumulatedHeight = 0;
+    const newPositions: Record<string, { x: number; y: number }> = {};
+
+    nodes.forEach(node => {
+      const id = node.id.split('::')[0];
+      const height = nodeHeights[id] || 120;
+      newPositions[id] = { x: 0, y: accumulatedHeight };
+      accumulatedHeight += height + gap;
+    });
+
+    setPositions(newPositions);
+    positionsSet.current = true;
+  }, [nodeHeights, nodes]);
+
+  useEffect(() => {
+    if (Object.keys(positions).length === 0) return;
+
+    setNodes(nds =>
+      nds.map(node => ({
+        ...node,
+        position: positions[node.id.split('::')[0]] || node.position,
+      })),
+    );
+  }, [positions, setNodes]);
 
   if (isLoading) {
     return (
