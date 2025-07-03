@@ -12,7 +12,11 @@ interface AgentCardProps {
 
 export const AgentCard: FC<AgentCardProps> = ({ agent, setSelectedAgent }) => {
   return (
-    <Card>
+    <Card
+      className={`${
+        agent.is_active ? 'border-primary-accent' : 'border-red-600'
+      }`}
+    >
       <div className="h-full min-h-[150px] flex flex-col justify-between">
         <div>
           <h3 className="font-bold mb-1 truncate capitalize">

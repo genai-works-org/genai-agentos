@@ -31,7 +31,7 @@ export const MainLayout: FC<MainLayoutProps> = ({
       <Header currentPage={currentPage} actionItems={actionItems} />
       <div className="flex flex-1">
         <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-        <main className="flex-1 bg-neutral-light rounded-tl-[36px] max-h-[calc(100vh-64px)] overflow-y-scroll">
+        <main className="flex-1 bg-neutral-light rounded-tl-[36px] max-h-[calc(100vh-64px)] overflow-y-auto">
           {children}
         </main>
       </div>

@@ -32,7 +32,7 @@ export const AgentFlowCard: FC<AgentFlowCardProps> = ({
 
   return (
     <Card
-      className={flow.is_active ? 'border-primary-accent' : 'border-error-main'}
+      className={flow.is_active ? 'border-primary-accent' : 'border-red-600'}
     >
       <div className="h-full flex flex-col justify-between">
         <div>

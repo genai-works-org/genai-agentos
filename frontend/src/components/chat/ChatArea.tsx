@@ -256,13 +256,15 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
         </div>
       )}
       <div className="sticky bottom-0 pb-16 bg-neutral-light">
-        <div
-          className={`text-lg font-bold text-center py-6 ${
-            !isChatAvailable ? 'opacity-40' : ''
-          }`}
-        >
-          What can I do for you today?
-        </div>
+        {messages.length === 0 && (
+          <div
+            className={`text-lg font-bold text-center py-6 ${
+              !isChatAvailable ? 'opacity-40' : ''
+            }`}
+          >
+            What can I do for you today?
+          </div>
+        )}
         <ChatInput
           onSendMessage={handleSendMessage}
           isUploading={isUploading}

@@ -39,7 +39,7 @@ const Toolbar: FC<ToolbarProps> = ({
     if (!isModelSelected && isModelAvailable) {
       setActiveModel(availableModels[0]);
     }
-  }, []);
+  }, [isModelSelected, isModelAvailable, availableModels, setActiveModel]);
 
   return (
     <div className="px-4 pb-3 flex items-center justify-between">
