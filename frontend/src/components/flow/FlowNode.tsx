@@ -2,9 +2,9 @@ import type { FC } from 'react';
 import { useRef, useEffect } from 'react';
 import { NodeProps, Handle, Position } from 'reactflow';
 import { ShieldX, Trash2 } from 'lucide-react';
-import { Box } from '@mui/material';
 
 import { getBatchVariant } from '@/utils/getNodeStyles';
+import { removeUnderscore } from '@/utils/normalizeString';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -79,50 +79,21 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
       )}
 
       {data.flow && (
-        <Box
-          sx={{
-            width: '90%',
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 0.5,
-            overflow: 'auto',
-            py: 0.5,
-          }}
-        >
+        <div className="mt-2 space-y-2">
           {data.flow.map((step: any, index: number) => (
-            <Box
+            <div
               key={index}
               id={`flow-node-${id}-${index}`}
-              onClick={e => {
-                e.stopPropagation();
-                const event = new CustomEvent('flowStepClick', {
-                  detail: { step, nodeId: id },
-                });
-                window.dispatchEvent(event);
-              }}
-              sx={{
-                maxWidth: '180px',
-                wordBreak: 'break-all',
-                textAlign: 'center',
-                p: 0.5,
-                bgcolor: '#fff',
-                borderRadius: '4px',
-                border: `1px solid ${step.is_success ? '#4CAF50' : '#F44336'}`,
-                minHeight: '20px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: 'grey.100',
-                },
-              }}
+              className={`p-2 border rounded-xl ${
+                step.is_success ? 'border-primary-accent' : 'border-red-600'
+              }`}
             >
-              <p className="text-center">{step.name}</p>
-            </Box>
+              <p className="text-sm text-center capitalize">
+                {removeUnderscore(step.name)}
+              </p>
+            </div>
           ))}
-        </Box>
+        </div>
       )}
     </div>
   );

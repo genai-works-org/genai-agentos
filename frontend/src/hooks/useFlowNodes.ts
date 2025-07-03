@@ -6,8 +6,10 @@ import {
   useEdgesState,
   MarkerType,
 } from 'reactflow';
+
 import { AgentTrace } from '@/types/agent';
 import { getNodeStyles } from '@/utils/getNodeStyles';
+import { removeUnderscore } from '@/utils/normalizeString';
 
 export const useFlowNodes = (traceData: AgentTrace[] | null) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -36,11 +38,12 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
     if (traceData) {
       // Calculate node positions based on actual heights
       let currentY = 0;
+
       const nodePositions = traceData.map((_, index) => {
         const nodeId = `node-${index}`;
         const height = nodeHeights[nodeId] || 100; // Default height if not measured yet
         const position = { x: 100, y: currentY };
-        currentY += height + 100; // Add 50px spacing between nodes
+        currentY += height + 100; // Add 100px spacing between nodes
         return position;
       });
 
@@ -50,7 +53,7 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
         type: 'custom',
         position: nodePositions[index],
         data: {
-          label: trace.name,
+          label: removeUnderscore(trace.name),
           input: trace.input,
           output: trace.output,
           flow: trace.flow,

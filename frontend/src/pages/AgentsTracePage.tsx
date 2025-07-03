@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { FC, MouseEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MoveLeft } from 'lucide-react';
@@ -28,8 +28,6 @@ const AgentsTracePage: FC = () => {
   const [selectedNode, setSelectedNode] = useState<ReactFlowNode | null>(null);
   const [logAreaWidth, setLogAreaWidth] = useState(450);
   const [isResizing, setIsResizing] = useState(false);
-  const [showTracePanel, setShowTracePanel] = useState(false);
-  const tracePanelRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { logs, error, fetchLogs } = useLogs();
@@ -59,23 +57,8 @@ const AgentsTracePage: FC = () => {
 
   const onNodeClick = useCallback((event: MouseEvent, node: ReactFlowNode) => {
     event.stopPropagation();
-    if (!node.data.flow) {
-      setSelectedNode(node);
-      setShowTracePanel(true);
-    }
+    setSelectedNode(node);
   }, []);
-
-  const handleClickOutside = useCallback(
-    (event: WindowEventMap['mousemove']) => {
-      if (
-        tracePanelRef.current &&
-        !tracePanelRef.current.contains(event.target as HTMLElement)
-      ) {
-        setShowTracePanel(false);
-      }
-    },
-    [],
-  );
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -104,39 +87,11 @@ const AgentsTracePage: FC = () => {
     }
   }, [location.state]);
 
-  useEffect(() => {
-    const handleFlowStepClick = (event: CustomEvent) => {
-      event.stopPropagation();
-      setShowTracePanel(true);
-    };
-
-    window.addEventListener(
-      'flowStepClick',
-      handleFlowStepClick as EventListener,
-    );
-    return () => {
-      window.removeEventListener(
-        'flowStepClick',
-        handleFlowStepClick as EventListener,
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [handleClickOutside]);
-
   return (
     <MainLayout currentPage="Agent Trace">
       <div className="flex h-[calc(100vh-64px)]">
         {/* React Flow Area */}
-        <div
-          onClick={() => showTracePanel && setShowTracePanel(false)}
-          className="flex-1 relative"
-        >
+        <div className="flex-1 relative">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -145,10 +100,6 @@ const AgentsTracePage: FC = () => {
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
             fitView
-            nodesDraggable={false}
-            nodesConnectable={false}
-            elementsSelectable={false}
-            panOnDrag={false}
           >
             <Background />
             <Controls />
