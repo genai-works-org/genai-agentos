@@ -27,6 +27,8 @@ export const AgentsPage: FC = () => {
     [agents],
   );
 
+  const agentsLength = useMemo(() => activeAgents.length, [activeAgents]);
+
   useEffect(() => {
     loadAgents();
   }, []);
@@ -74,7 +76,9 @@ export const AgentsPage: FC = () => {
     <MainLayout currentPage="GenAI Agents">
       <div className="p-16">
         <div className="flex justify-between items-center mb-12 p-4 bg-primary-white rounded-2xl border border-neutral-border">
-          <p className="font-bold">{activeAgents.length} Active Agents</p>
+          <p className="font-bold">
+            {agentsLength} Active {agentsLength === 1 ? 'Agent' : 'Agents'}
+          </p>
           <div>
             <Button onClick={createNewAgent} className="w-[168px] mr-2">
               Generate token
@@ -116,7 +120,7 @@ export const AgentsPage: FC = () => {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        description={`Are you sure you want to delete "${
+        description={`Are you sure you want to delete this Agent "${
           selectedAgent?.agent_name || ''
         }"?`}
         onClose={() => setIsConfirmOpen(false)}

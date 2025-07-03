@@ -78,7 +78,7 @@ const MCPServersPage = () => {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        description={`Are you sure you want to delete this agent?`}
+        description={`Are you sure you want to delete this Agent "${selectedAgent?.server_url}"?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteServer}
         loading={isLoading}
