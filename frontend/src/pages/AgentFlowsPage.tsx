@@ -10,7 +10,7 @@ import { AgentFlowCard } from '@/components/flow/AgentFlowCard';
 import ConfirmModal from '@/components/modals/ConfirmModal';
 import CreateCard from '@/components/shared/CreateCard';
 
-export const AgentFlowsPage: FC = () => {
+const AgentFlowsPage: FC = () => {
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -93,3 +93,5 @@ export const AgentFlowsPage: FC = () => {
     </MainLayout>
   );
 };
+
+export default AgentFlowsPage;

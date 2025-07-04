@@ -13,7 +13,7 @@ import { AgentCard } from '@/components/genai/AgentCard';
 import AgentDetailsModal from '@/components/genai/AgentDetailsModal';
 import GenerateTokenModal from '@/components/genai/GenerateTokenModal';
 
-export const AgentsPage: FC = () => {
+const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -136,3 +136,5 @@ export const AgentsPage: FC = () => {
     </MainLayout>
   );
 };
+
+export default AgentsPage;

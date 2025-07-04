@@ -29,7 +29,7 @@ import Select from '@/components/shared/Select';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 
-export const SettingsPage = () => {
+const SettingsPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -249,3 +249,5 @@ export const SettingsPage = () => {
     </MainLayout>
   );
 };
+
+export default SettingsPage;
