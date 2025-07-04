@@ -6,7 +6,10 @@ import {
   useEdgesState,
   MarkerType,
 } from 'reactflow';
-import { AgentTrace } from '../types/agent';
+
+import { AgentTrace } from '@/types/agent';
+import { getNodeStyles } from '@/utils/getNodeStyles';
+import { removeUnderscore } from '@/utils/normalizeString';
 
 export const useFlowNodes = (traceData: AgentTrace[] | null) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -35,11 +38,13 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
     if (traceData) {
       // Calculate node positions based on actual heights
       let currentY = 0;
+      const currentX = (window.innerWidth - 1150) / 2;
+
       const nodePositions = traceData.map((_, index) => {
         const nodeId = `node-${index}`;
         const height = nodeHeights[nodeId] || 100; // Default height if not measured yet
-        const position = { x: 100, y: currentY };
-        currentY += height + 50; // Add 50px spacing between nodes
+        const position = { x: currentX, y: currentY };
+        currentY += height + 100; // Add 100px spacing between nodes
         return position;
       });
 
@@ -49,18 +54,16 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
         type: 'custom',
         position: nodePositions[index],
         data: {
-          label: trace.name,
+          label: removeUnderscore(trace.name),
           input: trace.input,
           output: trace.output,
           flow: trace.flow,
           type: trace?.type,
         },
-        style: {
-          borderColor:
-            trace.is_success || trace.flow?.at(-1)?.is_success
-              ? '#4CAF50'
-              : '#F44336',
-        },
+        style: getNodeStyles(
+          trace?.type || '',
+          trace.is_success || trace.flow?.at(-1)?.is_success,
+        ),
       }));
 
       // Create edges for main flow
@@ -70,8 +73,8 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
         target: `node-${index + 1}`,
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          color: '#000',
-          fill: '#000',
+          color: '#008765',
+          fill: '#008765',
         },
       }));
 
@@ -87,8 +90,8 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
                 target: `flow-target-${nodeIndex}-${flowIndex + 1}`,
                 markerEnd: {
                   type: MarkerType.ArrowClosed,
-                  color: '#666',
-                  fill: '#666',
+                  color: '#008765',
+                  fill: '#008765',
                 },
               }));
             return [...edges, ...flowNodeEdges];

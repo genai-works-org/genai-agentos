@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Layout from '../components/Layout';
-import AuthForm from '../components/AuthForm';
-import type { FormEvent } from 'react';
+import AuthLayout from '../components/layout/AuthLayout';
+import AuthForm from '../components/auth/AuthForm';
+
 const SignupPage = () => {
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -34,9 +35,10 @@ const SignupPage = () => {
   };
 
   return (
-    <Layout>
+    <AuthLayout>
       <AuthForm
-        title="Create your account"
+        title="Sign Up"
+        subtitle="Join now to access tools that power real-world AI success."
         buttonText="Sign up"
         name={name}
         setName={setName}
@@ -50,7 +52,7 @@ const SignupPage = () => {
         footerLinkText="Sign in"
         footerLinkTo="/login"
       />
-    </Layout>
+    </AuthLayout>
   );
 };
 

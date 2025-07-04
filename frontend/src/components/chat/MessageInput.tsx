@@ -3,6 +3,7 @@ import type { FC, FormEvent, ChangeEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useSettings } from '../../contexts/SettingsContext';
+import { Textarea } from '../ui/textarea';
 
 interface MessageInputProps {
   message: string;
@@ -22,7 +23,7 @@ const MessageInput: FC<MessageInputProps> = ({
   onSubmit,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { activeModel } = useSettings();
+  const { activeModel, isModelSelected } = useSettings();
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -33,6 +34,7 @@ const MessageInput: FC<MessageInputProps> = ({
 
   useEffect(() => {
     const textarea = textareaRef.current;
+
     if (textarea) {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight}px`;
@@ -40,21 +42,21 @@ const MessageInput: FC<MessageInputProps> = ({
   }, [message]);
 
   return (
-    <div className="p-3">
+    <div>
       {showPreview ? (
         <div className="prose prose-sm max-w-none dark:prose-invert p-2 min-h-[100px] border rounded">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{message}</ReactMarkdown>
         </div>
       ) : (
-        <textarea
+        <Textarea
           ref={textareaRef}
+          name="message"
           value={message}
           onChange={onMessageChange}
           onKeyDown={handleKeyDown}
-          placeholder="Message"
-          className="w-full h-full px-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none resize-none"
-          rows={1}
-          disabled={isUploading || isAnyFileUploading}
+          placeholder="Ask anything"
+          className="min-h-[54px] rounded-none focus-visible:ring-0 border-0"
+          disabled={isUploading || isAnyFileUploading || !isModelSelected}
         />
       )}
     </div>

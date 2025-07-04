@@ -5,6 +5,7 @@ import {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 import localStorage from '../services/localStorageService';
 import { useModels } from '../hooks/useModels';
@@ -18,6 +19,9 @@ interface SettingsContextType {
   activeModel: ActiveModel | null;
   setActiveModel: (model: ModelConfig | null) => void;
   refetchModels: () => Promise<void>;
+  availableModels: ModelConfig[];
+  isModelAvailable: boolean;
+  isModelSelected: boolean;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(
@@ -32,6 +36,13 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
   );
   const { fetchModels, fetchSystemPrompt } = useModels();
   const { user } = useAuth();
+
+  const availableModels = useMemo(() => {
+    return providers.flatMap(provider => provider.configs);
+  }, [providers]);
+
+  const isModelAvailable = availableModels.length > 0;
+  const isModelSelected = availableModels.some(m => m.id === model?.id);
 
   const refetchModels = useCallback(async () => {
     const models = await fetchModels();
@@ -71,6 +82,9 @@ export const SettingsProvider: FC<{ children: ReactNode }> = ({ children }) => {
         activeModel: model,
         setActiveModel,
         refetchModels,
+        availableModels,
+        isModelAvailable,
+        isModelSelected,
       }}
     >
       {children}

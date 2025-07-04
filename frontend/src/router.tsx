@@ -9,34 +9,11 @@ const SignupPage = lazy(() => import('./pages/SignupPage'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
 const A2AAgentsPage = lazy(() => import('./pages/A2AAgentsPage'));
 const MCPAgentsPage = lazy(() => import('./pages/MCPAgentsPage'));
-const SettingsPage = lazy(() =>
-  import('./pages/SettingsPage').then(module => ({
-    default: module.SettingsPage,
-  })),
-);
-const AgentsPage = lazy(() =>
-  import('./pages/AgentsPage').then(module => ({ default: module.AgentsPage })),
-);
-const AgentDetailsPage = lazy(() =>
-  import('./pages/AgentDetailsPage').then(module => ({
-    default: module.AgentDetailsPage,
-  })),
-);
-const AgentFlowsPage = lazy(() =>
-  import('./pages/AgentFlowsPage').then(module => ({
-    default: module.AgentFlowsPage,
-  })),
-);
-const AgentFlowsEditPage = lazy(() =>
-  import('./pages/AgentFlowsEditPage').then(module => ({
-    default: module.AgentFlowsEditPage,
-  })),
-);
-const AgentsTracePage = lazy(() =>
-  import('./pages/AgentsTracePage').then(module => ({
-    default: module.default,
-  })),
-);
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const AgentsPage = lazy(() => import('./pages/AgentsPage'));
+const AgentFlowsPage = lazy(() => import('./pages/AgentFlowsPage'));
+const AgentFlowsEditPage = lazy(() => import('./pages/AgentFlowsEditPage'));
+const AgentsTracePage = lazy(() => import('./pages/AgentsTracePage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 
 // Loading component
@@ -91,17 +68,21 @@ export const router = createBrowserRouter(
     {
       path: '/settings',
       element: (
-        <Suspense fallback={<LoadingFallback />}>
-          <SettingsPage />
-        </Suspense>
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsPage />
+          </Suspense>
+        </ProtectedRoute>
       ),
     },
     {
       path: '/chat/:id',
       element: (
-        <Suspense fallback={<LoadingFallback />}>
-          <ChatPage />
-        </Suspense>
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <ChatPage />
+          </Suspense>
+        </ProtectedRoute>
       ),
     },
     {
@@ -110,16 +91,6 @@ export const router = createBrowserRouter(
         <ProtectedRoute>
           <Suspense fallback={<LoadingFallback />}>
             <AgentsPage />
-          </Suspense>
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: '/agents/:id/details',
-      element: (
-        <ProtectedRoute>
-          <Suspense fallback={<LoadingFallback />}>
-            <AgentDetailsPage />
           </Suspense>
         </ProtectedRoute>
       ),

@@ -212,7 +212,6 @@ examples/
 *.webp
 
 # Portable Network Graphics
-*.png
 
 # Animated Portable Network Graphics
 *.apng
@@ -225,7 +224,6 @@ examples/
 *.tif
 
 # Scalable Vector Graphics
-*.svg
 *.svgz
 
 # Portable Document Format

@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { chatService } from '../services/chatService';
-import { useToast } from './useToast';
 
 export const useChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const toast = useToast();
 
   const getChatsList = useCallback(async () => {
     setIsLoading(true);
@@ -13,7 +11,7 @@ export const useChat = () => {
       const chats = await chatService.getChatsList();
       return chats;
     } catch (error) {
-      toast.showError('Failed to fetch chats');
+      setError('Failed to fetch chats');
       throw error;
     } finally {
       setIsLoading(false);

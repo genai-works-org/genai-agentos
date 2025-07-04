@@ -1,27 +1,24 @@
 import { useEffect, useState } from 'react';
 import type { FC } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AgentFlowDTO } from '../types/agent';
-import {
-  Container,
-  IconButton,
-  Typography,
-  CircularProgress,
-  Box,
-} from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { MainLayout } from '../components/MainLayout';
-import { AgentFlowCard } from '../components/AgentFlowCard';
-import { useAgent } from '../hooks/useAgent';
-import ConfirmModal from '../components/ConfirmModal';
+import { CircularProgress } from '@mui/material';
 
-export const AgentFlowsPage: FC = () => {
+import { AgentFlowDTO } from '@/types/agent';
+import { useAgent } from '@/hooks/useAgent';
+import { useToast } from '@/hooks/useToast';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { AgentFlowCard } from '@/components/flow/AgentFlowCard';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import CreateCard from '@/components/shared/CreateCard';
+
+const AgentFlowsPage: FC = () => {
   const [flows, setFlows] = useState<AgentFlowDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [selectedFlow, setSelectedFlow] = useState<AgentFlowDTO | null>(null);
   const navigate = useNavigate();
   const { getAgentFlows, deleteAgentFlow } = useAgent();
+  const toast = useToast();
 
   useEffect(() => {
     loadFlows();
@@ -55,6 +52,7 @@ export const AgentFlowsPage: FC = () => {
     await deleteAgentFlow(selectedFlow.id);
     await loadFlows();
     handleClose();
+    toast.showSuccess('Agent Flow deleted successfully');
   };
 
   const handleEdit = (id: string) => {
@@ -63,55 +61,13 @@ export const AgentFlowsPage: FC = () => {
 
   return (
     <MainLayout currentPage="Agent Flows">
-      <Container
-        maxWidth="xl"
-        sx={{
-          mb: 4,
-          justifyContent: 'align-item',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
-        <Box
-          display="flex"
-          alignItems="center"
-          justifyContent="flex-end"
-          mb={3}
-        >
-          <Box>
-            <IconButton
-              color="primary"
-              onClick={loadFlows}
-              disabled={isLoading}
-              sx={{ mr: 2 }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Box>
-        </Box>
-
+      <div className="p-16">
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
+          <div className="flex justify-center items-center min-h-[200px]">
             <CircularProgress />
-          </Box>
-        ) : flows.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <Typography variant="h6" color="text.secondary">
-              No agent flows found
-            </Typography>
-          </Box>
+          </div>
         ) : (
-          <Box>
+          <div className="flex flex-wrap gap-4 min-h-[280px]">
             {flows.map(flow => (
               <AgentFlowCard
                 key={flow.id}
@@ -120,17 +76,25 @@ export const AgentFlowsPage: FC = () => {
                 onDelete={() => handleDelete(flow)}
               />
             ))}
-          </Box>
+
+            <CreateCard
+              buttonText="Add Agent Flow"
+              onClick={() => navigate('/agent-flows/new')}
+            />
+          </div>
         )}
-      </Container>
+      </div>
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Agent Flow"
-        text={`Are you sure you want to delete "${selectedFlow?.name || ''}"?`}
+        description={`Are you sure you want to delete this Agent Flow "${
+          selectedFlow?.name || ''
+        }"?`}
         onClose={handleClose}
         onConfirm={handleDeleteConfirmed}
       />
     </MainLayout>
   );
 };
+
+export default AgentFlowsPage;

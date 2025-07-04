@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from src.auth.encrypt import decrypt_secret
 from src.models import ModelConfig, ModelProvider, User
 from src.repositories.base import CRUDBase
 from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
@@ -288,6 +289,18 @@ class ModelConfigRepository(
         if provider_obj.name.lower().strip() == "ollama":
             upd_in.api_key = None
             return await self.update(db=db, db_obj=provider_obj, obj_in=upd_in.dump())
+
+        try:
+            new_api_key = decrypt_secret(upd_in.api_key)
+            prev_api_key = decrypt_secret(provider_obj.api_key)
+            if prev_api_key == new_api_key:
+                return await self.update(
+                    db=db, db_obj=provider_obj, obj_in=upd_in.dump()
+                )
+        except ValueError:
+            # result of 'prev_api_key' decryption is a value that differs from the previously
+            # encrypted key -> cryptography library raises ValueError -> apply encryption to the new value
+            pass
 
         api_key = validate_and_encrypt_provider_api_key(api_key=upd_in.api_key)
         upd_in.api_key = api_key

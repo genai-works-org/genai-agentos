@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
-import Layout from '../components/Layout';
+import Layout from '../components/layout/AuthLayout';
 
 const NotFoundPage = () => {
   const { theme } = useTheme();
@@ -9,14 +9,18 @@ const NotFoundPage = () => {
     <Layout>
       <div className="max-w-md w-full space-y-8 px-4 sm:px-6 lg:px-8">
         <div>
-          <h2 className={`text-center text-3xl font-extrabold ${
-            theme === 'light' ? 'text-light-text' : 'text-dark-text'
-          }`}>
+          <h2
+            className={`text-center text-3xl font-extrabold ${
+              theme === 'light' ? 'text-light-text' : 'text-dark-text'
+            }`}
+          >
             404 - Page Not Found
           </h2>
-          <p className={`mt-2 text-center text-sm ${
-            theme === 'light' ? 'text-light-text' : 'text-dark-text'
-          }`}>
+          <p
+            className={`mt-2 text-center text-sm ${
+              theme === 'light' ? 'text-light-text' : 'text-dark-text'
+            }`}
+          >
             The page you're looking for doesn't exist or has been moved.
           </p>
         </div>
@@ -37,4 +41,4 @@ const NotFoundPage = () => {
   );
 };
 
-export default NotFoundPage; 
+export default NotFoundPage;

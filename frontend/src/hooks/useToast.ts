@@ -1,9 +1,10 @@
 import { toast } from 'react-toastify';
+import CustomToast from '@/components/shared/CustomToast';
 
 export const useToast = () => {
   const showSuccess = (message: string) => {
-    toast.success(message, {
-      position: "top-center",
+    toast.success(CustomToast({ title: 'Success', desc: message }), {
+      position: 'top-center',
       autoClose: 3000,
       hideProgressBar: false,
       closeOnClick: true,
@@ -14,9 +15,9 @@ export const useToast = () => {
   };
 
   const showError = (message: string) => {
-    toast.error(message, {
-      position: "top-center",
-      autoClose: 5000,
+    toast.error(CustomToast({ title: 'Error', desc: message }), {
+      position: 'top-center',
+      autoClose: 3000,
       hideProgressBar: false,
       closeOnClick: true,
       pauseOnHover: true,
@@ -26,4 +27,4 @@ export const useToast = () => {
   };
 
   return { showSuccess, showError };
-}; 
+};

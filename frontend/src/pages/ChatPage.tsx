@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Container, CircularProgress } from '@mui/material';
-import { websocketService } from '../services/websocketService';
-import { FileData, fileService } from '../services/fileService';
-import { useChatHistory } from '../contexts/ChatHistoryContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useChat } from '../hooks/useChat';
-import ChatArea from '../components/ChatArea';
-import { MainLayout } from '../components/MainLayout';
-import { ChatHistory } from '../types/chat';
+import { CircularProgress } from '@mui/material';
+
+import { websocketService } from '@/services/websocketService';
+import { FileData, fileService } from '@/services/fileService';
+import { useChatHistory } from '@/contexts/ChatHistoryContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useChat } from '@/hooks/useChat';
+import { ChatHistory } from '@/types/chat';
+import ChatArea from '@/components/chat/ChatArea';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<ChatHistory['items']>([]);
@@ -58,26 +59,16 @@ const ChatPage = () => {
   }, [user, clearMessages, id]);
 
   return (
-    <MainLayout currentPage="Chat">
-      <Container
-        maxWidth="xl"
-        sx={{ height: '100%', display: 'flex', flexDirection: 'column', py: 2 }}
-      >
-        <Box sx={{ flex: 1, overflow: 'auto', mb: 1 }}>
-          {isLoading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              minHeight="500px"
-            >
-              <CircularProgress />
-            </Box>
-          ) : (
-            <ChatArea content={messages} id={id} files={files} />
-          )}
-        </Box>
-      </Container>
+    <MainLayout currentPage="AgentOS Chat">
+      <div className="h-full p-16 pb-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[500px]">
+            <CircularProgress />
+          </div>
+        ) : (
+          <ChatArea content={messages} id={id} files={files} />
+        )}
+      </div>
     </MainLayout>
   );
 };

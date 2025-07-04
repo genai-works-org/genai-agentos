@@ -14,3 +14,8 @@ export interface ChatHistory {
     request_id: string;
   }[];
 }
+
+export interface AttachedFile {
+  id: string;
+  name: string;
+}
