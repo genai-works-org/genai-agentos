@@ -23,6 +23,7 @@ import { transformEdgesToNodes } from '@/utils/transformEdgesToNodes';
 import { AgentType, ActiveConnection } from '@/types/agent';
 import { FlowChainNode } from '@/types/flow';
 import { useAgent } from '@/hooks/useAgent';
+import { useToast } from '@/hooks/useToast';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import SaveFlowModal from '@/components/flow/SaveFlowModal';
@@ -57,6 +58,7 @@ const AgentFlowsEditPage: FC = () => {
   const positionsSet = useRef(false);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
+  const toast = useToast();
 
   const isNewFlow = useMemo(() => id === 'new', [id]);
   const layoutTitle = isNewFlow ? 'New Agent Flow' : flowName;
@@ -175,8 +177,9 @@ const AgentFlowsEditPage: FC = () => {
         await updateAgentFlow(id!, flow);
       }
       navigate('/agent-flows');
+      toast.showSuccess('Agent Flow saved successfully');
     } catch (e) {
-      console.error(e);
+      toast.showError('Failed to save agent flow');
     } finally {
       setSaving(false);
     }

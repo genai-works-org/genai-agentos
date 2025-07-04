@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 
 import { useSettings } from '@/contexts/SettingsContext';
 import { useModels } from '@/hooks/useModels';
+import { useToast } from '@/hooks/useToast';
 import {
   getInitialConfig,
   getProviderModels,
@@ -51,6 +51,7 @@ const SettingsPage = () => {
     deleteModel,
     loading,
   } = useModels();
+  const toast = useToast();
 
   const handleProviderChange = (value: string) => {
     const currentProvider = providers.find(p => p.provider === value);
@@ -87,6 +88,7 @@ const SettingsPage = () => {
     }
     setDeleteDialogOpen(false);
     setSelectedModel(null);
+    toast.showSuccess('Model deleted successfully');
   };
 
   const handleSaveProvider = async () => {
@@ -120,9 +122,9 @@ const SettingsPage = () => {
         });
       }
 
-      toast.success('Settings saved successfully');
+      toast.showSuccess('Settings saved successfully');
     } catch (error) {
-      console.error('Failed to create provider');
+      toast.showError('Failed to create provider');
     } finally {
       refetchModels();
     }
@@ -142,8 +144,9 @@ const SettingsPage = () => {
           provider,
         });
       }
+      toast.showSuccess('Model saved successfully');
     } catch (err) {
-      console.error(err);
+      toast.showError('Failed to save model');
     } finally {
       refetchModels();
       setShowForm(false);

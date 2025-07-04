@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CircularProgress } from '@mui/material';
 
 import { useA2aAgents } from '@/hooks/useA2aAgents';
+import { useToast } from '@/hooks/useToast';
 import { removeUnderscore } from '@/utils/normalizeString';
 import { A2AAgent } from '@/types/agent';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -17,12 +18,14 @@ const A2AAgentsPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { getAgents, createAgent, deleteAgent, isLoading } = useA2aAgents();
+  const toast = useToast();
 
   const handleCreateAgent = async (url: string) => {
     await createAgent(url);
     const updatedAgents = await getAgents();
     setAgents(updatedAgents);
     setIsCreateModalOpen(false);
+    toast.showSuccess('Agent created successfully');
   };
 
   const handleDeleteAgent = async () => {
@@ -31,6 +34,7 @@ const A2AAgentsPage = () => {
     setAgents(updatedAgents);
     setIsConfirmOpen(false);
     setSelectedAgent(null);
+    toast.showSuccess('Agent deleted successfully');
   };
 
   useEffect(() => {

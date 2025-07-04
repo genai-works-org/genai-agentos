@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CircularProgress } from '@mui/material';
 
 import { useMcpAgents } from '@/hooks/useMcpAgents';
+import { useToast } from '@/hooks/useToast';
 import { MCPAgent } from '@/types/agent';
 import { MainLayout } from '@/components/layout/MainLayout';
 import CreateCard from '@/components/shared/CreateCard';
@@ -16,12 +17,14 @@ const MCPServersPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { getServers, createServer, deleteServer, isLoading } = useMcpAgents();
+  const toast = useToast();
 
   const handleCreateServer = async (url: string) => {
     await createServer(url);
     const updatedAgents = await getServers();
     setAgents(updatedAgents);
     setIsCreateModalOpen(false);
+    toast.showSuccess('Server added successfully');
   };
 
   const handleDeleteServer = async () => {
@@ -30,6 +33,7 @@ const MCPServersPage = () => {
     setAgents(updatedServers);
     setIsConfirmOpen(false);
     setSelectedAgent(null);
+    toast.showSuccess('Server deleted successfully');
   };
 
   useEffect(() => {

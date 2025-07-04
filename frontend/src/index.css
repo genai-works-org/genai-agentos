@@ -9,6 +9,11 @@
   }
 }
 
+:root {
+  --accent-color: #008765;
+  --error-color: #ba1a1a;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #c4c4c4 transparent;
@@ -19,12 +24,12 @@
 }
 
 .react-flow .react-flow__edge path {
-  stroke: #008765;
+  stroke: var(--accent-color);
   stroke-width: 2px;
 }
 
 .react-flow .react-flow__edge.selected path {
-  stroke: #008765;
+  stroke: var(--accent-color);
   stroke-width: 3px;
 }
 
@@ -43,7 +48,7 @@
   width: 12px;
   height: 12px;
   background-color: #fff;
-  border: 1px solid #008765;
+  border: 1px solid var(--accent-color);
 }
 
 .react-flow__node .react-flow__handle-top {
@@ -52,4 +57,41 @@
 
 .react-flow__node .react-flow__handle-bottom {
   bottom: -32px;
+}
+
+/* Toastify styles */
+
+.Toastify__toast {
+  width: 664px !important;
+  padding: 18px 16px !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.Toastify__toast-icon svg {
+  fill: var(--accent-color);
+}
+
+.Toastify__toast--success .Toastify__progress-bar {
+  background-color: var(--accent-color);
+}
+
+.Toastify__toast--error .Toastify__toast-icon svg {
+  fill: var(--error-color);
+}
+
+.Toastify__toast--error .Toastify__progress-bar {
+  background-color: var(--error-color);
+}
+
+.Toastify__close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80%;
+}
+
+.Toastify__close-button > svg {
+  width: 24px !important;
+  height: 24px !important;
 }

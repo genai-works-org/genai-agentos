@@ -5,6 +5,7 @@ import { CircularProgress } from '@mui/material';
 
 import { AgentFlowDTO } from '@/types/agent';
 import { useAgent } from '@/hooks/useAgent';
+import { useToast } from '@/hooks/useToast';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { AgentFlowCard } from '@/components/flow/AgentFlowCard';
 import ConfirmModal from '@/components/modals/ConfirmModal';
@@ -17,6 +18,7 @@ const AgentFlowsPage: FC = () => {
   const [selectedFlow, setSelectedFlow] = useState<AgentFlowDTO | null>(null);
   const navigate = useNavigate();
   const { getAgentFlows, deleteAgentFlow } = useAgent();
+  const toast = useToast();
 
   useEffect(() => {
     loadFlows();
@@ -50,6 +52,7 @@ const AgentFlowsPage: FC = () => {
     await deleteAgentFlow(selectedFlow.id);
     await loadFlows();
     handleClose();
+    toast.showSuccess('Agent Flow deleted successfully');
   };
 
   const handleEdit = (id: string) => {

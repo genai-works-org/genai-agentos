@@ -44,6 +44,7 @@ const AgentsPage: FC = () => {
       await loadAgents();
       setSelectedAgent(null);
       setIsConfirmOpen(false);
+      toast.showSuccess('Agent deleted successfully');
     }
   };
 

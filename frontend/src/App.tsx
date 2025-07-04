@@ -32,6 +32,7 @@ export function App() {
                 draggable
                 pauseOnHover
                 theme="light"
+                className="pt-20"
               />
             </LogProvider>
           </SettingsProvider>
