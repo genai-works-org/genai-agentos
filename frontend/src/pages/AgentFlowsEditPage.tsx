@@ -52,14 +52,8 @@ const AgentFlowsEditPage: FC = () => {
   const [saving, setSaving] = useState(false);
   const [openDrawer, setOpenDrawer] = useState(true);
   const [openBottomPanel, setOpenBottomPanel] = useState(false);
-  const [usedAgentColors, setUsedAgentColors] = useState<
-    Record<string, string>
-  >({});
   const [links, setLinks] = useState<FlowChainNode[]>([]);
   const [nodeHeights, setNodeHeights] = useState<Record<string, number>>({});
-  const [positions, setPositions] = useState<
-    Record<string, { x: number; y: number }>
-  >({});
   const positionsSet = useRef(false);
   const { getAgentFlow, createAgentFlow, updateAgentFlow, getAgents } =
     useAgent();
@@ -107,6 +101,7 @@ const AgentFlowsEditPage: FC = () => {
   const onDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
+      positionsSet.current = true;
       const agent = JSON.parse(event.dataTransfer.getData('text/plain'));
 
       // Get the ReactFlow container's bounds
@@ -193,7 +188,6 @@ const AgentFlowsEditPage: FC = () => {
     setEdges([]);
     setLinks([]);
     setFlowDescription('');
-    setUsedAgentColors({});
   }, []);
 
   // Fetch agents and flow data
@@ -297,61 +291,51 @@ const AgentFlowsEditPage: FC = () => {
 
   // Relationship display (edges)
   useEffect(() => {
-    const nodes = transformEdgesToNodes(edges, agents, usedAgentColors);
+    const nodes = transformEdgesToNodes(edges, agents);
 
     setLinks(nodes);
   }, [edges]);
 
   // Calculate node positions
   useEffect(() => {
-    const handleNodeHeight = (e: CustomEvent) => {
-      const { nodeId, height } = e.detail;
-      const id = nodeId.split('::')[0];
-      setNodeHeights(prev => {
-        return { ...prev, [id]: height };
-      });
+    const handleNodeHeight = (event: CustomEvent) => {
+      const { nodeId, height } = event.detail;
+      setNodeHeights(prev => ({
+        ...prev,
+        [nodeId]: height,
+      }));
     };
+
     window.addEventListener('nodeHeight', handleNodeHeight as EventListener);
-    return () =>
+    return () => {
       window.removeEventListener(
         'nodeHeight',
         handleNodeHeight as EventListener,
       );
+    };
   }, []);
 
   useEffect(() => {
-    if (
-      nodes.length === 0 ||
-      Object.keys(nodeHeights).length < nodes.length ||
-      positionsSet.current
-    )
-      return;
+    if (nodes.length === 0 || positionsSet.current) return;
 
     const gap = 100;
-    let accumulatedHeight = 0;
-    const newPositions: Record<string, { x: number; y: number }> = {};
-
-    nodes.forEach(node => {
-      const id = node.id.split('::')[0];
-      const height = nodeHeights[id] || 120;
-      newPositions[id] = { x: 0, y: accumulatedHeight };
-      accumulatedHeight += height + gap;
-    });
-
-    setPositions(newPositions);
-    positionsSet.current = true;
-  }, [nodeHeights, nodes]);
-
-  useEffect(() => {
-    if (Object.keys(positions).length === 0) return;
+    let currentY = 0;
 
     setNodes(nds =>
-      nds.map(node => ({
-        ...node,
-        position: positions[node.id.split('::')[0]] || node.position,
-      })),
+      nds.map(node => {
+        const height = nodeHeights[node.id] || 120;
+        const position = { x: 0, y: currentY };
+        currentY += height + gap;
+
+        return {
+          ...node,
+          position,
+        };
+      }),
     );
-  }, [positions, setNodes]);
+
+    positionsSet.current = true;
+  }, [nodeHeights]);
 
   if (isLoading) {
     return (

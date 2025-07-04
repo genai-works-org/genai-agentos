@@ -1,11 +1,7 @@
 import { Edge } from 'reactflow';
 import { FlowChainNode } from '@/types/flow';
 
-export const transformEdgesToNodes = (
-  edges: Edge[],
-  agents: any[] = [],
-  usedAgentColors: Record<string, string> = {},
-) => {
+export const transformEdgesToNodes = (edges: Edge[], agents: any[] = []) => {
   if (edges.length === 0) return [];
   const nodes: FlowChainNode[] = [];
   const processedIds = new Set<string>();
@@ -22,7 +18,7 @@ export const transformEdgesToNodes = (
     id: headNodeId,
     agent_id: headNodeId.split('::')[0],
     name: headAgent?.agent_name || headNodeId,
-    color: usedAgentColors[headNodeId.split('::')[0]] || '#000000',
+    color: '#000000',
     nextId: null,
     type: headAgent?.type,
   });
@@ -42,7 +38,7 @@ export const transformEdgesToNodes = (
       id: nextId,
       agent_id: nextId.split('::')[0],
       name: nextAgent?.agent_name || nextId,
-      color: usedAgentColors[nextId.split('::')[0]] || '#000000',
+      color: '#000000',
       nextId: null,
       type: nextAgent?.type,
     });
