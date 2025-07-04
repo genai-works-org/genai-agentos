@@ -57,7 +57,7 @@ const AgentsSidebar: FC<AgentsSidebarProps> = ({
         />
         <Search className="absolute top-9 left-4 text-text-secondary" />
       </div>
-      <div className="flex flex-col gap-4 overflow-y-auto">
+      <div className="flex flex-col gap-4 overflow-y-auto will-change-scroll">
         {(search.length >= 2 ? searchResults : agents).map(agent => {
           const isNodeInFlow = nodes.find(
             node => node.id.split('::')[0] === agent.id,

@@ -46,7 +46,7 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
 
   return (
     <aside
-      className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out overflow-y-auto ${
+      className={`max-h-[calc(100vh-64px)] px-2 transition-all duration-300 ease-in-out overflow-y-auto will-change-scroll ${
         collapsed ? 'w-[56px]' : 'w-[200px]'
       }`}
     >
