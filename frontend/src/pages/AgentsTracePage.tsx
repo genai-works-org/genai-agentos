@@ -99,7 +99,6 @@ const AgentsTracePage: FC = () => {
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
-            fitView
           >
             <Background />
             <Controls />

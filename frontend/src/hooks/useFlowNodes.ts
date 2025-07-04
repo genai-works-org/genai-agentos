@@ -38,11 +38,12 @@ export const useFlowNodes = (traceData: AgentTrace[] | null) => {
     if (traceData) {
       // Calculate node positions based on actual heights
       let currentY = 0;
+      const currentX = (window.innerWidth - 1150) / 2;
 
       const nodePositions = traceData.map((_, index) => {
         const nodeId = `node-${index}`;
         const height = nodeHeights[nodeId] || 100; // Default height if not measured yet
-        const position = { x: 100, y: currentY };
+        const position = { x: currentX, y: currentY };
         currentY += height + 100; // Add 100px spacing between nodes
         return position;
       });
