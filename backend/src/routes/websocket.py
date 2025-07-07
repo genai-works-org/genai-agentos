@@ -153,7 +153,7 @@ async def handle_frontend_ws(
                 )
             chat_title = message_obj.message[:20]
             if not chat_title:
-                chat_title = f"New Chat {datetime.now().time()}"
+                chat_title = "New Chat"
 
             chat = await chat_repo.get_chat_by_session_id(
                 db=db, session_id=session_id, user_model=user_model
