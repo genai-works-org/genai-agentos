@@ -22,6 +22,7 @@ dependencies = [
     "tenacity>=9.1.2",
     "mcp[cli]>=1.9.0",
     "celery-singleton>=0.3.1",
+    "langchain-google-genai>=2.1.6",
 ]
 
 [dependency-groups]

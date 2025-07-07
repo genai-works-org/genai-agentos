@@ -3,7 +3,7 @@ from typing import Any
 from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 class LLMFactory:
     _registry = {}
@@ -53,4 +53,16 @@ def __create_ollama_model(configs: dict[str, Any]) -> ChatOllama:
         model=configs.get("model"),
         base_url=configs.get("base_url"),
         temperature=configs.get("temperature")
+    )
+
+
+@LLMFactory.register("gemini")
+def __create_gemini_model(configs: dict[str, Any]) -> ChatGoogleGenerativeAI:
+    return ChatGoogleGenerativeAI(
+        model=configs.get("model"),
+        google_api_key=configs.get("api_key"),
+        temperature=configs.get("temperature"),
+        max_output_tokens=configs.get("max_output_tokens", 1024),
+        top_p=configs.get("top_p", 0.95),
+        top_k=configs.get("top_k", 40)
     )

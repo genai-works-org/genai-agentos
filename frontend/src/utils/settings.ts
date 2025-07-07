@@ -69,6 +69,11 @@ export const getInitialMetadata = (
         base_url: '',
       };
 
+    case AI_PROVIDERS.GEMINI:
+      return {
+        api_key: '',
+      };
+
     default:
       return {};
   }
