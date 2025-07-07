@@ -1,7 +1,10 @@
+import hashlib
+import hmac
 import json
 from typing import Any
 
 from langchain_core.language_models import BaseChatModel
+from langchain_core.messages import BaseMessage
 from langchain_ollama import ChatOllama
 
 
@@ -24,3 +27,11 @@ def filter_and_order_by_ids(ids: list[Any], items: list[dict[str, Any]]) -> list
 
 def remove_last_underscore_segment(s: str) -> str:
     return s.rsplit('_', 1)[0] if '_' in s else s
+
+
+def generate_hmac(secret_key: str, message: str) -> str:
+    return hmac.new(secret_key.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+
+def combine_messages(messages: list[BaseMessage]) -> str:
+    return "\n".join([msg.content for msg in messages])

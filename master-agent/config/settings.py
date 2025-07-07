@@ -21,3 +21,7 @@ class Settings(BaseSettings):
     BACKEND_API_URL: str = Field(
         default="http://genai-backend:8000/api", alias="BACKEND_API_URL"
     )
+    SECRET_KEY: str = Field(
+        default="GenAI-ddc5e9f5-c340-4dcc-9872-d7f098b6b172",
+        alias="SECRET_KEY"
+    )
