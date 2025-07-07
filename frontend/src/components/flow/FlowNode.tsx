@@ -52,10 +52,10 @@ export const FlowNode: FC<NodeProps<FlowNodeData>> = ({ data, id }) => {
       >
         <p className="font-bold break-words capitalize">
           {isActive ? (
-            data.label.toLowerCase()
+            data.label
           ) : (
             <span className="flex items-center gap-1 text-error-main">
-              <ShieldX /> {data.label.toLowerCase() || 'Inactive'}
+              <ShieldX /> {data.label || 'Inactive'}
             </span>
           )}
         </p>

@@ -94,7 +94,7 @@ const ChatList = memo(() => {
       <p className="font-medium text-text-secondary mb-1.5 pl-2">Chats</p>
 
       {chats.length === 0 ? (
-        <p>No chats found</p>
+        <p className="px-2">No chats found</p>
       ) : (
         <ul className="p-0 pb-3">
           {sortedChats.map(chat => {

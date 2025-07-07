@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Info } from 'lucide-react';
 
 import { cn } from '@/utils/utils';
 import { Label } from './label';
 import { Button } from './button';
+import Tooltip from '../shared/Tooltip';
 
 interface InputWithIconProps extends React.ComponentProps<'input'> {
   label?: string;
@@ -12,6 +13,7 @@ interface InputWithIconProps extends React.ComponentProps<'input'> {
   setShowPassword?: React.Dispatch<React.SetStateAction<boolean>>;
   secure?: boolean;
   withAsterisk?: boolean;
+  hint?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
@@ -25,6 +27,7 @@ const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
       setShowPassword,
       secure,
       withAsterisk,
+      hint,
       ...props
     },
     ref,
@@ -33,14 +36,23 @@ const Input = React.forwardRef<HTMLInputElement, InputWithIconProps>(
       <div className="relative w-full">
         {label && (
           <Label
-            className={`mb-2 block text-xs text-text-secondary ${
-              withAsterisk
-                ? 'after:content-["*"] after:text-error-main after:ml-1'
-                : ''
-            }`}
+            className="flex items-center justify-between mb-2 text-xs text-text-secondary"
             htmlFor={props.id}
           >
-            {label}
+            <span
+              className={
+                withAsterisk
+                  ? 'after:content-["*"] after:text-error-main after:ml-1'
+                  : ''
+              }
+            >
+              {label}
+            </span>
+            {hint && (
+              <Tooltip message={hint}>
+                <Info size={16} />
+              </Tooltip>
+            )}
           </Label>
         )}
 

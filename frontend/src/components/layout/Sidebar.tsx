@@ -56,7 +56,7 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
           className="ml-2 mb-8 cursor-pointer"
           aria-label="Toggle sidebar"
         />
-        <nav>
+        <nav className="flex flex-col gap-2">
           {pages.map(({ path, title, Icon }) => {
             const isActive = location.pathname === path;
             return (

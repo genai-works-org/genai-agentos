@@ -6,10 +6,9 @@ import {
   ModelConfig,
   Config,
   CreateModelBody,
-  PROVIDERS_OPTIONS,
 } from '@/types/model';
 import { validateModelsField } from '@/utils/validation';
-import Select from '@/components/shared/Select';
+import { MAX_LAST_MESSAGES_HINT } from '@/constants/texts';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -124,13 +123,6 @@ const ModelForm: FC<ModelFormProps> = ({
             withAsterisk
             error={validationErrors.name}
           />
-          <Select
-            value={formData.provider}
-            label="Provider"
-            options={PROVIDERS_OPTIONS}
-            disabled
-            withAsterisk
-          />
           <Input
             id="model"
             name="model"
@@ -184,6 +176,7 @@ const ModelForm: FC<ModelFormProps> = ({
               max={20}
               withAsterisk
               error={validationErrors.max_last_messages}
+              hint={MAX_LAST_MESSAGES_HINT}
             />
             <p className="text-xs text-text-secondary mt-2">
               Enter the value between 1 - 20. Numeric value only
