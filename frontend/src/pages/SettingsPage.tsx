@@ -1,4 +1,5 @@
 import { useState } from 'react';
+// import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 import {
   Select,
@@ -22,6 +23,7 @@ import { MainLayout } from '../components/MainLayout';
 import { OpenAISettings } from '../components/settings/OpenAISettings';
 import { AzureOpenAISettings } from '../components/settings/AzureOpenAISettings';
 import { OllamaSettings } from '../components/settings/OllamaSettings';
+import { GeminiSettings } from '../components/settings/GeminiSettings';
 import { ModelForm } from '../components/ModelForm';
 import ConfirmModal from '../components/ConfirmModal';
 import {
@@ -43,8 +45,8 @@ export const SettingsPage = () => {
     activeModel,
     setActiveModel,
   } = useSettings();
-  const [config, setConfig] = useState<Config>(() =>
-    getInitialConfig(providers),
+  const [config, setConfig] = useState<Config>(() => 
+    getInitialConfig(providers)
   );
   const {
     createProvider,
@@ -140,6 +142,10 @@ export const SettingsPage = () => {
     }
   };
 
+  // useEffect(() => {
+  //   console.log('Config changed:', config);
+  // }, [config]);
+
   return (
     <MainLayout currentPage="Settings">
       <div className="h-full flex flex-col">
@@ -161,6 +167,7 @@ export const SettingsPage = () => {
                     Azure OpenAI
                   </MenuItem>
                   <MenuItem value={AI_PROVIDERS.OLLAMA}>Ollama</MenuItem>
+                  <MenuItem value={AI_PROVIDERS.GEMINI}>Gemini</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -226,6 +233,28 @@ export const SettingsPage = () => {
                 tooltipMessage={
                   !isProviderSettingsSet(providers, AI_PROVIDERS.OLLAMA)
                     ? TOOLTIP_MESSAGES.OLLAMA
+                    : ''
+                }
+              />
+            )}
+
+            {config.provider === AI_PROVIDERS.GEMINI && (
+              <GeminiSettings
+                settings={config}
+                onSettingsChange={setConfig}
+                availableModels={getProviderModels(
+                  providers,
+                  AI_PROVIDERS.GEMINI,
+                )}
+                onModelCreate={() => setShowForm(true)}
+                onModelEdit={handleEditModel}
+                onModelDelete={handleDeleteModel}
+                disabledModelCreate={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.GEMINI)
+                }
+                tooltipMessage={
+                  !isProviderSettingsSet(providers, AI_PROVIDERS.GEMINI)
+                    ? TOOLTIP_MESSAGES.GEMINI
                     : ''
                 }
               />
