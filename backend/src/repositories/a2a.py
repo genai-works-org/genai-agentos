@@ -1,4 +1,5 @@
 import logging
+import traceback
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -112,6 +113,9 @@ class A2ARepository(CRUDBase[A2ACard, A2AAgentCard, A2AAgentCard]):
             )
 
         except IntegrityError:
+            print("=" * 30)
+            print(traceback.format_exc())
+            print("=" * 30)
             await db.rollback()
             return await self.update_server_is_active_state(
                 db=db, user_id=user_id, agent_dto=a2a_card_dto
