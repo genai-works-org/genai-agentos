@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { CircularProgress, Container, Box } from '@mui/material';
+import { CircularProgress } from '@mui/material';
 
-import { useMcpAgents } from '../hooks/useMcpAgents';
-import { MCPAgent } from '../types/agent';
-import { MainLayout } from '../components/MainLayout';
-import { AIModelCreateCard } from '../components/AIModelCreateCard';
-import CreateModal from '../components/CreateModal';
-import AgentDetailModal from '../components/mcp/AgentDetailModal';
-import AgentCard from '../components/mcp/AgentCard';
-import ConfirmModal from '../components/ConfirmModal';
+import { useMcpAgents } from '@/hooks/useMcpAgents';
+import { useToast } from '@/hooks/useToast';
+import { MCPAgent } from '@/types/agent';
+import { MainLayout } from '@/components/layout/MainLayout';
+import CreateCard from '@/components/shared/CreateCard';
+import AgentCard from '@/components/mcp/AgentCard';
+import AgentDetailModal from '@/components/mcp/AgentDetailModal';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import CreateAgentModal from '@/components/modals/CreateAgentModal';
 
 const MCPServersPage = () => {
   const [agents, setAgents] = useState<MCPAgent[]>([]);
@@ -16,12 +17,14 @@ const MCPServersPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const { getServers, createServer, deleteServer, isLoading } = useMcpAgents();
+  const toast = useToast();
 
   const handleCreateServer = async (url: string) => {
     await createServer(url);
     const updatedAgents = await getServers();
     setAgents(updatedAgents);
     setIsCreateModalOpen(false);
+    toast.showSuccess('Server added successfully');
   };
 
   const handleDeleteServer = async () => {
@@ -30,6 +33,7 @@ const MCPServersPage = () => {
     setAgents(updatedServers);
     setIsConfirmOpen(false);
     setSelectedAgent(null);
+    toast.showSuccess('Server deleted successfully');
   };
 
   useEffect(() => {
@@ -37,33 +41,14 @@ const MCPServersPage = () => {
   }, [getServers]);
 
   return (
-    <MainLayout currentPage="MCP Agents">
-      <Container
-        maxWidth="xl"
-        sx={{
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          py: 2,
-        }}
-      >
+    <MainLayout currentPage="MCP Servers">
+      <div className="p-16">
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="400px"
-          >
+          <div className="flex justify-center items-center min-h-[400px]">
             <CircularProgress />
-          </Box>
+          </div>
         ) : (
-          <div className="flex flex-wrap gap-4 min-h-[200px]">
-            <AIModelCreateCard
-              onClick={() => setIsCreateModalOpen(true)}
-              disabled={false}
-              tooltipMessage="Create a new MCP Server"
-              width="350px"
-            />
+          <div className="flex flex-wrap gap-4 min-h-[220px]">
             {agents.map(agent => (
               <AgentCard
                 key={agent.id}
@@ -71,15 +56,20 @@ const MCPServersPage = () => {
                 setSelectedAgent={setSelectedAgent}
               />
             ))}
+            <CreateCard
+              buttonText="Add MCP Agent"
+              onClick={() => setIsCreateModalOpen(true)}
+            />
           </div>
         )}
-      </Container>
+      </div>
 
-      <CreateModal
+      <CreateAgentModal
         open={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onCreate={handleCreateServer}
         title="Create MCP Server"
+        placeholder="https://mcp-example.com"
         loading={isLoading}
       />
 
@@ -92,10 +82,10 @@ const MCPServersPage = () => {
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Server"
-        text={`Are you sure you want to delete this agent?`}
+        description={`Are you sure you want to delete this Agent "${selectedAgent?.server_url}"?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteServer}
+        loading={isLoading}
       />
     </MainLayout>
   );

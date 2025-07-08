@@ -5,7 +5,7 @@ export const isProviderSettingsSet = (
   name: string,
 ) => {
   const provider = configs.find(c => c.provider === name);
-  return Boolean(provider?.api_key);
+  return Boolean(provider?.api_key) || Boolean(provider?.metadata?.base_url);
 };
 
 export const isProviderSettingsChanged = (
@@ -20,12 +20,30 @@ export const isProviderSettingsChanged = (
     return false;
   }
 
-  return (
-    JSON.stringify({
-      ...targetProvider?.metadata,
-      api_key: targetProvider?.api_key,
-    }) !== JSON.stringify(newConfig.data)
-  );
+  if (provider === AI_PROVIDERS.OLLAMA) {
+    return targetProvider?.metadata.base_url !== newConfig.data.base_url;
+  }
+
+  if (!targetProvider) return true;
+
+  const prev = {
+    ...targetProvider.metadata,
+    api_key: targetProvider.api_key,
+  };
+  const curr = newConfig.data;
+
+  const prevKeys = Object.keys(prev);
+  const currKeys = Object.keys(curr);
+
+  if (prevKeys.length !== currKeys.length) return true;
+
+  for (const key of prevKeys) {
+    if (prev[key as keyof typeof prev] !== curr[key]) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 export const getProviderModels = (

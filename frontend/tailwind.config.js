@@ -8,37 +8,55 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary colors
         primary: {
-          dark: '#1A2D42',    // Dark blue
-          medium: '#2E4156',   // Medium blue
+          white: '#FFFFFF',
+          accent: '#008765',
+          light: '#D6FFF5'
         },
-        // Neutral colors
         neutral: {
-          light: '#AAB7B7',    // Light gray
-          medium: '#C0C8CA',   // Medium gray
-          lighter: '#D4D8DD',  // Lighter gray
+          light: '#F2F7F6',
+          accent: '#D7E3E0',
+          border: '#B8C2BF'
         },
-        // Theme-specific colors
-        light: {
-          bg: '#FFFFFF',       // White background
-          bgAlt: '#D4D8DD',    // Light gray background
-          text: '#1A2D42',     // Dark blue text
-          secondary: {
-            primary: '#2E4156', // Medium blue
-            secondary: '#AAB7B7', // Light gray
+        text: {
+          main: '#00231A',
+          secondary: '#3D5E56',
+          light: '#B2BDBA',
+          placeholder: '#A9B2B2',
+          accent: '#003629'
+        },
+        error: {
+          main: '#BA1A1A',
+        },
+        disabled: {
+          main: '#B8C2C2',
+        },
+        badge: {
+          pink: {
+            light: '#FFDAD6',
+            dark: '#410002',
           },
-        },
-        dark: {
-          bg: '#1A2D42',       // Dark blue background
-          bgAlt: '#2E4156',    // Medium blue background
-          text: '#D4D8DD',     // Light gray text
-          secondary: {
-            primary: '#C0C8CA', // Medium gray
-            secondary: '#AAB7B7', // Light gray
+          blue: {
+            light: '#007AFF1A',
+            dark: '#001A36'
           },
-        },
+          brown: {
+            light: '#FFECD6',
+            dark: '#40280D'
+          },
+          cyan: {
+            light: '#D6FFFF',
+            dark: '#003436'
+          },
+          green: {
+            light: '#D7E3E0',
+            dark: '#3D5E56'
+          },
+        }
       },
+      fontFamily: {
+        sans: ['Open Sans', 'sans-serif'],
+      }
     },
   },
   plugins: [

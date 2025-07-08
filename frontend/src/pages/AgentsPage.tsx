@@ -1,25 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FC } from 'react';
-import { Copy } from 'lucide-react';
-import {
-  Container,
-  IconButton,
-  Typography,
-  CircularProgress,
-  Box,
-  Button,
-  TextField,
-} from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { AgentDTO } from '../types/agent';
-import { useAgent } from '../hooks/useAgent';
-import { useToast } from '../hooks/useToast';
-import { AgentCard } from '../components/AgentCard';
-import { MainLayout } from '../components/MainLayout';
-import ConfirmModal from '../components/ConfirmModal';
-import { Modal as GenerateTokenModal } from '../components/Modal';
+import { RefreshCw } from 'lucide-react';
+import { CircularProgress } from '@mui/material';
 
-export const AgentsPage: FC = () => {
+import { AgentDTO } from '@/types/agent';
+import { useAgent } from '@/hooks/useAgent';
+import { useToast } from '@/hooks/useToast';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Button } from '@/components/ui/button';
+import ConfirmModal from '@/components/modals/ConfirmModal';
+import { AgentCard } from '@/components/genai/AgentCard';
+import AgentDetailsModal from '@/components/genai/AgentDetailsModal';
+import GenerateTokenModal from '@/components/genai/GenerateTokenModal';
+
+const AgentsPage: FC = () => {
   const [agents, setAgents] = useState<AgentDTO[]>([]);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -28,7 +22,12 @@ export const AgentsPage: FC = () => {
   const { isLoading, getAgents, deleteAgent, createAgent } = useAgent();
   const toast = useToast();
 
-  const activeAgents = agents.filter(agent => agent.is_active);
+  const activeAgents = useMemo(
+    () => agents.filter(agent => agent.is_active),
+    [agents],
+  );
+
+  const agentsLength = useMemo(() => activeAgents.length, [activeAgents]);
 
   useEffect(() => {
     loadAgents();
@@ -39,17 +38,13 @@ export const AgentsPage: FC = () => {
     setAgents(response);
   };
 
-  const openConfirm = (agent: AgentDTO) => {
-    setSelectedAgent(agent);
-    setIsConfirmOpen(true);
-  };
-
   const handleDeleteAgent = async () => {
     if (selectedAgent) {
       await deleteAgent(selectedAgent.agent_id);
       await loadAgents();
       setSelectedAgent(null);
       setIsConfirmOpen(false);
+      toast.showSuccess('Agent deleted successfully');
     }
   };
 
@@ -79,93 +74,68 @@ export const AgentsPage: FC = () => {
   };
 
   return (
-    <MainLayout currentPage="Agents">
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <Box display="flex" alignItems="center" mb={3}>
-          {!isLoading && (
-            <Box>
-              <Typography variant="h5" component="h3">
-                {agents.length} agents ({activeAgents.length} active)
-              </Typography>
-            </Box>
-          )}
-          <Button
-            variant="contained"
-            onClick={createNewAgent}
-            sx={{ ml: 'auto', mr: 2 }}
-          >
-            Generate Token
-          </Button>
-          <Box>
-            <IconButton
-              color="primary"
+    <MainLayout currentPage="GenAI Agents">
+      <div className="p-16">
+        <div className="flex justify-between items-center mb-12 p-4 bg-primary-white rounded-2xl border border-neutral-border">
+          <p className="font-bold">
+            {agentsLength} Active {agentsLength === 1 ? 'Agent' : 'Agents'}
+          </p>
+          <div>
+            <Button onClick={createNewAgent} className="w-[168px] mr-2">
+              Generate token
+            </Button>
+            <Button
+              variant="outline"
               onClick={loadAgents}
-              disabled={isLoading}
-              sx={{ mr: 2 }}
+              className="w-[131px]"
             >
-              <RefreshIcon />
-            </IconButton>
-          </Box>
-        </Box>
+              <RefreshCw size={15} />
+              Refresh
+            </Button>
+          </div>
+        </div>
+
         {isLoading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
+          <div className="flex items-center justify-center min-h-[200px]">
             <CircularProgress />
-          </Box>
-        ) : agents.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="200px"
-          >
-            <Typography variant="h6" color="text.secondary">
-              No agents found
-            </Typography>
-          </Box>
+          </div>
         ) : (
-          <Box display="flex" gap={2} flexWrap="wrap">
+          <div className="flex flex-wrap gap-4">
             {agents.map(agent => (
-              <Box key={agent.agent_id} sx={{ width: '350px' }}>
-                <AgentCard agent={agent} onDelete={() => openConfirm(agent)} />
-              </Box>
+              <AgentCard
+                key={agent.agent_id}
+                agent={agent}
+                setSelectedAgent={setSelectedAgent}
+              />
             ))}
-          </Box>
+          </div>
         )}
-      </Container>
+      </div>
+
+      <AgentDetailsModal
+        open={!!selectedAgent}
+        agent={selectedAgent}
+        onClose={() => setSelectedAgent(null)}
+        onDelete={() => setIsConfirmOpen(true)}
+      />
 
       <ConfirmModal
         isOpen={isConfirmOpen}
-        title="Delete Agent"
-        text={`Are you sure you want to delete ${selectedAgent?.agent_name || ''}?`}
+        description={`Are you sure you want to delete this Agent "${
+          selectedAgent?.agent_name || ''
+        }"?`}
         onClose={() => setIsConfirmOpen(false)}
         onConfirm={handleDeleteAgent}
       />
 
       <GenerateTokenModal
-        isOpen={isGenerateOpen}
+        open={isGenerateOpen}
         onClose={closeTokenModal}
-        title="Generated Token"
-        className="relative"
-      >
-        <TextField
-          multiline
-          maxRows={6}
-          value={token}
-          fullWidth
-          disabled
-          sx={{ '& .MuiInputBase-root': { pr: 5 } }}
-        />
-        <Copy
-          size={20}
-          className="absolute top-[84px] right-[30px] cursor-pointer"
-          onClick={copyToken}
-        />
-      </GenerateTokenModal>
+        token={token}
+        copyToken={copyToken}
+      />
     </MainLayout>
   );
 };
+
+export default AgentsPage;

@@ -1,24 +1,97 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
+
+@layer base {
+  body {
+    @apply text-text-main font-sans font-medium;
+  }
+}
+
+:root {
+  --accent-color: #008765;
+  --error-color: #ba1a1a;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c4c4c4 transparent;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #a0a0a0;
+}
 
 .react-flow .react-flow__edge path {
-  stroke: #000;
+  stroke: var(--accent-color);
   stroke-width: 2px;
 }
 
 .react-flow .react-flow__edge.selected path {
-  stroke: #f4511e;
+  stroke: var(--accent-color);
+  stroke-width: 3px;
 }
 
 .react-flow__node {
-  width: 200px;
-  padding: 10px;
-  border-radius: 8px;
-  border: 2px solid;
-  background-color: #fff;
+  width: 505px;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid;
 }
 
 .react-flow__node.selected {
-  background-color: #fdedef;
+  border-width: 2px;
+}
+
+.react-flow__node .react-flow__handle {
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border: 1px solid var(--accent-color);
+}
+
+.react-flow__node .react-flow__handle-top {
+  top: -32px;
+}
+
+.react-flow__node .react-flow__handle-bottom {
+  bottom: -32px;
+}
+
+/* Toastify styles */
+
+.Toastify__toast {
+  width: 664px !important;
+  padding: 18px 16px !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+.Toastify__toast-icon svg {
+  fill: var(--accent-color);
+}
+
+.Toastify__toast--success .Toastify__progress-bar {
+  background-color: var(--accent-color);
+}
+
+.Toastify__toast--error .Toastify__toast-icon svg {
+  fill: var(--error-color);
+}
+
+.Toastify__toast--error .Toastify__progress-bar {
+  background-color: var(--error-color);
+}
+
+.Toastify__close-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80%;
+}
+
+.Toastify__close-button > svg {
+  width: 24px !important;
+  height: 24px !important;
 }

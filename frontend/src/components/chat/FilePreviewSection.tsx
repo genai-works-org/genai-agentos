@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import FilePreviewCard, { FileData } from '../FilePreviewCard';
+import FilePreviewCard, { FileData } from './FilePreviewCard';
 
 interface FilePreviewSectionProps {
   attachedFiles: FileData[];
@@ -16,8 +16,8 @@ const FilePreviewSection: FC<FilePreviewSectionProps> = ({
 
   return (
     <div className="px-3 py-2 border-b border-gray-200 flex flex-wrap gap-3">
-      {attachedFiles.map((file) => (
-        <FilePreviewCard 
+      {attachedFiles.map(file => (
+        <FilePreviewCard
           key={file.clientId}
           fileData={file}
           onRemove={onRemoveFile}
@@ -28,4 +28,4 @@ const FilePreviewSection: FC<FilePreviewSectionProps> = ({
   );
 };
 
-export default FilePreviewSection; 
+export default FilePreviewSection;

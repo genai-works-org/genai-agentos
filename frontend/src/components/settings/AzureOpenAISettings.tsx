@@ -1,31 +1,17 @@
-import { ChangeEvent, FC, useState } from 'react';
-import { Box, TextField, IconButton, InputAdornment } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
-import { AIModelGrid } from '../AIModelGrid';
-import { ModelConfig, AI_PROVIDERS, Config } from '../../types/model';
+import { ChangeEvent, FC } from 'react';
+import { Config } from '@/types/model';
+import { Input } from '../ui/input';
 
 interface AzureOpenAISettingsProps {
   settings: Config;
   onSettingsChange: (data: Config) => void;
-  availableModels: ModelConfig[];
-  disabledModelCreate: boolean;
-  tooltipMessage: string;
-  onModelCreate: () => void;
-  onModelEdit: (model: ModelConfig) => void;
-  onModelDelete: (model: ModelConfig) => void;
 }
 
 export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
   settings,
-  availableModels,
-  disabledModelCreate,
-  tooltipMessage,
   onSettingsChange,
-  onModelCreate,
-  onModelEdit,
-  onModelDelete,
 }) => {
-  const [showApiKey, setShowApiKey] = useState(false);
+  // const [showApiKey, setShowApiKey] = useState(false);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,78 +23,46 @@ export const AzureOpenAISettings: FC<AzureOpenAISettingsProps> = ({
 
   return (
     <>
-      <Box>
-        <TextField
-          fullWidth
-          name="endpoint"
-          label="Endpoint"
-          value={settings.data.endpoint || ''}
-          onChange={handleChange}
-          placeholder="Enter Azure OpenAI endpoint"
-        />
-      </Box>
+      <Input
+        id="endpoint"
+        name="endpoint"
+        label="Endpoint"
+        placeholder="Enter Azure OpenAI endpoint"
+        value={settings.data.endpoint || ''}
+        onChange={handleChange}
+      />
 
-      <Box>
-        <TextField
-          fullWidth
-          type={showApiKey ? 'text' : 'password'}
-          name="api_key"
-          label="API Key"
-          value={settings.data.api_key || ''}
-          onChange={handleChange}
-          placeholder="Enter Azure OpenAI API key"
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  aria-label="toggle password visibility"
-                  onClick={() => setShowApiKey(!showApiKey)}
-                  edge="end"
-                >
-                  {showApiKey ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Box>
+      <Input
+        id="api_key"
+        name="api_key"
+        label="API Key"
+        type="password"
+        // type={showApiKey ? 'text' : 'password'}
+        placeholder="Enter Azure OpenAI API key"
+        value={settings.data.api_key || ''}
+        onChange={handleChange}
+        // secure
+        // showPassword={showApiKey}
+        // setShowPassword={setShowApiKey}
+      />
 
-      <Box>
-        <TextField
-          fullWidth
-          name="api_version"
-          label="API Version"
-          value={settings.data.api_version || ''}
-          onChange={handleChange}
-          placeholder="Enter Azure OpenAI API version"
-        />
-      </Box>
+      <Input
+        id="api_version"
+        name="api_version"
+        label="API Version"
+        placeholder="Enter Azure OpenAI API version"
+        value={settings.data.api_version || ''}
+        onChange={handleChange}
+      />
 
-      <Box>
-        <TextField
-          fullWidth
-          name="model"
-          label="Deployment Name"
-          value={settings.data.model || ''}
-          onChange={handleChange}
-          placeholder="Enter Azure OpenAI deployment name"
-        />
-      </Box>
-
-      <Box>
-        <p className="block text-sm font-medium text-gray-700 mb-4">
-          Available Models
-        </p>
-        <AIModelGrid
-          models={availableModels}
-          onModelCreate={onModelCreate}
-          onModelEdit={onModelEdit}
-          onModelDelete={onModelDelete}
-          disabledModelCreate={disabledModelCreate}
-          tooltipMessage={tooltipMessage}
-          provider={AI_PROVIDERS.AZURE_OPENAI}
-        />
-      </Box>
+      <Input
+        id="model"
+        name="model"
+        label="Deployment Name"
+        placeholder="Enter Azure OpenAI deployment name"
+        value={settings.data.model || ''}
+        onChange={handleChange}
+      />
     </>
   );
 };

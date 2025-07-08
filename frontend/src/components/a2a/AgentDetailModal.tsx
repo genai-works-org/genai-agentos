@@ -1,15 +1,18 @@
 import { FC } from 'react';
+import { Trash2 } from 'lucide-react';
+
+import { A2AAgent } from '@/types/agent';
+import { removeUnderscore } from '@/utils/normalizeString';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
-  Box,
-  Button,
-  Chip,
-  DialogActions,
-  Stack,
-  Typography,
-} from '@mui/material';
-import { A2AAgent, AgentType } from '../../types/agent';
-import { Modal } from '../Modal';
-import { removeUnderscore } from '../../utils/normalizeString';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface AgentDetailModalProps {
   open: boolean;
@@ -27,72 +30,58 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
   if (!agent) return null;
 
   return (
-    <Modal
-      isOpen={open}
-      onClose={onClose}
-      title={removeUnderscore(agent.name || '')}
-    >
-      <Stack spacing={2}>
-        <Box>
-          <Typography variant="subtitle2">Type:</Typography>
-          <Chip
-            label={AgentType.A2A}
-            color="primary"
-            size="small"
-            sx={{ mt: 0.5 }}
-          />
-        </Box>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-[800px] px-8 py-12 gap-4">
+        <DialogHeader>
+          <DialogTitle className="text-left mb-4">
+            {removeUnderscore(agent.name || '')}
+          </DialogTitle>
+          <DialogDescription className="text-left">
+            {agent.description}
+          </DialogDescription>
+        </DialogHeader>
 
-        <Box>
-          <Typography variant="subtitle2">Description:</Typography>
-          <Typography variant="body2">{agent.description}</Typography>
-        </Box>
-
-        <Box>
-          <Typography variant="subtitle2">Expected Input:</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
+        <div>
+          <p className="text-sm font-bold text-text-secondary mb-2">
+            Expected Input
+          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
             {agent.card_content.defaultInputModes.map(mode => (
-              <Chip key={mode} label={mode} size="small" />
+              <Badge key={mode} variant="green">
+                {mode}
+              </Badge>
             ))}
-          </Stack>
-        </Box>
+          </div>
 
-        <Box>
-          <Typography variant="subtitle2">Expected Output:</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" mt={0.5}>
+          <p className="text-sm font-bold text-text-secondary mb-2">
+            Expected Output
+          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
             {agent.card_content.defaultOutputModes.map(mode => (
-              <Chip key={mode} label={mode} size="small" />
+              <Badge key={mode} variant="green">
+                {mode}
+              </Badge>
             ))}
-          </Stack>
-        </Box>
+          </div>
 
-        <Box>
-          <Typography variant="subtitle2">Skills:</Typography>
-          <Stack direction="row" mt={1} flexWrap="wrap" gap={1}>
+          <p className="text-sm font-bold text-text-secondary mb-2">Skills</p>
+          <div className="flex flex-wrap gap-2 mb-4">
             {agent.card_content.skills.map(skill => (
-              <Chip
-                key={skill.id}
-                label={removeUnderscore(skill.id)}
-                size="small"
-                sx={{
-                  fontSize: '0.75rem',
-                  fontWeight: 500,
-                  backgroundColor: '#E3F2FD',
-                  color: '#1565C0',
-                }}
-              />
+              <Badge key={skill.id} variant="blue">
+                {removeUnderscore(skill.id)}
+              </Badge>
             ))}
-          </Stack>
-        </Box>
-      </Stack>
+          </div>
+        </div>
 
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" color="error" onClick={onDelete}>
-          Delete
-        </Button>
-      </DialogActions>
-    </Modal>
+        <DialogFooter>
+          <Button onClick={onDelete} variant="remove" className="w-fit">
+            <Trash2 size={16} />
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 

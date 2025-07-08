@@ -29,6 +29,7 @@ from src.utils.websocket import get_current_ws_user
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
+
 ws_router = APIRouter()
 
 
@@ -151,6 +152,9 @@ async def handle_frontend_ws(
                     f"Message validation failed. Details: {validation_exception_handler(exc=e)}"  # noqa: E501
                 )
             chat_title = message_obj.message[:20]
+            if not chat_title:
+                chat_title = "New Chat"
+
             chat = await chat_repo.get_chat_by_session_id(
                 db=db, session_id=session_id, user_model=user_model
             )

@@ -256,12 +256,14 @@ class ModelProvider(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    __table_args__ = (UniqueConstraint("creator_id", "name", name="uq_user_item_name"),)
+    __table_args__ = (
+        UniqueConstraint("creator_id", "name", name="uq_user_provider_name"),
+    )
 
 
 class ModelConfig(Base):
     id: Mapped[uuid_pk]
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str]
     model: Mapped[str] = mapped_column(nullable=False, index=True)
 
     provider_id: Mapped[uuid.UUID] = mapped_column(
@@ -284,6 +286,10 @@ class ModelConfig(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
+    __table_args__ = (
+        UniqueConstraint("creator_id", "name", name="uq_user_config_name"),
+    )
+
 
 class MCPServer(Base):
     id: Mapped[uuid_pk]
@@ -291,7 +297,7 @@ class MCPServer(Base):
     name: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
 
-    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
+    server_url: Mapped[str] = mapped_column(nullable=False)
 
     mcp_tools: Mapped[List["MCPTool"]] = relationship(back_populates="mcp_server")
 
@@ -305,6 +311,10 @@ class MCPServer(Base):
     )
 
     is_active: Mapped[bool]
+
+    __table_args__ = (
+        UniqueConstraint("creator_id", "server_url", name="uq_mcp_server_url"),
+    )
 
     def __repr__(self) -> str:
         return f"<MCPServer(host={self.server_url!r}>"
@@ -336,7 +346,7 @@ class A2ACard(Base):
     alias: Mapped[str] = mapped_column(nullable=True)
     description: Mapped[str] = mapped_column(nullable=True)
 
-    server_url: Mapped[str] = mapped_column(unique=True, nullable=False)
+    server_url: Mapped[str] = mapped_column(nullable=False)
     card_content: Mapped[not_null_json_column]
 
     is_active: Mapped[bool]
@@ -348,6 +358,9 @@ class A2ACard(Base):
 
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    __table_args__ = (
+        UniqueConstraint("creator_id", "server_url", name="uq_a2a_card_server_url"),
     )
 
 

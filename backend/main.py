@@ -15,6 +15,7 @@ from genai_session.utils.context import GenAIContext
 from genai_session.utils.exceptions import RouterInaccessibleException
 from src.core.settings import get_settings
 from src.middleware.pagination import PaginationMiddleware
+from src.middleware.provider import ProviderLookupMiddleware
 from src.routes.api import api_router
 from src.routes.files.routes import files_router
 from src.routes.websocket import ws_router
@@ -129,6 +130,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(PaginationMiddleware)
+app.add_middleware(ProviderLookupMiddleware)
 
 
 @app.route("/")

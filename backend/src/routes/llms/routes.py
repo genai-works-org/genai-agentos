@@ -165,3 +165,13 @@ async def get_model_prompt(
     model: Optional[str] = None,
 ):
     return ModelPromptDTO(default_system_prompt=DEFAULT_SYSTEM_PROMPT)
+
+
+@llm_router.get("/hackathon/genai")
+async def get_genai_provider_data(
+    db: AsyncDBSession,
+    user_model: CurrentUserDependency,
+):
+    return await model_config_repo.get_default_genai_provider(
+        db=db, user_id=user_model.id
+    )

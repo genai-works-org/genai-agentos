@@ -1,15 +1,17 @@
 import { FC } from 'react';
+import { Trash2 } from 'lucide-react';
+
+import { MCPAgent, AgentType } from '@/types/agent';
+import { removeUnderscore } from '@/utils/normalizeString';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
-  Box,
-  Button,
-  Chip,
-  DialogActions,
-  Stack,
-  Typography,
-} from '@mui/material';
-import { MCPAgent } from '../../types/agent';
-import { Modal } from '../Modal';
-import { removeUnderscore } from '../../utils/normalizeString';
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface AgentDetailModalProps {
   open: boolean;
@@ -27,56 +29,38 @@ const AgentDetailModal: FC<AgentDetailModalProps> = ({
   if (!agent) return null;
 
   return (
-    <Modal isOpen={open} onClose={onClose} title={agent.server_url}>
-      <Stack spacing={2}>
-        <Box>
-          <Typography variant="subtitle2">Type:</Typography>
-          <Chip label="MCP" color="primary" size="small" sx={{ mt: 0.5 }} />
-        </Box>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent
+        aria-describedby={undefined}
+        className="max-w-[800px] px-8 py-12 gap-4"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-left">{agent.server_url}</DialogTitle>
+        </DialogHeader>
 
-        <Box mt={1}>
-          <Typography
-            variant="subtitle2"
-            fontWeight={600}
-            color="text.primary"
-            gutterBottom
-          >
-            Tools:
-          </Typography>
-
-          <Stack direction="row" gap={1} flexWrap="wrap">
+        <div>
+          <p className="text-sm font-bold text-text-secondary mb-2">Tools</p>
+          <div className="flex flex-wrap gap-2 mb-4">
             {agent.mcp_tools.map(tool => (
-              <Box
-                key={tool.id}
-                px={1.5}
-                py={0.5}
-                borderRadius={1}
-                bgcolor="#E3F2FD"
-              >
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    textTransform: 'lowercase',
-                    fontSize: '0.8rem',
-                    fontWeight: 500,
-                  }}
-                >
-                  {removeUnderscore(tool.name)}
-                </Typography>
-              </Box>
+              <Badge key={tool.id} variant="cyan" className="capitalize">
+                {removeUnderscore(tool.name.toLowerCase())}
+              </Badge>
             ))}
-          </Stack>
-        </Box>
-      </Stack>
+          </div>
+          <p className="text-sm font-bold text-text-secondary mb-2">Type</p>
+          <Badge variant="brown" className="mb-4">
+            {AgentType.MCP}
+          </Badge>
+        </div>
 
-      <DialogActions>
-        <Button onClick={onClose}>Close</Button>
-        <Button variant="contained" color="error" onClick={onDelete}>
-          Delete
-        </Button>
-      </DialogActions>
-    </Modal>
+        <DialogFooter>
+          <Button onClick={onDelete} variant="remove" className="w-fit">
+            <Trash2 size={16} />
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
