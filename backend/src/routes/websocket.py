@@ -182,9 +182,6 @@ async def handle_frontend_ws(
             provider = await model_config_repo.get_provider_by_name(
                 db=db, provider_name=message_obj.provider, user_id=user_model.id
             )
-            config = await model_config_repo.find_model_by_config_name(
-                db=db, config_name=message_obj.llm_name, user_model=user_model
-            )
             if not provider:
                 await websocket.send_json(
                     {"error": f"Provider {message_obj.provider} does not exist"}
@@ -194,6 +191,9 @@ async def handle_frontend_ws(
                     reason=f"Provider {message_obj.provider} does not exist",
                 )
 
+            config = await model_config_repo.find_model_by_config_name(
+                db=db, config_name=message_obj.llm_name, user_model=user_model
+            )
             if not config:
                 await websocket.send_json(
                     {"error": f"Config {message_obj.llm_name} does not exist"}

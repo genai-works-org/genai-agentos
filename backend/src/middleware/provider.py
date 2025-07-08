@@ -4,7 +4,8 @@ from sqlalchemy import and_, select
 from src.auth.jwt import TokenLifespanType, validate_token
 from src.core.settings import get_settings
 from src.db.session import async_session
-from src.models import ModelProvider
+from src.models import ModelConfig, ModelProvider
+from src.utils.constants import DEFAULT_SYSTEM_PROMPT
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -33,13 +34,27 @@ async def lookup_provider_per_current_user(request: Request, call_next):
             )
         )
         if not existing_provider:
-            new_provider = ModelProvider(
+            default_provider = ModelProvider(
                 name="genai",
                 provider_metadata={"base_url": settings.GENAI_PROVIDER_URL},
                 creator_id=user_id,
             )
-            db.add(new_provider)
+            db.add(default_provider)
             await db.commit()
+            await db.refresh(default_provider)
+
+            default_config = ModelConfig(
+                name="default",
+                model="gpt-4o",
+                provider_id=default_provider.id,
+                creator_id=user_id,
+                temperature=0.7,
+                credentials={},
+                system_prompt=DEFAULT_SYSTEM_PROMPT,
+            )
+            db.add(default_config)
+            await db.commit()
+
             return await call_next(request)
 
     return await call_next(request)
