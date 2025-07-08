@@ -256,12 +256,14 @@ class ModelProvider(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    __table_args__ = (UniqueConstraint("creator_id", "name", name="uq_user_item_name"),)
+    __table_args__ = (
+        UniqueConstraint("creator_id", "name", name="uq_user_provider_name"),
+    )
 
 
 class ModelConfig(Base):
     id: Mapped[uuid_pk]
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str]
     model: Mapped[str] = mapped_column(nullable=False, index=True)
 
     provider_id: Mapped[uuid.UUID] = mapped_column(
@@ -283,6 +285,10 @@ class ModelConfig(Base):
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
+
+    __table_args__ = (
+        UniqueConstraint("creator_id", "name", name="uq_user_config_name"),
+    )
 
 
 class MCPServer(Base):

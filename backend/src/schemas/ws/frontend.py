@@ -79,6 +79,13 @@ class LLMPropertiesDecryptCreds(LLMProperties):
                 return v
         return v
 
+    @model_validator(mode="after")
+    def validate_genai_provider_config(self) -> Self:
+        if self.provider == "genai":
+            self.model = "gpt-4o"
+
+        return self
+
 
 class LLMPropertiesDTO(BaseModel):
     llm: Optional[dict] = {}
