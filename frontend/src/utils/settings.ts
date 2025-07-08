@@ -4,6 +4,8 @@ export const isProviderSettingsSet = (
   configs: ModelsConfigs[],
   name: string,
 ) => {
+  if (name === AI_PROVIDERS.GENAI) return true; // remove after hackathon
+
   const provider = configs.find(c => c.provider === name);
   return Boolean(provider?.api_key) || Boolean(provider?.metadata?.base_url);
 };

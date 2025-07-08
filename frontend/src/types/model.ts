@@ -56,6 +56,7 @@ export const AI_PROVIDERS = {
   OPENAI: 'openai',
   AZURE_OPENAI: 'azure openai',
   OLLAMA: 'ollama',
+  GENAI: 'genai', // remove after hackathon
 } as const;
 
 export type AIProvider = (typeof AI_PROVIDERS)[keyof typeof AI_PROVIDERS];
@@ -68,6 +69,7 @@ export const TOOLTIP_MESSAGES = {
 };
 
 export const PROVIDERS_OPTIONS = [
+  { value: AI_PROVIDERS.GENAI, label: 'GenAI' }, // remove after hackathon
   { value: AI_PROVIDERS.OPENAI, label: 'OpenAI' },
   { value: AI_PROVIDERS.AZURE_OPENAI, label: 'Azure OpenAI' },
   { value: AI_PROVIDERS.OLLAMA, label: 'Ollama' },

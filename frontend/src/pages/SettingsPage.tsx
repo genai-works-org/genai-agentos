@@ -4,7 +4,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useModels } from '@/hooks/useModels';
 import { useToast } from '@/hooks/useToast';
 import {
-  getInitialConfig,
+  // getInitialConfig,
   getProviderModels,
   isProviderSettingsChanged,
   isProviderSettingsSet,
@@ -40,9 +40,10 @@ const SettingsPage = () => {
     activeModel,
     setActiveModel,
   } = useSettings();
-  const [config, setConfig] = useState<Config>(() =>
-    getInitialConfig(providers),
-  );
+  const [config, setConfig] = useState<Config>({
+    provider: AI_PROVIDERS.GENAI,
+    data: {},
+  }); // change after hackathon
   const {
     createProvider,
     updateProvider,
@@ -195,17 +196,23 @@ const SettingsPage = () => {
               )}
             </div>
 
-            <div className="flex justify-end mb-6">
-              <Button
-                onClick={handleSaveProvider}
-                disabled={
-                  !isProviderSettingsChanged(config.provider, providers, config)
-                }
-                className="w-[181px]"
-              >
-                Save API changes
-              </Button>
-            </div>
+            {config.provider !== AI_PROVIDERS.GENAI && ( // remove condition after hackathon
+              <div className="flex justify-end mb-6">
+                <Button
+                  onClick={handleSaveProvider}
+                  disabled={
+                    !isProviderSettingsChanged(
+                      config.provider,
+                      providers,
+                      config,
+                    )
+                  }
+                  className="w-[181px]"
+                >
+                  Save API changes
+                </Button>
+              </div>
+            )}
 
             <p className="text-xs text-text-secondary mb-2">Models</p>
             <AIModelGrid
