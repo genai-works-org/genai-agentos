@@ -14,6 +14,7 @@ from genai_session.session import GenAISession
 from genai_session.utils.context import GenAIContext
 from genai_session.utils.exceptions import RouterInaccessibleException
 from src.core.settings import get_settings
+from src.middleware.db_session import DBSessionMiddleware
 from src.middleware.pagination import PaginationMiddleware
 from src.middleware.provider import ProviderLookupMiddleware
 from src.routes.api import api_router
@@ -131,6 +132,7 @@ app.add_middleware(
 )
 app.add_middleware(PaginationMiddleware)
 app.add_middleware(ProviderLookupMiddleware)
+app.add_middleware(DBSessionMiddleware)
 
 
 @app.route("/")
