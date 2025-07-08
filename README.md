@@ -23,6 +23,10 @@ This repository provides the complete infrastructure for running GenAI agents, i
 * [Router](router/README.md)
 * [Frontend](frontend/README.md)
 
+## 📄️ License
+* [MIT](LICENSE)
+
+
 ## 🧠 Supported Agent Types
 
 The system supports multiple kinds of Agents:
