@@ -51,6 +51,10 @@ class ModelProviderUpdateDTO(ModelProviderCreateDTO):
 class GenAIProviderDTO(BaseModel):
     name: str
     api_key: Optional[str] = Field(default=None)
+    base_url: Optional[str] = None
 
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+
+    # @model_validator(mode="after")
+    # def validate_url(self) -> Self:

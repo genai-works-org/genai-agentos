@@ -332,7 +332,8 @@ class ModelConfigRepository(
                 and_(ModelProvider.name == "genai", ModelProvider.creator_id == user_id)
             )
         )
-        return GenAIProviderDTO(**provider.__dict__)
+        base_url = provider.provider_metadata.get("base_url")
+        return GenAIProviderDTO(**provider.__dict__, base_url=base_url)
 
 
 model_config_repo = ModelConfigRepository(ModelConfig)
