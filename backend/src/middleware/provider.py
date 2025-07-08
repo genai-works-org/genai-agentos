@@ -2,11 +2,13 @@ from contextvars import ContextVar
 
 from sqlalchemy import and_, select
 from src.auth.jwt import TokenLifespanType, validate_token
+from src.core.settings import get_settings
 from src.db.session import async_session
 from src.models import ModelProvider
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
+settings = get_settings()
 request_object: ContextVar[Request] = ContextVar("request")
 
 
@@ -32,7 +34,9 @@ async def lookup_provider_per_current_user(request: Request, call_next):
         )
         if not existing_provider:
             new_provider = ModelProvider(
-                name="genai", provider_metadata={}, creator_id=user_id
+                name="genai",
+                provider_metadata={"base_url": settings.GENAI_PROVIDER_URL},
+                creator_id=user_id,
             )
             db.add(new_provider)
             await db.commit()
