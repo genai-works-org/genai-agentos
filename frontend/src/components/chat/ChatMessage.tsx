@@ -47,7 +47,12 @@ const ChatMessage: FC<ChatMessageProps> = ({
   };
 
   const renderContent = () => {
-    if (!content && content !== '') return <span>Something went wrong!</span>;
+    if (!content && !files)
+      return (
+        <span className="text-sm text-error-main">
+          Received empty response! Please, check execution traceback.
+        </span>
+      );
 
     try {
       // Try to parse as JSON
