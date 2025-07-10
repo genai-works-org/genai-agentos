@@ -259,7 +259,7 @@ class MCPRepository(CRUDBase[MCPServer, MCPToolSchema, MCPToolSchema]):
         except IntegrityError:
             await db.rollback()
             return await self.update_server_is_active_state(
-                db=db, user_model=user_model, mcp_server_data=mcp_server
+                db=db, user_id=user_id, mcp_server_data=mcp_server
             )
 
     async def update_server_is_active_state(
