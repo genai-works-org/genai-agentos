@@ -10,6 +10,7 @@ import A2AAgentsIcon from '@/assets/icons/a2a.svg';
 import MCPAgentsIcon from '@/assets/icons/mcp.svg';
 import FlowsIcon from '@/assets/icons/tree.svg';
 import NewFlowIcon from '@/assets/icons/new-flow.svg';
+import DashboardIcon from '@/assets/icons/dashboard.svg';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -37,6 +38,11 @@ const pages: PageLink[] = [
     path: '/agent-flows/new',
     title: 'New Agent Flow',
     Icon: NewFlowIcon,
+  },
+  {
+    path: '/dashboard',
+    title: 'Dashboard',
+    Icon: DashboardIcon,
   },
 ];
 
@@ -70,6 +76,8 @@ const Sidebar: FC<SidebarProps> = memo(({ collapsed, setCollapsed }) => {
                 }`}
               >
                 <Icon
+                  width={20}
+                  height={20}
                   className={`${
                     isActive ? 'text-primary-accent' : 'text-text-main'
                   } ${collapsed ? 'mr-0' : 'mr-2'}`}
