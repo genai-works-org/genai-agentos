@@ -25,6 +25,10 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    open: true,
+    host: '0.0.0.0', // Allow external connections (required for Docker)
+    open: false, // Don't auto-open browser in container
+    watch: {
+      usePolling: true, // Required for file watching in Docker on some systems
+    },
   },
 });
