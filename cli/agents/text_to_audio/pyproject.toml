@@ -1,0 +1,18 @@
+[project]
+name = "text-to-audio-mcp-server"
+version = "0.1.0"
+description = "Text to Audio MCP Server using Eleven Labs"
+dependencies = [
+    "mcp>=1.0.0",
+    "fastmcp>=0.1.0",
+    "elevenlabs>=1.0.0",
+    "python-dotenv>=1.0.0"
+]
+requires-python = ">=3.9"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
