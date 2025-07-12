@@ -10,6 +10,7 @@ const ChatPage = lazy(() => import('./pages/ChatPage'));
 const A2AAgentsPage = lazy(() => import('./pages/A2AAgentsPage'));
 const MCPAgentsPage = lazy(() => import('./pages/MCPAgentsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
 const AgentsPage = lazy(() => import('./pages/AgentsPage'));
 const AgentFlowsPage = lazy(() => import('./pages/AgentFlowsPage'));
 const AgentFlowsEditPage = lazy(() => import('./pages/AgentFlowsEditPage'));
@@ -121,6 +122,16 @@ export const router = createBrowserRouter(
         <ProtectedRoute>
           <Suspense fallback={<LoadingFallback />}>
             <AgentsTracePage />
+          </Suspense>
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: '/dashboard',
+      element: (
+        <ProtectedRoute>
+          <Suspense fallback={<LoadingFallback />}>
+            <Dashboard />
           </Suspense>
         </ProtectedRoute>
       ),
