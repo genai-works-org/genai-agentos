@@ -16,7 +16,6 @@ const Signin = () => {
   const navigate = useNavigate();
 
   const handleSignin = async () => {
-    setError('');
     try {
       const result = await signin({ email, password });
       setCookie('userId', result.access_token);
@@ -32,7 +31,7 @@ const Signin = () => {
       <HomepageHeaderWLogo headerText="Sign into Navicare" logo={logo} logoAltText="GenAI AgentOS Logo" caption="Please sign in using your existing email and password  or create a new account." />
       <InputWLabel label="Email" type="email" placeholder="Email" value={email} onChange={setEmail} id="email" />
       <InputWLabel label="Password" type="password" placeholder="Password" value={password} onChange={setPassword} id="password" />
-      {error && <div style={{ color: '#FF535C', marginBottom: 12 }}>{error}</div>}
+      {error && <div style={{ color: '#FF535C', marginBottom: 12, textAlign: 'center', marginInline: 'auto', width:"fit-content" }}>{error}</div>}
       <div className='form-btn-container'>
       <PrimaryBtn text="Log into Account" onClick={handleSignin} />
       <SecondaryBtn text="Switch to Sign up" onClick={() => {navigate('/signup')}} />

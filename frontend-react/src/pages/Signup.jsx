@@ -17,7 +17,6 @@ const Signup = () => {
   const navigate = useNavigate();
 
   const handleSignup = async () => {
-    setError('');
     try {
       const result = await signup({ email, password, firstName });
       setCookie('username', result.firstName || result.email);
@@ -34,10 +33,10 @@ const Signup = () => {
       <InputWLabel label="First Name" type="text" placeholder="First Name" value={firstName} onChange={setFirstName} id="firstName" />
       <InputWLabel label="Email" type="email" placeholder="Email" value={email} onChange={setEmail} id="email" />
       <InputWLabel label="Password" type="password" placeholder="Password" value={password} onChange={setPassword} id="password" />
-      {error && <div style={{ color: '#FF535C', marginBottom: 12 }}>{error}</div>}
+      {error && <div style={{ color: '#FF535C', marginBottom: 12, textAlign: 'center', marginInline: 'auto', width:"fit-content" }}>{error}</div>}
       <div className='form-btn-container'>
       <PrimaryBtn text="Sign up" onClick={handleSignup} />
-      <SecondaryBtn text="Log into account" to="/signin" />
+      <SecondaryBtn text="Log into account" onClick={() => {navigate('/signin')}} />
       </div>
     </div>
   );
