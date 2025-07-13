@@ -1,0 +1,53 @@
+.primary-btn{
+    display: block;
+    width: 400px;
+    height: 46px;
+    background-color: #FF535C;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    margin-top: 23px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(255, 83, 92, 0.2);
+}
+
+.primary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.primary-btn:hover{
+    background-color: #fff;
+    color: #FF535C;
+    border: 3px solid #FF535C;
+    box-shadow: 0 8px 15px rgba(255, 83, 92, 0.3);
+}
+
+.primary-btn:hover::before {
+    left: 100%;
+}
+
+.primary-btn:active{
+    background-color: #d43d47;
+    color: #fff;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(255, 83, 92, 0.2);
+    transition: all 0.1s ease;
+}
+
+.primary-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 83, 92, 0.3), 0 4px 6px rgba(255, 83, 92, 0.2);
+}

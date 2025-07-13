@@ -1,0 +1,89 @@
+.upload-document-card {
+  border: 5px solid #FF535C;
+  border-radius: 12px;
+  background: #fff;
+  width: 100%;
+  max-width: 700px;
+  min-height: 320px;
+  margin: 40px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  box-shadow: 0 2px 16px rgba(255, 83, 92, 0.05);
+  transition: box-shadow 0.3s, border-color 0.3s;
+  padding: 26px 84px;
+  position: relative;
+}
+
+.upload-document-card.drag-active {
+  border-color: #ff7a85;
+  box-shadow: 0 4px 24px rgba(255, 83, 92, 0.15);
+}
+
+.upload-icon {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-text {
+  color: #FF535C;
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  text-align: center;
+  margin-bottom: 30px;
+  line-height: 1.3;
+}
+
+.upload-error {
+  color: #d43d47;
+  font-size: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.upload-btn {
+  display: block;
+  width: 320px;
+  height: 40px;
+  background: #fff;
+  color: #FF535C;
+  border: 4px solid #FF535C;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0 auto;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(255, 83, 92, 0.08);
+}
+
+.upload-btn:hover, .upload-btn:focus {
+  background: #FF535C;
+  color: #fff;
+  border-color: #FF535C;
+  box-shadow: 0 4px 16px rgba(255, 83, 92, 0.18);
+  outline: none;
+}
+
+@media (max-width: 800px) {
+  .upload-document-card {
+    max-width: 98vw;
+    min-height: 220px;
+    padding: 24px 4vw 32px 4vw;
+  }
+  .upload-btn {
+    width: 90vw;
+    max-width: 320px;
+    font-size: 22px;
+    height: 52px;
+  }
+  .upload-text {
+    font-size: 20px;
+  }
+} 

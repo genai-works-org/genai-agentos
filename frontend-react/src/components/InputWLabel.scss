@@ -1,0 +1,37 @@
+.input-w-label{
+    display: block;
+    width: 400px;
+    height: 100%;
+    background-color: #001A29;
+    color:#001A29;
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 23px;
+    margin-inline: auto;
+}
+
+.input-w-label-input-input{
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    outline: 3px solid #FF535C;
+    color:#001A29;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    border-radius: 10px;
+    border: none;
+    padding: 5px 15px;
+}
+.input-w-label .input-w-label-label label{
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: #001A29;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    font-size: 24px;
+    color: #FF535C;
+}

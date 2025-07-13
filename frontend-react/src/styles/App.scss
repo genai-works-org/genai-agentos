@@ -1,0 +1,25 @@
+body {
+  background-color: #001A29;
+  background-image:
+    radial-gradient(transparent 1.2em, #001A29 1.2em),
+    conic-gradient(at 2em 2em, transparent 270deg, #FF535C11 270deg),
+    conic-gradient(at 2em 2em, transparent 270deg, #FF535C18 270deg);
+  background-size: 2em 2em, 8em 8em, 12em 12em;
+  animation: bpx 24s linear infinite, bpy 24s -7.5s linear infinite;
+
+  @each $xy in ('x', 'y') {
+    @keyframes bp#{$xy} {
+      0%, 7.5%, 100% { background-position-#{$xy}: 0, 0, 2em; }
+      12.5%, 20% { background-position-#{$xy}: 0, 2em, 0; }
+      25%, 32.5% { background-position-#{$xy}: 0, -2em, 4em; }
+      37.5%, 45% { background-position-#{$xy}: 0, 2em, 6em; }
+      50%, 57.5% { background-position-#{$xy}: 0, -4em, 8em; }
+      62.5%, 70% { background-position-#{$xy}: 0, -6em, 6em; }
+      75%, 82.5% { background-position-#{$xy}: 0, -2em, 4em; }
+      87.5%, 95% { background-position-#{$xy}: 0, -6em, 0; }
+    }
+  }
+}
+.main-content{
+  margin-top: 40px;
+}

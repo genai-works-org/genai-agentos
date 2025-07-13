@@ -1,0 +1,54 @@
+.secondary-btn{
+    display: block;
+    width: 400px;
+    height: 46px;
+    background-color: #FFF;
+    border: 3px solid #FF535C;
+    color: #FF535C;
+    font-family: 'Poppins', sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 23px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(255, 83, 92, 0.2);
+}
+
+.secondary-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.secondary-btn:hover{
+    background-color: #FF535C;
+    color: #fff;
+    box-shadow: 0 8px 15px rgba(255, 83, 92, 0.3);
+    border-color: #FF535C;
+}
+
+.secondary-btn:hover::before {
+    left: 100%;
+}
+
+.secondary-btn:active{
+    background-color: #d43d47;
+    color: #fff;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(255, 83, 92, 0.2);
+    border-color: #d43d47;
+    transition: all 0.1s ease;
+}
+
+.secondary-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 83, 92, 0.3), 0 4px 6px rgba(255, 83, 92, 0.2);
+}

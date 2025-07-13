@@ -1,0 +1,53 @@
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border: 4px solid #FF535C;
+  border-radius: 12px;
+  padding: 0 32px;
+  height: 64px;
+  min-width: 0;
+  margin: 16px 0;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(255, 83, 92, 0.08);
+  position: relative;
+}
+
+.file-name {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #0A2239;
+  flex: 1 1 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  color: #0A2239;
+  margin-left: 32px;
+  margin-right: 32px;
+  flex-shrink: 0;
+}
+
+.file-remove {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.15s;
+}
+
+.file-remove:hover {
+  transform: scale(1.15) rotate(10deg);
+  background: none;
+} 

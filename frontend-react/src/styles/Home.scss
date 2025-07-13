@@ -1,0 +1,23 @@
+@import 'mixins';
+
+.homepage-container{
+    display: block;
+    height: 100%;
+    width: fit-content;
+    margin: 0 auto;
+}
+
+.homepage-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+
+  .btn {
+    width: 100%;
+  }
+}
+.form-btn-container{
+  width: fit-content;
+  margin: 0 auto;
+}
