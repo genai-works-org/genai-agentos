@@ -1,0 +1,139 @@
+networks:
+  local-genai-network:
+    driver: bridge
+
+services:
+  frontend:
+    container_name: genai-frontend-dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    env_file: .env
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+      - VITE_WS_URL=ws://localhost:8000
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      # Exclude node_modules to prevent conflicts
+      - /app/node_modules
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+
+  router:
+    container_name: genai-router
+    build:
+      context: ./router
+    ports:
+      - "8080:8080"
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+
+  master-agent:
+    container_name: genai-master-agent
+    build:
+      context: ./master-agent
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    depends_on:
+      - router
+
+  backend:
+    container_name: genai-backend
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    env_file: .env
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - router
+      - migration_svc
+    volumes:
+      - shared-files-volume:${DEFAULT_FILES_FOLDER_NAME:-/files}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  postgres:
+    container_name: genai-postgres
+    build:
+      context: ./backend/scripts
+      dockerfile: ./Dockerfile.postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+    networks:
+      - local-genai-network
+    restart: unless-stopped
+    volumes:
+      - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
+      - postgres-volume:/var/lib/postgresql/data
+  redis:
+    container_name: genai-redis
+    image: redis:7
+    ports:
+      - "6379:6379"
+    networks:
+      - local-genai-network
+    volumes:
+      - redis-data:/data
+
+  migration_svc:
+    container_name: genai-migration-svc
+    build:
+      context: ./backend
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    networks:
+      - local-genai-network
+    restart: on-failure
+    command: ["alembic", "upgrade", "head"]
+
+  celery:
+    container_name: genai-celery-worker
+    build:
+      context: ./backend
+    command: celery -A src.celery.celery_app worker --loglevel=debug
+    networks:
+      - local-genai-network
+    depends_on:
+      - redis
+
+  celery-beat:
+    container_name: genai-celery-beat
+    build:
+      context: ./backend
+    command: celery -A src.celery.celery_app beat --loglevel=debug
+    networks:
+      - local-genai-network
+    depends_on:
+      - redis
+
+volumes:
+  postgres-volume:
+  shared-files-volume:
+  redis-data:
