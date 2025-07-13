@@ -33,8 +33,10 @@ const Signin = () => {
       <InputWLabel label="Email" type="email" placeholder="Email" value={email} onChange={setEmail} id="email" />
       <InputWLabel label="Password" type="password" placeholder="Password" value={password} onChange={setPassword} id="password" />
       {error && <div style={{ color: '#FF535C', marginBottom: 12 }}>{error}</div>}
+      <div className='form-btn-container'>
       <PrimaryBtn text="Log into Account" onClick={handleSignin} />
       <SecondaryBtn text="Switch to Sign up" onClick={() => {navigate('/signup')}} />
+      </div>
     </div>
   );
 };
