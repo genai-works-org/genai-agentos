@@ -1,9 +1,22 @@
 import React, { useState } from 'react';
 import logo from '../assets/logo.svg';
 import './PageHeader.scss';
+import { useCookies } from 'react-cookie';
+import { useNavigate } from 'react-router-dom';
 
 const PageHeader = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [, , removeCookie] = useCookies(['username']);
+  const navigate = useNavigate();
+
+  const handleSignOut = () => {
+    removeCookie('username', { path: '/' });
+    window.location.reload();
+  };
+
+  const handleEditBenefits = () => {
+    navigate('/intakeprocess');
+  };
 
   return (
     <header className="page-header">
@@ -23,11 +36,9 @@ const PageHeader = () => {
         <div className="page-header-avatar">B</div>
         {dropdownOpen && (
           <div className="page-header-dropdown">
-            <div className="dropdown-item">View Benefits</div>
+            <div className="dropdown-item" onClick={handleEditBenefits}>Edit Benefits</div>
             <div className="dropdown-divider" />
-            <div className="dropdown-item">Edit Benefits</div>
-            <div className="dropdown-divider" />
-            <div className="dropdown-item">Sign Out</div>
+            <div className="dropdown-item" onClick={handleSignOut}>Sign Out</div>
           </div>
         )}
       </div>
