@@ -6,6 +6,7 @@ import SignIn from './pages/SignIn';
 import Signup from './pages/Signup';
 import IntakeProcess from './pages/IntakeProcess';
 import BenefitsOverview from './pages/BenefitsOverview';
+import Chat from './pages/Chat';
 import './styles/App.scss';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/intakeprocess" element={<IntakeProcess />} />
             <Route path="/benefitsoverview" element={<BenefitsOverview />} />
+            <Route path="/chat" element={<Chat />} />
           </Routes>
         </main>
       </div>

@@ -1,0 +1,25 @@
+.chat-messages-scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: #FF535C #f5f5f5;
+}
+
+.chat-messages-scrollable::-webkit-scrollbar {
+  width: 10px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.chat-messages-scrollable::-webkit-scrollbar-thumb {
+  background: #FF535C;
+  border-radius: 8px;
+  min-height: 40px;
+}
+
+.chat-messages-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #d43d47;
+}
+
+.chat-messages-scrollable::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 8px;
+} 

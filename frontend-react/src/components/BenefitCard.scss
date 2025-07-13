@@ -1,25 +1,54 @@
 .benefit-card {
-  border: 4px solid #FF535C;
-  border-radius: 18px;
   background: #fff;
-  padding:16px 24px;
-  margin: 24px 0;
-  max-width: 550px;
+  border: 4px solid #FF535C;
+  border-radius: 16px;
   box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(255, 83, 92, 0.06);
+  box-shadow: 0 2px 8px rgba(255, 83, 92, 0.08);
+  padding: 18px 16px 16px 16px;
+  max-width: 240px;
+  min-width: 160px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: box-shadow 0.2s;
 }
 
-.benefit-card-heading {
+.benefit-card-icon-circle {
+  background: #FF535C;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  font-size: 24px;
+  color: #fff;
+}
+
+.benefit-card-title {
   font-family: 'Poppins', sans-serif;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 1.05rem;
+  font-weight: 600;
   color: #0A2239;
-  margin-bottom: 12px;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 .benefit-card-description {
-  font-family: 'Poppins', sans-serif;
-  font-size: 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.98rem;
   color: #0A2239;
+  text-align: center;
   font-weight: 400;
+  line-height: 1.4;
+}
+
+@media (max-width: 1100px) {
+  .benefit-card {
+    max-width: 98vw;
+    min-width: 0;
+    padding: 12px 4vw 12px 4vw;
+  }
 } 
