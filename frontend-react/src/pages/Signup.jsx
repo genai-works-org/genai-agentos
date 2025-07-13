@@ -6,7 +6,7 @@ import InputWLabel from '../components/InputWLabel';
 import PrimaryBtn from '../components/PrimaryBtn';
 import SecondaryBtn from '../components/SecondaryBtn';
 import { useNavigate } from 'react-router-dom';
-import { signup } from '../../frontend-react/src/utils/api';
+import { signup } from '../utils/api';
 import { setCookie } from '../utils/cookies';
 
 const Signup = () => {
