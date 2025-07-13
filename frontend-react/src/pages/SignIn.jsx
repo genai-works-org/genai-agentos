@@ -19,7 +19,7 @@ const Signin = () => {
     setError('');
     try {
       const result = await signin({ email, password });
-      setCookie('username', result.firstName || result.email);
+      setCookie('userId', result.access_token);
       // Redirect or show success (example: navigate('/dashboard'))
       navigate('/dashboard');
     } catch (err) {
