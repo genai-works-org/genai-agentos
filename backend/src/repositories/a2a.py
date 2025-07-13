@@ -40,6 +40,7 @@ async def lookup_agent_well_known(
                 if resp.status == 200:
                     json_resp = await resp.json()
                     card = A2AAgentCard(**json_resp)
+                    card.url = url
                     return A2AAgentCardSchema(card=card, is_active=True)
 
                 return None

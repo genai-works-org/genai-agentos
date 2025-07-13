@@ -70,6 +70,7 @@ class A2AConnector(ConnectorStrategy):
                 client = await A2AClient.get_client_from_agent_card_url(
                     httpx_client, config.endpoint
                 )
+                client.url = config.endpoint
 
                 send_message_payload: dict[str, Any] = {
                     "message": {
