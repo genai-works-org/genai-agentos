@@ -8,6 +8,7 @@ import HomepageHeaderWLogo from '../components/HomepageHeaderWLogo';
 import ChatInput from '../components/ChatInput';
 import ChatMessage from '../components/ChatMessage';
 import './ChatPageCustom.scss';
+import { getConversationHistory, sendMessage, openAgentStatusSocket } from '../utils/api';
 
 const benefitCards = [
   {
@@ -27,33 +28,38 @@ const benefitCards = [
   }
 ];
 
-const initialMessages = [
-//   {
-//     from: 'user',
-//     message: 'I just got scheduled for knee surgery next month. Can you help me prepare?'
-//   },
-//   {
-//     from: 'ai',
-//     message: `Absolutely! I’ll build a timeline with key dates like pre-op visits, the surgery itself, and recovery milestones. Would you like me to also check if your insurance covers physical therapy and transportation?`
-//   }
-];
-
 const Chat = () => {
-  const [chatMessages, setChatMessages] = useState(initialMessages);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [agentStatus, setAgentStatus] = useState('idle');
+  const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
   const prevMsgCount = useRef(chatMessages.length);
+  const wsRef = useRef(null);
 
-  const handleSend = (message) => {
-    setChatMessages(prev => [
-      ...prev,
-      { from: 'user', message }
-    ]);
-    setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        { from: 'ai', message: 'This is a simulated AI response to: ' + message }
-      ]);
-    }, 1000);
+  useEffect(() => {
+    // Fetch conversation history on mount
+    getConversationHistory().then(setChatMessages).catch(() => setChatMessages([]));
+    // Open websocket for agent status
+    wsRef.current = openAgentStatusSocket((status) => setAgentStatus(status.status));
+    return () => {
+      if (wsRef.current) wsRef.current.close();
+    };
+  }, []);
+
+  const handleSend = async (message) => {
+    setLoading(true);
+    try {
+      const res = await sendMessage(message);
+      // Assume API returns the updated conversation
+      if (Array.isArray(res)) {
+        setChatMessages(res);
+      } else if (res && res.message) {
+        setChatMessages(prev => [...prev, res]);
+      }
+    } catch (e) {
+      // Optionally show error
+    }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -110,6 +116,8 @@ const Chat = () => {
             {chatMessages.map((msg, i) => (
               <ChatMessage key={i} from={msg.from} message={msg.message} />
             ))}
+            {loading && <div style={{ color: '#FF535C', textAlign: 'center', margin: 8 }}>Sending...</div>}
+            {agentStatus === 'processing' && <div style={{ color: '#2B8AC6', textAlign: 'center', margin: 8 }}>Agent is processing...</div>}
             <div ref={chatEndRef} />
           </div>
         )}
