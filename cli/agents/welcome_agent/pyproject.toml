@@ -1,0 +1,13 @@
+[project]
+name = "genai-agents"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "genai-protocol",
+    "loguru>=0.7.3",
+    "openai>=1.70.0",
+    "pydantic==2.11.1",
+    "python-dotenv>=1.1.0",
+    "requests>=2.32.3",
+]

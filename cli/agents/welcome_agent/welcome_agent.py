@@ -72,7 +72,7 @@ async def welcome_patient(
         )
 
 async def main():
-    print(f"Mila agent started with token '{AGENT_JWT}'")
+    print(f"✅ Mila agent started with token: {AGENT_JWT[:10]}...")
     await session.process_events()
 
 if __name__ == "__main__":
