@@ -7,15 +7,22 @@ services:
     container_name: genai-frontend
     build:
       context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     env_file: .env
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - VITE_API_URL=http://backend:8000
       - VITE_WS_URL=ws://backend:8000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - /app/node_modules
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: unless-stopped
 
   router:
@@ -26,7 +33,7 @@ services:
       - "8080:8080"
     env_file: .env
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: unless-stopped
 
   master-agent:
@@ -35,7 +42,7 @@ services:
       context: ./master-agent
     env_file: .env
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: unless-stopped
     depends_on:
       - router
@@ -48,7 +55,7 @@ services:
       - "8000:8000"
     env_file: .env
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: unless-stopped
     depends_on:
       - postgres
@@ -73,18 +80,18 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_DB=${POSTGRES_DB:-postgres}
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: unless-stopped
     volumes:
-        - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
-        - postgres-volume:/var/lib/postgresql/data
+      - ./backend/scripts/postgres.conf:/etc/postgresql/postgresql.conf
+      - postgres-volume:/var/lib/postgresql/data
   redis:
     container_name: genai-redis
     image: redis:7
     ports:
       - "6379:6379"
     networks:
-     - local-genai-network
+      - local-genai-network
     volumes:
       - redis-data:/data
 
@@ -97,27 +104,27 @@ services:
     env_file:
       - .env
     networks:
-     - local-genai-network
+      - local-genai-network
     restart: on-failure
     command: ["alembic", "upgrade", "head"]
 
   celery:
     container_name: genai-celery-worker
-    build: 
+    build:
       context: ./backend
     command: celery -A src.celery.celery_app worker --loglevel=debug
     networks:
-     - local-genai-network
+      - local-genai-network
     depends_on:
       - redis
 
   celery-beat:
     container_name: genai-celery-beat
-    build: 
+    build:
       context: ./backend
     command: celery -A src.celery.celery_app beat --loglevel=debug
     networks:
-     - local-genai-network
+      - local-genai-network
     depends_on:
       - redis
 
