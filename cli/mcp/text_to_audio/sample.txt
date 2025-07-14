@@ -1,0 +1,5 @@
+Hello! This is a sample text file for testing the Eleven Labs text-to-speech conversion. 
+
+The quick brown fox jumps over the lazy dog. This sentence contains every letter of the alphabet and is commonly used for testing purposes.
+
+Thank you for using our text-to-audio service powered by Eleven Labs!
