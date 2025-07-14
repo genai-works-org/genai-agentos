@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1",
     "jinja2>=3.1.6",
+    "mcp[cli]>=1.11.0",
     "pydantic>=2.11.3",
     "pydantic-settings>=2.8.1",
     "typer>=0.15.2",
