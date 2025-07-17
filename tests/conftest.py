@@ -385,7 +385,7 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
                 id=t["id"],
                 name=t["alias"],
                 type=AgentType.mcp,
-                url=server_details["server_url"],
+                url=f"{invoke_url}:{MCP_PORT}/mcp",
                 agent_schema=json_schema,
                 created_at=server_details["mcp_tools"][0]["created_at"],
                 updated_at=server_details["mcp_tools"][0]["updated_at"],
@@ -398,7 +398,7 @@ async def registered_mcp_tools(user_jwt_token, async_db_engine: AsyncEngine):
 
 @pytest_asyncio.fixture
 async def a2a_server_url():
-    return f"{host_url}:{A2A_PORT}"
+    return f"{invoke_url}:{A2A_PORT}"
 
 
 @pytest_asyncio.fixture(scope="session")
