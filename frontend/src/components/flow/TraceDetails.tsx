@@ -135,7 +135,7 @@ export const TraceDetails: FC<TraceDetailsProps> = ({
                 </Collapse>
 
                 {!trace.flow && (
-                  <div className="break-all">
+                  <>
                     <JsonField
                       label="Input"
                       value={trace.input}
@@ -146,7 +146,7 @@ export const TraceDetails: FC<TraceDetailsProps> = ({
                       value={trace.output}
                       fieldId={`output-${traceId}`}
                     />
-                  </div>
+                  </>
                 )}
               </Card>
             </div>

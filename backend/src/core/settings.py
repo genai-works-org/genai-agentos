@@ -44,8 +44,6 @@ class Settings(BaseSettings):
 
     CELERY_BEAT_INTERVAL_MINUTES: int = Field(default=1)
 
-    GENAI_PROVIDER_URL: str = Field(default="https://proxy-openai.chi-6ec.workers.dev")
-
     @model_validator(mode="after")
     def build_database_uri(self) -> Self:
         if not self.SQLALCHEMY_ASYNC_DATABASE_URI:

@@ -4,8 +4,6 @@ from langchain_core.language_models import BaseChatModel
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 
-from llms.custom import ChatGenAI
-
 
 class LLMFactory:
     _registry = {}
@@ -53,16 +51,6 @@ def __create_azure_openai_model(configs: dict[str, Any]) -> AzureChatOpenAI:
 def __create_ollama_model(configs: dict[str, Any]) -> ChatOllama:
     return ChatOllama(
         model=configs.get("model"),
-        base_url=configs.get("base_url"),
-        temperature=configs.get("temperature")
-    )
-
-
-@LLMFactory.register("genai")
-def __create_genai_proxy_model(configs: dict[str, Any]):
-    return ChatGenAI(
-        api_key="genai-super-secret-api-key",
-        model="gpt-4o",
         base_url=configs.get("base_url"),
         temperature=configs.get("temperature")
     )

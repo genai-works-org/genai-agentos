@@ -8,11 +8,7 @@ from sqlalchemy.orm import selectinload
 from src.auth.encrypt import decrypt_secret
 from src.models import ModelConfig, ModelProvider, User
 from src.repositories.base import CRUDBase
-from src.schemas.api.model_config.dto import (
-    GenAIProviderDTO,
-    ModelConfigDTO,
-    ModelProviderDTO,
-)
+from src.schemas.api.model_config.dto import ModelConfigDTO, ModelProviderDTO
 from src.schemas.api.model_config.schemas import (
     ModelConfigCreate,
     ModelConfigUpdate,
@@ -323,17 +319,6 @@ class ModelConfigRepository(
         await db.commit()
         await db.refresh(p)
         return p
-
-    async def get_default_genai_provider(
-        self, db: AsyncSession, user_id: UUID
-    ) -> GenAIProviderDTO:
-        provider = await db.scalar(
-            select(ModelProvider).where(
-                and_(ModelProvider.name == "genai", ModelProvider.creator_id == user_id)
-            )
-        )
-        base_url = provider.provider_metadata.get("base_url")
-        return GenAIProviderDTO(**provider.__dict__, base_url=base_url)
 
 
 model_config_repo = ModelConfigRepository(ModelConfig)

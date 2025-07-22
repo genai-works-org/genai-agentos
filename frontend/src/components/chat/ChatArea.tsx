@@ -124,7 +124,7 @@ const ChatArea: FC<ChatAreaProps> = ({ content, id, files }) => {
         content.map(async (item, index) => {
           const isUser = item.sender_type === 'user';
           const parsedContent = !isUser && JSON.parse(item.content);
-          const text = parsedContent?.response ?? item.content;
+          const text = parsedContent?.response || item.content;
           const trace = parsedContent?.agents_trace || [];
 
           const utcFixed = item.created_at.split('.')[0] + 'Z';

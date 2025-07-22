@@ -39,9 +39,7 @@ const ModelForm: FC<ModelFormProps> = ({
   systemPrompt,
 }) => {
   const initialModel =
-    initialData?.model ||
-    settings.provider === AI_PROVIDERS.OPENAI ||
-    settings.provider === AI_PROVIDERS.GENAI // remove after hackathon
+    initialData?.model || settings.provider === AI_PROVIDERS.OPENAI
       ? 'gpt-4o'
       : '';
 
@@ -129,13 +127,12 @@ const ModelForm: FC<ModelFormProps> = ({
             id="model"
             name="model"
             label="Model"
-            placeholder="Model"
+            placeholder="Model Identification"
             value={formData.model}
             onChange={handleChange}
             required
             withAsterisk
             error={validationErrors.model}
-            readOnly={formData?.provider === AI_PROVIDERS.GENAI} // remove after hackathon
           />
           <Textarea
             id="system_prompt"
