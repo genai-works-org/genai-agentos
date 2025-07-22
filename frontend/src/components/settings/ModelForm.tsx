@@ -39,9 +39,9 @@ const ModelForm: FC<ModelFormProps> = ({
   systemPrompt,
 }) => {
   const initialModel =
-    initialData?.model || settings.provider === AI_PROVIDERS.OPENAI
+    initialData?.model || (settings.provider === AI_PROVIDERS.OPENAI
       ? 'gpt-4o'
-      : '';
+      : '');
 
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
