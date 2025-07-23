@@ -15,7 +15,7 @@ dependencies = [
     "attrs>=25.3.0",
     "faker>=37.1.0",
     "frozenlist>=1.6.0",
-    "genai-protocol",
+    "genai-protocol==1.0.9",
     "google-adk>=1.2.1",
     "google-genai>=1.19.0",
     "greenlet>=3.2.3",

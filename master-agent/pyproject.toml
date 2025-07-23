@@ -5,7 +5,7 @@ description = "Python Master Agent for GenAI Agentos infrastructure"
 requires-python = ">=3.12"
 dependencies = [
     "a2a-sdk>=0.2.5",
-    "genai-protocol",
+    "genai-protocol==1.0.9",
     "httpx>=0.28.1",
     "jmespath>=1.0.1",
     "langchain>=0.3.21",
