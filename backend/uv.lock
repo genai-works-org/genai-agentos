@@ -192,7 +192,7 @@ requires-dist = [
     { name = "celery-singleton", specifier = ">=0.3.1" },
     { name = "cryptocode", specifier = ">=0.1" },
     { name = "fastapi", specifier = ">=0.115.12" },
-    { name = "genai-protocol" },
+    { name = "genai-protocol", specifier = "==1.0.9" },
     { name = "greenlet", specifier = ">=3.1.1" },
     { name = "mcp", extras = ["cli"], specifier = ">=1.9.0" },
     { name = "passlib", specifier = ">=1.7.4" },
@@ -453,7 +453,7 @@ wheels = [
 
 [[package]]
 name = "genai-protocol"
-version = "1.0.5"
+version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohappyeyeballs" },
@@ -473,9 +473,9 @@ dependencies = [
     { name = "websockets" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/07/51603a3c00c288acd46462706773cd05774ff21377ca3906845c7d7789b9/genai_protocol-1.0.5.tar.gz", hash = "sha256:ff35fa9a8d0bce61dc52cc2a214963a5c1f2e9e2f97b8e13902bd06fc3b8d578", size = 16197, upload_time = "2025-05-05T14:19:53.25Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d7/7accda6bc15c40157496a331fea51438d363d392887dc986379c52839f50/genai_protocol-1.0.9.tar.gz", hash = "sha256:5eda7272e7ed774e09491aa46a90755b47d28769c5ef4e6641e0a1fcca8bab10", size = 16258, upload_time = "2025-05-09T11:49:11.028Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/91/41c2b449bc25bd4f1c877c38f13d68c29e1cb8a64504e1443b9edc28c465/genai_protocol-1.0.5-py3-none-any.whl", hash = "sha256:082168154269c67d5810934a8938658336db170365b72430f3e4dba1b4d0b64f", size = 19002, upload_time = "2025-05-05T14:19:51.716Z" },
+    { url = "https://files.pythonhosted.org/packages/21/45/aa3db43435691070b623f8afc3be2cbd5d7129fe1a40fdfe4f25e0228ff1/genai_protocol-1.0.9-py3-none-any.whl", hash = "sha256:306aedd3c9151f33ae0b073abdea73f34bbedb706e3bf32fea822ef1c3a54935", size = 19029, upload_time = "2025-05-09T11:49:08.178Z" },
 ]
 
 [[package]]

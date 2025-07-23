@@ -5,7 +5,7 @@ description = "Python Backend for GenAI Agentos infrastructure"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "genai-protocol",
+    "genai-protocol==1.0.9",
     "alembic>=1.15.1",
     "asyncpg>=0.30.0",
     "fastapi>=0.115.12",

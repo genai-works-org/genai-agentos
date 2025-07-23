@@ -378,7 +378,7 @@ wheels = [
 
 [[package]]
 name = "genai-protocol"
-version = "1.0.6"
+version = "1.0.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohappyeyeballs" },
@@ -398,9 +398,9 @@ dependencies = [
     { name = "websockets" },
     { name = "yarl" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cc/81/3da6641a5683e1577313e6363b626abe279bba9ec8b3c94e40d8526edc87/genai_protocol-1.0.6.tar.gz", hash = "sha256:931eaa4b209a6a07b40d342c67e7645e219570c27f4621576d4b1864436c5215", size = 16221, upload_time = "2025-05-06T11:21:54.456Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0a/d7/7accda6bc15c40157496a331fea51438d363d392887dc986379c52839f50/genai_protocol-1.0.9.tar.gz", hash = "sha256:5eda7272e7ed774e09491aa46a90755b47d28769c5ef4e6641e0a1fcca8bab10", size = 16258, upload_time = "2025-05-09T11:49:11.028Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/9c/3789414c30436ac8da1404ce58b65d82801ffb71755988cc0138dfa0c9e9/genai_protocol-1.0.6-py3-none-any.whl", hash = "sha256:46ae21f15f2f3800217ad3be3f851d32fac414d5fceb547f0885965d295b0568", size = 19013, upload_time = "2025-05-06T11:21:52.884Z" },
+    { url = "https://files.pythonhosted.org/packages/21/45/aa3db43435691070b623f8afc3be2cbd5d7129fe1a40fdfe4f25e0228ff1/genai_protocol-1.0.9-py3-none-any.whl", hash = "sha256:306aedd3c9151f33ae0b073abdea73f34bbedb706e3bf32fea822ef1c3a54935", size = 19029, upload_time = "2025-05-09T11:49:08.178Z" },
 ]
 
 [[package]]
@@ -463,7 +463,7 @@ requires-dist = [
     { name = "attrs", specifier = ">=25.3.0" },
     { name = "faker", specifier = ">=37.1.0" },
     { name = "frozenlist", specifier = ">=1.6.0" },
-    { name = "genai-protocol" },
+    { name = "genai-protocol", specifier = "==1.0.9" },
     { name = "google-adk", specifier = ">=1.2.1" },
     { name = "google-genai", specifier = ">=1.19.0" },
     { name = "greenlet", specifier = ">=3.2.3" },
