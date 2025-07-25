@@ -3,9 +3,7 @@ from typing import Annotated
 
 from genai_session.session import GenAISession
 
-session = GenAISession(
-    jwt_token=""
-)
+session = GenAISession()
 
 
 @session.bind(name="save_file", description="Save file to the server")

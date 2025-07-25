@@ -2,20 +2,15 @@ import asyncio
 import os
 from typing import Any, Annotated
 
-from dotenv import load_dotenv
 from genai_session.session import GenAISession
 from openai import OpenAI
 
-load_dotenv()
+session = GenAISession()
 
 OPENAPI_KEY = os.environ.get("OPENAPI_KEY")
 
 openai_client = OpenAI(
     api_key=OPENAPI_KEY
-)
-
-session = GenAISession(
-    jwt_token=""
 )
 
 
