@@ -1,5 +1,7 @@
 # 🐍 GenAI Agents Infrastructure
 
+![hippo]([https://media3.giphy.com/media/aUovxH8Vf9qDu/giphy.gif](https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGdzOXM0bzkyaXI5c3ExZG53d2llbXh4a3R5cXM5NnJiaDRyZTgyNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/fFmebw4MrVUz7lRuOw/giphy.gif))
+
 This repository provides the complete infrastructure for running GenAI agents, including:
 
 * Backend
