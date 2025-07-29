@@ -3,9 +3,7 @@ from typing import Any, Annotated
 
 from genai_session.session import GenAISession
 
-session = GenAISession(
-    jwt_token=""
-)
+session = GenAISession()
 
 
 @session.bind(name="read_txt_file", description="Get content from the txt file")

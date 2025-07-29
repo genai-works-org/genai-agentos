@@ -3,9 +3,7 @@ from datetime import datetime
 
 from genai_session.session import GenAISession
 
-session = GenAISession(
-    jwt_token=""
-)
+session = GenAISession()
 
 
 @session.bind(name="get_current_date", description="Return current date")

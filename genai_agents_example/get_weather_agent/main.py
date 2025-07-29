@@ -3,17 +3,12 @@ import os
 from typing import Any, Annotated
 
 import requests
-from dotenv import load_dotenv
 from genai_session.session import GenAISession
 
-load_dotenv()
+session = GenAISession()
 
 BASE_URL = "http://api.weatherapi.com/v1/forecast.json"
 REQUEST_KEY = os.environ.get("REQUEST_KEY")
-
-session = GenAISession(
-    jwt_token=""
-)
 
 
 @session.bind(name="get_weather", description="Get weather forecast data")
@@ -29,7 +24,6 @@ async def get_weather(
 
 
 async def main():
-    print(REQUEST_KEY)
     await session.process_events()
 
 
