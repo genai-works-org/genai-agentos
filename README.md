@@ -1,4 +1,4 @@
-# hacklab-bio
+# 🧪🧬💻 HackLab-Bio
 
 This repository contains the development of an agentic AI system designed to accelerate research workflows in cellular longevity. This work is the implementation for a Master's Thesis and is built upon the GenAI-AgentOS framework (forked from [genai-works-org/genai-agentos](https://github.com/genai-works-org/genai-agentos)).
 ## Objective
