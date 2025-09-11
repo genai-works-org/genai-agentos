@@ -25,7 +25,7 @@ interface PageLink {
 const pages: PageLink[] = [
   { path: '/chat/new', title: 'New Chat', Icon: NewChatIcon },
   // { path: '', title: 'Search Chats', Icon: SearchChatsIcon },
-  { path: '/agents', title: 'GenAI Agents', Icon: AgentsIcon },
+  // { path: '/agents', title: 'GenAI Agents', Icon: AgentsIcon },
   { path: '/a2a-agents', title: 'A2A Agents', Icon: A2AAgentsIcon },
   { path: '/mcp-agents', title: 'MCP Servers', Icon: MCPAgentsIcon },
   {

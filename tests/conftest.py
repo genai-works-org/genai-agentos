@@ -24,7 +24,7 @@ from tests.constants import SPECIAL_CHARS, TEST_FILES_FOLDER
 from tests.schemas import AgentDTOPayload, AgentDTOWithJWT, AgentType, MCPToolDTO
 from tests.utils import a2a_agent_card_to_dto, mcp_tool_to_json_schema
 
-os.environ["ROUTER_WS_URL"] = "ws://0.0.0.0:8080/ws"
+os.environ["ROUTER_WS_URL"] = "ws://genai-router:8080/ws"
 os.environ["DEFAULT_FILES_FOLDER_NAME"] = TEST_FILES_FOLDER
 
 # IS_DOCKER = bool(os.environ.get("IS_DOCKER_HOST"))

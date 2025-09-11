@@ -75,8 +75,8 @@ Make sure you have the following installed:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/genai-works-org/genai-agentos.git
-   cd genai-agentos/
+   git clone https://github.com/palmedicoai/hacklab-bio.git
+   cd hacklab-bio/
    ```
 
 2. Create a `.env` file by copying the example (can be empty and customized later):
