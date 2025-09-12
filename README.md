@@ -1,3 +1,42 @@
+# 🧪🧬💻 HackLab-Bio
+![hacklabBio](https://github.com/user-attachments/assets/f899b123-8dd1-4990-9132-d84131bc7881)
+
+This repository contains the development of an agentic AI system designed to accelerate research workflows in cellular longevity. This work is the implementation for a Master's Thesis and is built upon the GenAI-AgentOS framework (forked from [genai-works-org/genai-agentos](https://github.com/genai-works-org/genai-agentos)).
+## Objective
+
+The main objective of this fork is to create and adapt intelligent agents that automate and optimize tasks in cellular longevity research, supporting faster experimentation, data analysis, and scientific discovery.
+## Features
+
+- Modular agent architecture for research automation
+- Integration with scientific data sources and tools
+- Customizable workflows for cellular longevity studies
+- Extensible framework for new agent development
+## Repository Structure
+
+- `backend/`: Core API and agent logic
+- `frontend/`: User interface for interacting with agents
+- `master-agent/`, `router/`, `genai_agents_example/`: Specialized agents and orchestration modules
+- `crewai-a2a-server/`: HackLab-bio Agents A2A enabled
+
+## Overwall Architecture 
+
+<img width="1415" height="899" alt="image" src="https://github.com/user-attachments/assets/44606ff3-7a51-45b3-8d0f-fab4a5ae95fe" />
+
+## Example uses
+
+<img width="2000" height="947" alt="image" src="https://github.com/user-attachments/assets/e78b80e2-210f-436a-ae8b-ec22a64824f6" />
+
+<img width="2000" height="947" alt="image" src="https://github.com/user-attachments/assets/445b1a0a-4fa2-40e1-9627-eeba6c1bbc81" />
+
+<img width="2000" height="1019" alt="image" src="https://github.com/user-attachments/assets/2761fbc1-cffd-4a0f-9e78-d5ec1521ca4a" />
+
+# Configured HackLab-Bio A2A Agents
+
+<img width="2000" height="763" alt="image" src="https://github.com/user-attachments/assets/820ae15a-a186-4b4b-910a-168728d49ad1" />
+
+## Getting Started
+
+Refer to the original GenAI-AgentOS documentation for setup instructions. This README provides details specific to the cellular longevity research implementation.
 # 🐍 GenAI Agents Infrastructure
 
 This repository provides the complete infrastructure for running GenAI agents, including:
@@ -55,8 +94,8 @@ Make sure you have the following installed:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/genai-works-org/genai-agentos.git
-   cd genai-agentos/
+   git clone https://github.com/palmedicoai/hacklab-bio.git
+   cd hacklab-bio/
    ```
 
 2. Create a `.env` file by copying the example (can be empty and customized later):
